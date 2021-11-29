@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Lexend";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(/fonts/lexend.woff2) format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-weight: 100 900;
+  font-display: block;
+  font-style: normal;
+  font-named-instance: "Regular";
+  src: url("/fonts/Inter-roman.var.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-weight: 100 900;
+  font-display: block;
+  font-style: italic;
+  font-named-instance: "Italic";
+  src: url("/fonts/Inter-italic.var.woff2") format("woff2");
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  color: #fff;
+  min-height: 100vh;
+}
+
+body {
+  background-color: #001220;
+  background-image: url("/bg.svg");
+  background-position: bottom left;
+  background-repeat: no-repeat;
+  background-size: cover;
+  @apply text-slate-100 font-display;
+}
+
+body > div:first-child,
+div#__next,
+div#__next > div {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  @apply text-indigo-500 hover:text-indigo-200 font-medium;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+input[type="text"],
+input[type="datetime-local"],
+input[type="number"],
+textarea {
+  @apply py-2 text-base font-display font-light sm:text-lg text-slate-200 border-sky-800 focus:outline-none focus:ring-sky-500;
+}
+
+input[type="datetime-local"] {
+  @apply focus:ring-transparent;
+  color-scheme: dark;
+}
+
+select,
+.button,
+.walletButton {
+  @apply bg-indigo-800 hover:bg-indigo-600 border-indigo-600 text-slate-100 cursor-pointer rounded-xl text-base;
+}
+
+select {
+  @apply pl-3 pr-10 bg-blend-color-dodge focus:border-sky-800;
+}
+
+.button,
+.walletButton {
+  @apply px-4 py-[0.8rem] inline-flex items-center justify-center border shadow-sm leading-4 focus:ring-2;
+}
+
+header .button,
+header .walletButton {
+  @apply text-[9px] px-2 sm:text-xs sm:px-4;
+}
+
+.submitbutton {
+  @apply inline-flex justify-center min-w-[200px] mx-auto;
+}
+
+.destructivebutton {
+  @apply bg-red-800 hover:bg-red-600 border-red-600;
+}
+
+.thinbutton {
+  @apply py-[0.4rem] text-sm;
+}
+
+button:disabled,
+.disabledButton {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+input[type="text"],
+input[type="datetime-local"],
+input[type="number"],
+textarea {
+  @apply bg-[#001220] shadow-sm placeholder-slate-200 placeholder-opacity-30;
+}
+
+label {
+  @apply text-sm font-medium sm:block mb-1;
+}
+
+::root {
+  --microtip-font-size: 11px;
+}
+
+.ReactModal__Overlay {
+  @apply flex justify-center items-center;
+}
+
+.ReactModal__Content {
+  @apply max-w-[640px] sm:min-w-[500px] max-h-[400px] bg-slate-600;
+}
+
+.ReactModal__Content h2 {
+  @apply text-lg mb-8;
+}
+
+.ReactModal__Content p {
+  @apply mb-2 rounded-lg;
+}
+
+.ReactModal__Content .buttons {
+  @apply flex justify-end space-x-2 mt-8;
+}
+
+.ReactModal__Content .buttons .button {
+  @apply bg-sky-600 hover:bg-sky-700 text-sm py-2 min-h-[40px];
+}
+
+.ReactModal__Content .buttons .cancelButton {
+  @apply bg-sky-800 hover:bg-sky-900;
+}
+
+.ReactModal__Content input[type="text"],
+.ReactModal__Content input[type="number"],
+.ReactModal__Content input[type="datetime-local"],
+.ReactModal__Content textarea {
+  @apply w-full;
+}
+
+model-viewer {
+  width: 100%;
+  height: 60vh;
+}
