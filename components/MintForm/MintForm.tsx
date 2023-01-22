@@ -4,7 +4,11 @@ import { toast } from "react-hot-toast";
 
 interface Props {
   includeCoverImage: boolean;
-  onComplete: (metadata: NFTFormData, isCrossmint: boolean) => void;
+  onComplete: (
+    metadata: NFTFormData,
+    coverImage: File | undefined,
+    isCrossmint: boolean
+  ) => void;
 }
 
 export interface MetadataAttribute {
@@ -124,6 +128,7 @@ const MintForm: React.FC<Props> = ({ includeCoverImage, onComplete }) => {
           attributes: attributes,
           creators: creators,
         },
+        coverImage,
         isCrossmint
       );
     } catch (e) {

@@ -42,13 +42,13 @@ const MintPage: NextPage = () => {
   const [isEditingNFT, setEditingNFT] = useState(false);
   const [mintedNFTAddress, setMintedNFTAddress] = useState<string>();
   const [mintedWithCrossMint, setMintedWithCrossMint] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState<string>();
 
   const router = useRouter();
 
   const wallet = useWallet();
   const { connection } = useConnection();
   const [file, setFile] = useState<File>();
-  const [coverFile, setCoverFile] = useState<File>();
   const progressToastId = useRef<string | null>(null);
 
   const updatedFileForNFT = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,7 +58,32 @@ const MintPage: NextPage = () => {
     }
   };
 
-  const mint = async (metadata: NFTFormData, isCrossmint: boolean) => {
+  const fileCategory = (file: File): string => {
+    if (
+      validVideoFormats.find((f) => file.name.toLowerCase().endsWith(f)) !==
+      undefined
+    ) {
+      return "video";
+    } else if (
+      validAudioFormats.find((f) => file.name.toLowerCase().endsWith(f)) !==
+      undefined
+    ) {
+      return "audio";
+    } else if (
+      valid3DFormats.find((f) => file.name.toLowerCase().endsWith(f)) !==
+      undefined
+    ) {
+      return "model";
+    } else {
+      return "image";
+    }
+  };
+
+  const mint = async (
+    metadata: NFTFormData,
+    coverImage: File | undefined,
+    isCrossmint: boolean
+  ) => {
     try {
       setMintingStatus("Minting...");
       setMintedWithCrossMint(isCrossmint);
@@ -78,6 +103,7 @@ const MintPage: NextPage = () => {
         if (!recipientEmail) {
           return;
         }
+        setRecipientEmail(recipientEmail);
       }
 
       const mx = Metaplex.make(connection);
@@ -87,6 +113,8 @@ const MintPage: NextPage = () => {
           token: process.env.NEXT_PUBLIC_NFT_STORAGE_API_KEY ?? "",
         })!
       );
+
+      const category = fileCategory(file);
 
       setMintingStatus(`Uploading media file...`);
       const mediaFile = await toMetaplexFileFromBrowser(file);
@@ -98,9 +126,9 @@ const MintPage: NextPage = () => {
         { type: file.type, uri: fullMediaLocation },
       ];
 
-      if (coverFile) {
+      if (coverImage) {
         setMintingStatus(`Uploading cover file...`);
-        const coverMediaFile = await toMetaplexFileFromBrowser(coverFile);
+        const coverMediaFile = await toMetaplexFileFromBrowser(coverImage);
         const coverFileLocation = await mx.storage().upload(coverMediaFile);
         fullCoverLocation = `${coverFileLocation}?ext=${coverMediaFile.extension?.toLowerCase()}`;
       }
@@ -120,6 +148,7 @@ const MintPage: NextPage = () => {
           creators: metadata.creators.map((c) => {
             return { address: c.address, share: c.percent };
           }),
+          category: category,
           files: files,
         },
       };
@@ -252,6 +281,17 @@ const MintPage: NextPage = () => {
             >
               View on Solana Explorer ({shortenedAddress(mintedNFTAddress)})
             </a>
+            {mintedWithCrossMint && recipientEmail && (
+              <span>
+                Next Steps:{" "}
+                <a
+                  href={`mailto:${recipientEmail}?subject=Art coming your way!&body=To access it, go to https://staging.crossmint.com/signin`}
+                >
+                  Let the recipient know
+                </a>{" "}
+                how to access their NFT.
+              </span>
+            )}
           </div>
         ) : (
           <>
