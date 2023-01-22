@@ -96,8 +96,8 @@ const MintForm: React.FC<Props> = ({
         throw "Royalties percentage is required.";
       }
 
-      if (royalties != 0 && royalties < 1) {
-        throw "Royalties is invalid.";
+      if (royalties != 0 && (royalties < 1 || royalties > 100)) {
+        throw "Royalties should be entered as a number from 0-100.";
       }
 
       if (includeCoverImage && !coverImage) {
