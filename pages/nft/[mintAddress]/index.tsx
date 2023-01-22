@@ -28,7 +28,7 @@ import NFTAttributesTable from "components/NFTAttributesTable/NFTAttributesTable
 import NFTDetailsTable from "components/NFTDetailsTable/NFTDetailsTable";
 import { useSession } from "next-auth/react";
 import NFTOwnerControls from "components/NFTOwnerControls/NFTOwnerControls";
-// import NFTCreatorControls from "components/NFTCreatorControls/NFTCreatorControls";
+import NFTCreatorControls from "components/NFTCreatorControls/NFTCreatorControls";
 import { useWallet } from "@solana/wallet-adapter-react";
 import NFTDisplay from "components/NFTDisplay/NFTDisplay";
 import { useRouter } from "next/router";
@@ -380,13 +380,16 @@ const NFTPage: NextPage = () => {
                     </div>
                   )}
 
-                  {/* {session?.user?.name == onChainData.updateAuthority &&
-                  wallet &&
-                  nft && (
-                    <div className="px-4 pt-3 pb-4 mb-4 sm:mb-3 rounded-lg bg-white bg-opacity-5 focus:outline-none">
-                      <NFTCreatorControls nft={nft} wallet={wallet} />
-                    </div>
-                  )} */}
+                  {onChainData &&
+                    session?.user?.name == onChainData.updateAuthority &&
+                    wallet &&
+                    nft && (
+                      <div className="px-4 pt-3 pb-4 mb-4 sm:mb-3 rounded-lg bg-white bg-opacity-5 focus:outline-none">
+                        <NFTCreatorControls
+                          nftAddress={nft.address.toString()}
+                        />
+                      </div>
+                    )}
                 </div>
               </div>
 

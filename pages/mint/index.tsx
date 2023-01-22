@@ -15,10 +15,16 @@ import { useRef, useState } from "react";
 import Header from "components/Header/Header";
 import Layout from "components/Layout/Layout";
 import MintForm, { NFTFormData } from "components/MintForm/MintForm";
+import {
+  fileCategory,
+  valid3DExtensions,
+  validAudioExtensions,
+  validImageExtensions,
+  validVideoExtensions,
+} from "utils/nftParse";
 import dynamic from "next/dynamic";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { pubKeyUrl, shortenedAddress } from "utils";
-import Image from "next/image";
+import { notEmpty, pubKeyUrl, shortenedAddress, tryPublicKey } from "utils";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 
 function pause(ms: number) {
@@ -30,11 +36,6 @@ function pause(ms: number) {
 }
 
 const Model = dynamic(() => import("components/Model"), { ssr: false });
-
-const validImageFormats = [".jpg", ".jpeg", ".png", ".gif"];
-const validVideoFormats = [".mp4", ".mov", ".webm", ".m4v", ".ogv", ".ogg"];
-const validAudioFormats = [".mp3", ".wav", ".oga", ".flac"];
-const valid3DFormats = [".glb", ".gltf", ".gltf-binary"];
 
 const MintPage: NextPage = () => {
   const [isLoading, setLoading] = useState(false);
@@ -49,33 +50,11 @@ const MintPage: NextPage = () => {
   const wallet = useWallet();
   const { connection } = useConnection();
   const [file, setFile] = useState<File>();
-  const progressToastId = useRef<string | null>(null);
 
   const updatedFileForNFT = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setEditingNFT(true);
     if (e.target.files) {
       setFile(e.target.files[0]);
-    }
-  };
-
-  const fileCategory = (file: File): string => {
-    if (
-      validVideoFormats.find((f) => file.name.toLowerCase().endsWith(f)) !==
-      undefined
-    ) {
-      return "video";
-    } else if (
-      validAudioFormats.find((f) => file.name.toLowerCase().endsWith(f)) !==
-      undefined
-    ) {
-      return "audio";
-    } else if (
-      valid3DFormats.find((f) => file.name.toLowerCase().endsWith(f)) !==
-      undefined
-    ) {
-      return "model";
-    } else {
-      return "image";
     }
   };
 
@@ -140,13 +119,22 @@ const MintPage: NextPage = () => {
         seller_fee_basis_points: metadata.royalties * 100,
         image: fullCoverLocation ?? fullMediaLocation,
         attributes: metadata.attributes
-          .filter((a) => a.name.length > 0 && a.value.length > 0)
+          .filter(
+            (a) =>
+              a.trait_type &&
+              a.value &&
+              a.trait_type.length > 0 &&
+              a.value.length > 0
+          )
           .map((a) => {
-            return { trait_type: a.name, value: a.value };
+            return {
+              trait_type: a.trait_type as string,
+              value: a.value as string,
+            };
           }),
         properties: {
           creators: metadata.creators.map((c) => {
-            return { address: c.address, share: c.percent };
+            return { address: c.address, share: c.share };
           }),
           category: category,
           files: files,
@@ -199,21 +187,24 @@ const MintPage: NextPage = () => {
           name: metadata.name,
           sellerFeeBasisPoints: metadata.royalties * 100,
           symbol: metadata.symbol,
-          creators: metadata.creators.map((c) => {
-            return { address: new PublicKey(c.address), share: c.percent };
-          }),
+          creators: metadata.creators
+            .map((c) => {
+              const publicKey = tryPublicKey(c.address ?? "");
+              return publicKey && c.share
+                ? {
+                    address: publicKey,
+                    share: c.share,
+                  }
+                : null;
+            })
+            .filter(notEmpty),
         });
 
         setMintedNFTAddress(result.mintAddress.toString());
       }
 
-      progressToastId.current && toast.dismiss(progressToastId.current);
-      progressToastId.current = null;
       toast.success("Mint complete!");
     } catch (error) {
-      progressToastId.current && toast.dismiss(progressToastId.current);
-      progressToastId.current = null;
-
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
@@ -243,10 +234,11 @@ const MintPage: NextPage = () => {
               <label className="button">
                 <input
                   type={"file"}
-                  accept={validImageFormats
-                    .concat(validVideoFormats)
-                    .concat(validAudioFormats)
-                    .concat(valid3DFormats)
+                  accept={validImageExtensions
+                    .map((e) => "." + e)
+                    .concat(validVideoExtensions.map((e) => "." + e))
+                    .concat(validAudioExtensions.map((e) => "." + e))
+                    .concat(valid3DExtensions.map((e) => "." + e))
                     .join(",")}
                   onChange={(e) => {
                     updatedFileForNFT(e);
@@ -297,28 +289,28 @@ const MintPage: NextPage = () => {
           <>
             <div className="flex gap-8 flex-col md:flex-row mt-8 px-1">
               <div className="relative w-full md:w-1/3 lg:w-1/2">
-                {validImageFormats.find((f) =>
-                  file.name.toLowerCase().endsWith(f)
+                {validImageExtensions.find((f) =>
+                  file.name.toLowerCase().endsWith("." + f)
                 ) ? (
                   <img
                     src={URL.createObjectURL(file)}
                     alt="NFT Image"
                     className="w-full"
                   />
-                ) : validVideoFormats.find((f) =>
-                    file.name.toLowerCase().endsWith(f)
+                ) : validVideoExtensions.find((f) =>
+                    file.name.toLowerCase().endsWith("." + f)
                   ) ? (
                   <video autoPlay controls loop>
                     <source src={URL.createObjectURL(file)} />
                   </video>
-                ) : validAudioFormats.find((f) =>
-                    file.name.toLowerCase().endsWith(f)
+                ) : validAudioExtensions.find((f) =>
+                    file.name.toLowerCase().endsWith("." + f)
                   ) ? (
                   <audio autoPlay controls loop>
                     <source src={URL.createObjectURL(file)} />
                   </audio>
-                ) : valid3DFormats.find((f) =>
-                    file.name.toLowerCase().endsWith(f)
+                ) : valid3DExtensions.find((f) =>
+                    file.name.toLowerCase().endsWith("." + f)
                   ) ? (
                   <Model src={URL.createObjectURL(file)}></Model>
                 ) : (
@@ -328,14 +320,14 @@ const MintPage: NextPage = () => {
               <div className="w-full md:w-2/3 lg:w-1/2">
                 <MintForm
                   includeCoverImage={
-                    validVideoFormats.find((f) =>
-                      file.name.toLowerCase().endsWith(f)
+                    validVideoExtensions.find((f) =>
+                      file.name.toLowerCase().endsWith("." + f)
                     ) !== undefined ||
-                    validAudioFormats.find((f) =>
-                      file.name.toLowerCase().endsWith(f)
+                    validAudioExtensions.find((f) =>
+                      file.name.toLowerCase().endsWith("." + f)
                     ) !== undefined ||
-                    valid3DFormats.find((f) =>
-                      file.name.toLowerCase().endsWith(f)
+                    valid3DExtensions.find((f) =>
+                      file.name.toLowerCase().endsWith("." + f)
                     ) !== undefined
                   }
                   onComplete={mint}

@@ -1,8 +1,17 @@
 import { tryPublicKey } from "utils";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import {
+  Creator,
+  Nft,
+  NftWithToken,
+  Sft,
+  SftWithToken,
+} from "@metaplex-foundation/js";
 
 interface Props {
+  isEdit?: boolean;
+  nft?: Sft | SftWithToken | Nft | NftWithToken;
   includeCoverImage: boolean;
   onComplete: (
     metadata: NFTFormData,
@@ -12,8 +21,15 @@ interface Props {
 }
 
 export interface MetadataAttribute {
-  name: string;
-  value: string;
+  trait_type?: string;
+  value?: string;
+  [key: string]: unknown;
+}
+
+export interface MetadataCreator {
+  address?: string | undefined;
+  share?: number | undefined;
+  [key: string]: unknown;
 }
 
 export interface NFTFormData {
@@ -23,26 +39,34 @@ export interface NFTFormData {
   symbol: string;
   coverImage: File | undefined;
   attributes: MetadataAttribute[];
-  creators: ProjectCreator[];
+  creators: MetadataCreator[];
 }
 
-export interface ProjectCreator {
-  address: string;
-  percent: number;
-}
-
-const MintForm: React.FC<Props> = ({ includeCoverImage, onComplete }) => {
-  const [name, setName] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [royalties, setRoyalties] = useState<number>();
-  const [symbol, setSymbol] = useState<string>("");
+const MintForm: React.FC<Props> = ({
+  isEdit = false,
+  nft = undefined,
+  includeCoverImage,
+  onComplete,
+}) => {
+  const [name, setName] = useState<string>(nft?.json?.name ?? "");
+  const [description, setDescription] = useState<string>(
+    nft?.json?.description ?? ""
+  );
+  const [royalties, setRoyalties] = useState<number | undefined>(
+    nft?.json?.seller_fee_basis_points
+      ? nft?.json?.seller_fee_basis_points / 100.0
+      : undefined
+  );
+  const [symbol, setSymbol] = useState<string>(nft?.json?.symbol ?? "");
   const [coverImage, setCoverImage] = useState<File>();
-  const [attributes, setAttributes] = useState<MetadataAttribute[]>([
-    { name: "", value: "" },
-  ]);
-  const [creators, setCreators] = useState<ProjectCreator[]>([
-    { address: "", percent: 0 },
-  ]);
+  const [attributes, setAttributes] = useState<MetadataAttribute[]>(
+    nft?.json?.attributes ?? [{ trait_type: "", value: "" }]
+  );
+  const [creators, setCreators] = useState<MetadataCreator[]>(
+    nft?.json?.properties?.creators ?? [
+      { address: "", share: 0 } as MetadataCreator,
+    ]
+  );
 
   const updatedCoverImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -81,7 +105,8 @@ const MintForm: React.FC<Props> = ({ includeCoverImage, onComplete }) => {
       }
 
       if (
-        attributes.length != [...new Set(attributes.map((a) => a.name))].length
+        attributes.length !=
+        [...new Set(attributes.map((a) => a.trait_type))].length
       ) {
         throw "Attribute names should be unique";
       }
@@ -91,17 +116,17 @@ const MintForm: React.FC<Props> = ({ includeCoverImage, onComplete }) => {
         if (!creator.address) {
           throw "Please specify all member public keys";
         }
-        if (!creator.percent) {
-          throw "Please specify all member percentages";
+        if (!creator.share) {
+          throw "Please specify all member shares";
         }
         const memberPubkey = tryPublicKey(creator.address);
         if (!memberPubkey) {
           throw "Invalid member public key, unable to cast to PublicKey";
         }
-        if (creator.percent <= 0) {
-          throw "Member percent cannot be negative or zero";
+        if (creator.share < 0) {
+          throw "Member percent cannot be negative";
         }
-        shareSum += creator.percent;
+        shareSum += creator.share;
       }
       if (shareSum !== 100) {
         throw `Sum of all shares must equal to 100`;
@@ -170,7 +195,7 @@ const MintForm: React.FC<Props> = ({ includeCoverImage, onComplete }) => {
         </div>
 
         <div>
-          <label>Royalties</label>
+          <label>Royalties (0-100%)</label>
           <input
             id="royalties"
             name="royalties"
@@ -238,10 +263,10 @@ const MintForm: React.FC<Props> = ({ includeCoverImage, onComplete }) => {
                       placeholder=""
                       onChange={(e) => {
                         const updatedAttributes = attributes;
-                        updatedAttributes[i]!.name = e.target.value;
+                        updatedAttributes[i]!.trait_type = e.target.value;
                         setAttributes([...updatedAttributes]);
                       }}
-                      value={attribute.name}
+                      value={attribute.trait_type}
                     />
                   );
                 })}
@@ -327,7 +352,11 @@ const MintForm: React.FC<Props> = ({ includeCoverImage, onComplete }) => {
                       placeholder="Address"
                       onChange={(e) => {
                         const updatedCreators = creators;
-                        updatedCreators[i]!.address = e.target.value;
+                        updatedCreators[i] = {
+                          address: e.target.value as any,
+                          share: creator.share,
+                          verified: creator.verified,
+                        };
                         setCreators([...updatedCreators]);
                       }}
                       value={creator.address}
@@ -350,10 +379,14 @@ const MintForm: React.FC<Props> = ({ includeCoverImage, onComplete }) => {
                       className="w-full mb-3"
                       onChange={(e) => {
                         const updatedCreators = creators;
-                        updatedCreators[i]!.percent = parseInt(e.target.value);
+                        updatedCreators[i] = {
+                          address: creator.address,
+                          share: parseInt(e.target.value) ?? 0,
+                          verified: creator.verified,
+                        };
                         setCreators([...updatedCreators]);
                       }}
-                      value={creator.percent > 0 ? creator.percent : ""}
+                      value={creator.share}
                     />
                   </div>
                 );
@@ -370,7 +403,8 @@ const MintForm: React.FC<Props> = ({ includeCoverImage, onComplete }) => {
                     ...creators,
                     {
                       address: "",
-                      percent: 0,
+                      share: 0,
+                      verified: false,
                     },
                   ])
                 }
@@ -385,7 +419,8 @@ const MintForm: React.FC<Props> = ({ includeCoverImage, onComplete }) => {
                     setCreators([
                       {
                         address: "",
-                        percent: 0,
+                        share: 0,
+                        verified: false,
                       },
                     ]);
                   } else {
@@ -404,33 +439,47 @@ const MintForm: React.FC<Props> = ({ includeCoverImage, onComplete }) => {
         </div>
 
         <div className="text-center mt-8 mx-auto flex gap-4 items-top justify-top">
-          <div className="w-full">
-            <button
-              className="button thinbutton w-full"
-              type="button"
-              onClick={async () => validateAndSaveNFTs(false)}
-            >
-              Mint to
-              <br />
-              Your Wallet
-            </button>
-            <div className="mt-2 h-[20px]"></div>
-          </div>
-          <p className="pt-4"> or </p>
-          <div className="w-full">
-            <button
-              className="button thinbutton w-full"
-              type="button"
-              onClick={async () => validateAndSaveNFTs(true)}
-            >
-              Mint & Email
-              <br />
-              w/Crossmint
-            </button>
-            <div className="mt-2 h-[20px] text-xs text-center">
-              (Devnet-only for now)
+          {isEdit ? (
+            <div className="w-full">
+              <button
+                className="button thinbutton w-full"
+                type="button"
+                onClick={async () => validateAndSaveNFTs(false)}
+              >
+                Save
+              </button>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="w-full">
+                <button
+                  className="button thinbutton w-full"
+                  type="button"
+                  onClick={async () => validateAndSaveNFTs(false)}
+                >
+                  Mint to
+                  <br />
+                  Your Wallet
+                </button>
+                <div className="mt-2 h-[20px]"></div>
+              </div>
+              <p className="pt-4"> or </p>
+              <div className="w-full">
+                <button
+                  className="button thinbutton w-full"
+                  type="button"
+                  onClick={async () => validateAndSaveNFTs(true)}
+                >
+                  Mint & Email
+                  <br />
+                  w/Crossmint
+                </button>
+                <div className="mt-2 h-[20px] text-xs text-center">
+                  (Devnet-only for now)
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </form>
     </main>
