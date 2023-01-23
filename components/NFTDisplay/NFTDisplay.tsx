@@ -21,13 +21,20 @@ const NFTDisplay: React.FC<Props> = ({ nft }) => {
     return <Model src={uri}></Model>;
   } else if (type === "video") {
     return (
-      <video autoPlay controls loop className="w-full">
+      <video
+        playsInline
+        autoPlay
+        controls
+        loop
+        poster={nft.json?.image}
+        className="w-full"
+      >
         <source src={uri} />
       </video>
     );
   } else if (type === "audio") {
     return (
-      <audio autoPlay controls loop className="w-full">
+      <audio playsInline autoPlay controls loop className="w-full">
         <source src={uri} />
       </audio>
     );

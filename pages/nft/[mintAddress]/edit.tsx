@@ -259,7 +259,13 @@ const EditPage: NextPage = () => {
                   ) : validVideoExtensions.find((f) =>
                       updatedMediaFile.name.toLowerCase().endsWith("." + f)
                     ) ? (
-                    <video autoPlay controls loop>
+                    <video
+                      playsInline
+                      autoPlay
+                      controls
+                      loop
+                      poster={nft.json?.image}
+                    >
                       <source src={URL.createObjectURL(updatedMediaFile)} />
                     </video>
                   ) : validAudioExtensions.find((f) =>
@@ -291,7 +297,13 @@ const EditPage: NextPage = () => {
                     loading="lazy"
                   />
                 ) : mediaFileType === "video" ? (
-                  <video autoPlay controls loop>
+                  <video
+                    playsInline
+                    autoPlay
+                    controls
+                    loop
+                    poster={nft.json?.image}
+                  >
                     <source src={nftMediaFileUri} />
                   </video>
                 ) : mediaFileType === "audio" ? (

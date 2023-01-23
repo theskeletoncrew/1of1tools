@@ -298,7 +298,7 @@ const MintPage: NextPage = () => {
                 ) : validVideoExtensions.find((f) =>
                     file.name.toLowerCase().endsWith("." + f)
                   ) ? (
-                  <video autoPlay controls loop>
+                  <video playsInline autoPlay controls loop>
                     <source src={URL.createObjectURL(file)} />
                   </video>
                 ) : validAudioExtensions.find((f) =>
