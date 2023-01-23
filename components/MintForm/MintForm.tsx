@@ -461,7 +461,6 @@ const MintForm: React.FC<Props> = ({
                   <br />
                   Your Wallet
                 </button>
-                <div className="mt-2 h-[20px]"></div>
               </div>
               <p className="pt-4"> or </p>
               <div className="w-full">
@@ -474,9 +473,6 @@ const MintForm: React.FC<Props> = ({
                   <br />
                   w/Crossmint
                 </button>
-                <div className="mt-2 h-[20px] text-xs text-center">
-                  (Devnet-only for now)
-                </div>
               </div>
             </>
           )}

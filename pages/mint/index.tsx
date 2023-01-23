@@ -277,7 +277,7 @@ const MintPage: NextPage = () => {
               <span>
                 Next Steps:{" "}
                 <a
-                  href={`mailto:${recipientEmail}?subject=Art coming your way!&body=To access it, go to https://staging.crossmint.com/signin`}
+                  href={`mailto:${recipientEmail}?subject=Art coming your way!&body=To access it, go to https://www.crossmint.com/signin`}
                 >
                   Let the recipient know
                 </a>{" "}

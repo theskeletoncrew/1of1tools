@@ -3,8 +3,8 @@ import nextConnect from "next-connect";
 import { unstable_getServerSession } from "next-auth";
 import { authOptions } from "pages/api/auth/[...nextauth]";
 
-const CROSSMINT_API_KEY = process.env.CROSSMINT_DEVNET_APIKEY || "";
-const CROSSMINT_PROJECT_ID = process.env.CROSSMINT_DEVNET_PROJECT_ID || "";
+const CROSSMINT_API_SECRET = process.env.CROSSMINT_PROD_API_SECRET || "";
+const CROSSMINT_PROJECT_ID = process.env.CROSSMINT_PROD_PROJECT_ID || "";
 
 const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
   onError(error, req, res) {
@@ -43,13 +43,13 @@ apiRoute.post(async (req, res) => {
     console.log(recipientEmail);
 
     const response = await fetch(
-      `https://staging.crossmint.com/api/2022-06-09/collections/default-solana/nfts`,
+      `https://www.crossmint.com/api/2022-06-09/collections/default-solana/nfts`,
       {
         method: "POST",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          "x-client-secret": CROSSMINT_API_KEY,
+          "x-client-secret": CROSSMINT_API_SECRET,
           "x-project-id": CROSSMINT_PROJECT_ID,
         },
         body: JSON.stringify({
