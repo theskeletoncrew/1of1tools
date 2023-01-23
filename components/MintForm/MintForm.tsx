@@ -64,7 +64,7 @@ const MintForm: React.FC<Props> = ({
   );
   const [creators, setCreators] = useState<MetadataCreator[]>(
     nft?.json?.properties?.creators ?? [
-      { address: "", share: 0 } as MetadataCreator,
+      { address: "", share: "" as any } as MetadataCreator,
     ]
   );
 
@@ -203,11 +203,13 @@ const MintForm: React.FC<Props> = ({
             type="number"
             placeholder=""
             onChange={(e) => {
-              const intval = parseInt(e.target.value);
-              e.currentTarget.value = intval.toString();
+              const intval: any = isNaN(parseInt(e.target.value))
+                ? ""
+                : parseInt(e.target.value);
+              console.log(intval);
               setRoyalties(intval);
             }}
-            value={royalties}
+            value={royalties ?? ""}
           />
         </div>
 
@@ -381,12 +383,14 @@ const MintForm: React.FC<Props> = ({
                         const updatedCreators = creators;
                         updatedCreators[i] = {
                           address: creator.address,
-                          share: parseInt(e.target.value) ?? 0,
+                          share: isNaN(parseInt(e.target.value))
+                            ? ("" as any)
+                            : parseInt(e.target.value),
                           verified: creator.verified,
                         };
                         setCreators([...updatedCreators]);
                       }}
-                      value={creator.share}
+                      value={creator.share ?? ""}
                     />
                   </div>
                 );
