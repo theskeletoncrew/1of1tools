@@ -92,7 +92,7 @@ const MintForm: React.FC<Props> = ({
         throw "Symbol is too long.";
       }
 
-      if (!royalties) {
+      if (royalties === undefined) {
         throw "Royalties percentage is required.";
       }
 
