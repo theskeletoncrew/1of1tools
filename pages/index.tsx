@@ -61,10 +61,10 @@ const Home: NextPage = () => {
                 Logout
               </a>
             </div>
-          ) : status == "loading" ? (
-            "Signing in..."
-          ) : (
+          ) : status == "unauthenticated" ? (
             <SolanaAuthButton />
+          ) : (
+            ""
           )}
         </div>
 

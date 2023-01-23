@@ -57,10 +57,10 @@ const MainNavigation: React.FC<Props> = ({}) => {
           //   </button>
           //   <WalletModalButton className="hiddenWalletButton absolute opacity-0 w-0 h-0 overflow-hidden" />
           // </>
-          status == "loading" ? (
-            "Signing in..."
-          ) : (
+          status == "unauthenticated" ? (
             <SolanaAuthButton />
+          ) : (
+            ""
           )}
           {/* <a
             href="https://discord.gg/skeletoncrewrip"
