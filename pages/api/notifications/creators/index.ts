@@ -68,26 +68,27 @@ apiRoute.put(async (req, res) => {
         dialect,
         deliveryAddress
       );
-      if (thread) {
-        if (isNew) {
-          await sendMessage(
-            thread,
-            `one / one: You are now setup to receive notifications about the creator ${shortenedAddress(
-              accountAddress
-            )}! Change your preferences at any time on https://1of1.tools`
-          );
-        } else {
-          await sendMessage(
-            thread,
-            `one / one: Your notification preferences about the creator ${shortenedAddress(
-              accountAddress
-            )} have been updated. Change them again at any time on https://1of1.tools`
-          );
-        }
-
-        res.status(200).json({
-          success: true,
+      if (!thread) {
+        res.status(500).json({
+          success: false,
+          message: "Unable to find or create thread on Dialect.",
         });
+        return;
+      }
+      if (isNew) {
+        await sendMessage(
+          thread,
+          `one / one: You are now setup to receive notifications about the creator ${shortenedAddress(
+            accountAddress
+          )}! Change your preferences at any time on https://1of1.tools`
+        );
+      } else {
+        await sendMessage(
+          thread,
+          `one / one: Your notification preferences about the creator ${shortenedAddress(
+            accountAddress
+          )} have been updated. Change them again at any time on https://1of1.tools`
+        );
       }
 
       res.status(200).json({
