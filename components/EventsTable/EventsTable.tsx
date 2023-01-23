@@ -11,6 +11,7 @@ import {
   humanReadableEventType,
   humanReadableSource,
   humanReadableSourceSm,
+  urlForSource,
 } from "utils/helius";
 
 dayjs.extend(relativeTime);
@@ -95,109 +96,114 @@ const EventsTable: React.FC<Props> = ({ events }) => {
               </tr>
             </thead>
             <tbody>
-              {events.map((event, i) => (
-                <tr
-                  key={event.signature}
-                  className={classNames(
-                    "bg-opacity-25 hover:bg-opacity-50",
-                    i % 2 == 0 ? "bg-indigo-800" : "bg-indigo-700"
-                  )}
-                >
-                  <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75">
-                    <a href={txUrl(event.signature, network)}>
+              {events.map((event, i) => {
+                const marketplaceUrl =
+                  (event.nfts ?? []).length > 0
+                    ? urlForSource(event.source, event.nfts[0]!.mint)
+                    : null;
+                return (
+                  <tr
+                    key={event.signature}
+                    className={classNames(
+                      "bg-opacity-25 hover:bg-opacity-50",
+                      i % 2 == 0 ? "bg-indigo-800" : "bg-indigo-700"
+                    )}
+                  >
+                    <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75">
+                      <a href={txUrl(event.signature, network)}>
+                        <span className="hidden sm:block">
+                          {shortenedAddress(event.signature)}
+                        </span>
+                        <span className="block sm:hidden">
+                          {shortenedAddress(event.signature, true)}
+                        </span>
+                      </a>
+                    </td>
+                    <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75">
+                      {humanReadableEventType(event.type)}
+                    </td>
+                    <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75">
+                      {event.buyer && (
+                        <a href={`/wallet/${event.buyer}`}>
+                          <span className="hidden sm:block">
+                            {shortenedAddress(event.buyer)}
+                          </span>
+                          <span className="block sm:hidden">
+                            {shortenedAddress(event.buyer, true)}
+                          </span>
+                        </a>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75">
                       <span className="hidden sm:block">
-                        {shortenedAddress(event.signature)}
+                        {event.amount / LAMPORTS_PER_SOL} SOL
                       </span>
                       <span className="block sm:hidden">
-                        {shortenedAddress(event.signature, true)}
+                        {event.amount / LAMPORTS_PER_SOL}
                       </span>
-                    </a>
-                  </td>
-                  <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75">
-                    {humanReadableEventType(event.type)}
-                  </td>
-                  <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75">
-                    {event.buyer && (
-                      <a href={`/wallet/${event.buyer}`}>
-                        <span className="hidden sm:block">
-                          {shortenedAddress(event.buyer)}
-                        </span>
-                        <span className="block sm:hidden">
-                          {shortenedAddress(event.buyer, true)}
-                        </span>
-                      </a>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75">
-                    <span className="hidden sm:block">
-                      {event.amount / LAMPORTS_PER_SOL} SOL
-                    </span>
-                    <span className="block sm:hidden">
-                      {event.amount / LAMPORTS_PER_SOL}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75">
-                    {event.seller && (
-                      <a href={`/wallet/${event.seller}`}>
-                        <span className="hidden sm:block">
-                          {shortenedAddress(event.seller)}
-                        </span>
-                        <span className="block sm:hidden">
-                          {shortenedAddress(event.seller, true)}
-                        </span>
-                      </a>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75 ">
-                    <span
-                      title={dayjs
-                        .utc(event.timestamp * 1000)
-                        .tz()
-                        .format("MMM D, YYYY h:mm A")}
-                    >
-                      {dayjs(event.timestamp * 1000).toNow(true)} ago
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75 ">
-                    {event.source === "EXCHANGE_ART" &&
-                    (event.nfts ?? []).length > 0 ? (
-                      <a
-                        href={`https://exchange.art/single/${
-                          event.nfts[0]!.mint
-                        }`}
+                    </td>
+                    <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75">
+                      {event.seller && (
+                        <a href={`/wallet/${event.seller}`}>
+                          <span className="hidden sm:block">
+                            {shortenedAddress(event.seller)}
+                          </span>
+                          <span className="block sm:hidden">
+                            {shortenedAddress(event.seller, true)}
+                          </span>
+                        </a>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75 ">
+                      <span
+                        title={dayjs
+                          .utc(event.timestamp * 1000)
+                          .tz()
+                          .format("MMM D, YYYY h:mm A")}
+                      >
+                        {dayjs(event.timestamp * 1000).toNow(true)} ago
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75 ">
+                      {marketplaceUrl ? (
+                        <a
+                          href={marketplaceUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <span className="hidden sm:block">
+                            {humanReadableSource(event.source)}
+                          </span>
+                          <span className="block sm:hidden">
+                            {humanReadableSourceSm(event.source)}
+                          </span>
+                        </a>
+                      ) : (
+                        <>
+                          <span className="hidden sm:block">
+                            {humanReadableSource(event.source)}
+                          </span>
+                          <span className="block sm:hidden">
+                            {humanReadableSourceSm(event.source)}
+                          </span>
+                        </>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75 ">
+                      <span
+                        aria-label={event.description}
+                        data-microtip-position="top-left"
+                        data-microtip-size="fit"
+                        role="tooltip"
                       >
                         <span className="hidden sm:block">
-                          {humanReadableSource(event.source)}
+                          <QuestionMarkCircleIcon className="w-5 h-5 text-gray-400 cursor-pointer" />
                         </span>
-                        <span className="block sm:hidden">
-                          {humanReadableSourceSm(event.source)}
-                        </span>
-                      </a>
-                    ) : (
-                      <>
-                        <span className="hidden sm:block">
-                          {humanReadableSource(event.source)}
-                        </span>
-                        <span className="block sm:hidden">
-                          {humanReadableSourceSm(event.source)}
-                        </span>
-                      </>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75 ">
-                    <span
-                      aria-label={event.description}
-                      data-microtip-position="top-left"
-                      data-microtip-size="fit"
-                      role="tooltip"
-                    >
-                      <span className="hidden sm:block">
-                        <QuestionMarkCircleIcon className="w-5 h-5 text-gray-400 cursor-pointer" />
                       </span>
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

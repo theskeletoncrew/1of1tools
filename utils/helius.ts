@@ -154,9 +154,24 @@ export const urlForSource = (
 ): string | null => {
   switch (source) {
     case "FORM_FUNCTION":
+      // not predictable, but resolves if using a fake username
       return `https://formfunction.xyz/@1of1tools/${nftAddress}`;
     case "EXCHANGE_ART":
       return `https://exchange.art/single/${nftAddress}`;
+    case "MAGIC_EDEN":
+      return `https://magiceden.io/item-details/${nftAddress}`;
+    case "SOLANART":
+      return `https://solanart.io/nft/${nftAddress}`;
+    case "HYPERSPACE":
+      return `https://hyperspace.xyz/token/${nftAddress}`;
+    case "SOLSEA":
+      return `https://solsea.io/n/${nftAddress}`;
+    case "YAWWW":
+      return null; // not predictable (uses a different id for each listing)
+    case "DIGITAL_EYES":
+      return null; // not predictable format
+    case "TENSOR":
+      return `https://www.tensor.trade/item/${nftAddress}`;
     default:
       return null;
   }
