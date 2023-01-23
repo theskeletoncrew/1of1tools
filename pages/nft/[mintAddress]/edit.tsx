@@ -33,7 +33,6 @@ import { CloudArrowDownIcon } from "@heroicons/react/24/outline";
 import dynamic from "next/dynamic";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { nftStorage } from "@metaplex-foundation/js-plugin-nft-storage";
-import { json } from "stream/consumers";
 
 const Model = dynamic(() => import("components/Model"), { ssr: false });
 

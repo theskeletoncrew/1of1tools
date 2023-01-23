@@ -3,7 +3,6 @@ import { toast } from "react-hot-toast";
 import { OneOfOneToolsClient } from "api-client";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { PublicKey } from "@solana/web3.js";
 import {
   Metaplex,
   toMetaplexFileFromBrowser,
@@ -11,7 +10,7 @@ import {
 } from "@metaplex-foundation/js";
 import { nftStorage } from "@metaplex-foundation/js-plugin-nft-storage";
 import { network } from "utils/network";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Header from "components/Header/Header";
 import Layout from "components/Layout/Layout";
 import MintForm, { NFTFormData } from "components/MintForm/MintForm";
@@ -38,7 +37,6 @@ function pause(ms: number) {
 const Model = dynamic(() => import("components/Model"), { ssr: false });
 
 const MintPage: NextPage = () => {
-  const [isLoading, setLoading] = useState(false);
   const [mintingStatus, setMintingStatus] = useState<string>();
   const [isEditingNFT, setEditingNFT] = useState(false);
   const [mintedNFTAddress, setMintedNFTAddress] = useState<string>();
