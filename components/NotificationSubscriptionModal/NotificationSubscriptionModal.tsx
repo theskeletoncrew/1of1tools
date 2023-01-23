@@ -52,7 +52,7 @@ const NotificationSubscriptionModal: React.FC<Props> = ({
       }}
     >
       <div className="relative">
-        <h2>Notifications</h2>
+        <h2>Dialect App Notifications</h2>
         <button
           className="p-2 absolute right-[-15px] top-[-15px]"
           onClick={close}
