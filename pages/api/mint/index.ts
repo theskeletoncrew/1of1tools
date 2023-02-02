@@ -68,7 +68,7 @@ apiRoute.post(async (req, res) => {
     } else {
       res.status(500).json({
         success: false,
-        message: responseJSON.error,
+        message: responseJSON.message ? responseJSON.message : "Minting Failed",
       });
     }
   } catch (error) {

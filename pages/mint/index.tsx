@@ -172,8 +172,7 @@ const MintPage: NextPage = () => {
             throw new Error("Timed out waiting for mint to complete.");
           }
         } else {
-          console.log(mintRes.error.message);
-          throw new Error("Minting failed.");
+          throw new Error(mintRes.error.message);
         }
       } else {
         setMintingStatus("Uploading metadata...");
