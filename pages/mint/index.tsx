@@ -172,7 +172,8 @@ const MintPage: NextPage = () => {
             throw new Error("Timed out waiting for mint to complete.");
           }
         } else {
-          throw new Error(mintRes.error.message);
+          console.log(mintRes.error.message);
+          throw new Error("Minting failed.");
         }
       } else {
         setMintingStatus("Uploading metadata...");
@@ -206,7 +207,7 @@ const MintPage: NextPage = () => {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error("Minting failure");
+        toast.error("Minting failed.");
       }
       console.log(error);
       setMintedNFTAddress(undefined);

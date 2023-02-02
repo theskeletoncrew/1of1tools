@@ -206,7 +206,6 @@ const MintForm: React.FC<Props> = ({
               const intval: any = isNaN(parseInt(e.target.value))
                 ? ""
                 : parseInt(e.target.value);
-              console.log(intval);
               setRoyalties(intval);
             }}
             value={royalties ?? ""}
