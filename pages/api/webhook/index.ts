@@ -43,8 +43,6 @@ apiRoute.post(async (req, res) => {
         continue;
       }
 
-      console.log(transaction);
-
       const taskName = `projects/${project}/locations/${location}/queues/${queue}/tasks/${transaction.signature}`;
 
       const [response] = await cloudTasksClient.createTask({
@@ -61,8 +59,6 @@ apiRoute.post(async (req, res) => {
           },
         },
       });
-
-      console.log(response);
     }
 
     res.status(200).json({
