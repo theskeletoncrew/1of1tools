@@ -13,6 +13,8 @@ import { useSession } from "next-auth/react";
 import { CheckBadgeIcon, Square2StackIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { loadBonfidaName, loadTwitterName } from "utils/addressResolution";
 
 interface Props {
   onChainData: NFTMetadataOnChain;
@@ -32,6 +34,19 @@ const NFTDetailsTable: React.FC<Props> = ({
   owner,
 }) => {
   const { data: session } = useSession();
+  const [bonfidaName, setBonfidaName] = useState<string>();
+  const [twitterName, setTwitterName] = useState<string>();
+
+  useEffect(() => {
+    if (owner) {
+      if (bonfidaName === undefined) {
+        loadBonfidaName(owner).then((name) => setBonfidaName(name));
+      }
+      if (twitterName === undefined) {
+        loadTwitterName(owner).then((name) => setTwitterName(name));
+      }
+    }
+  }, [owner]);
 
   return (
     <table className="w-full text-sm rounded-md">
@@ -118,8 +133,22 @@ const NFTDetailsTable: React.FC<Props> = ({
           <tr>
             <td className="pr-10">Owner:</td>
             <td className="text-right text-indigo-300 flex items-center justify-end gap-1">
-              {session?.user?.id == owner ? "You! 😎 - " : ""}
-              <a href={`/wallet/${owner}`}>{shortenedAddress(owner)}</a>
+              <a
+                href={
+                  twitterName
+                    ? `https://twitter.com/${twitterName}`
+                    : `/wallet/${owner}`
+                }
+                title={session?.user?.id == owner ? "You! 😎" : owner}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {twitterName
+                  ? `@${twitterName}`
+                  : bonfidaName
+                  ? `${bonfidaName}.sol`
+                  : shortenedAddress(owner)}
+              </a>
               <Square2StackIcon
                 className="w-5 h-5 cursor-pointer text-indigo-400"
                 onClick={async () => {
