@@ -56,7 +56,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
         className={classNames(
           "mt-4",
           view === ViewType.Grid
-            ? "grid gap-8 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5"
+            ? "grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-6"
             : "flex flex-col"
         )}
       >
@@ -104,7 +104,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                 </div>
                 <span
                   className={classNames(
-                    "w-full block truncate text-white",
+                    "w-full block truncate text-white group-hover:text-indigo-300",
                     view === ViewType.Grid
                       ? "text-center text-xl mt-2"
                       : "text-left text-sm sm:text-base"
