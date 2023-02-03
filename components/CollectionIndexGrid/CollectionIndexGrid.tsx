@@ -76,7 +76,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, maxCollectionSize }) => {
                   className={classNames(
                     "aspect-1 rounded-lg overflow-hidden bg-indigo-500 bg-opacity-5",
                     view === ViewType.Grid
-                      ? "w-full group-hover:scale-105 relative transition-transform duration-300"
+                      ? "w-full relative"
                       : "w-[80px] flex justify-center items-center"
                   )}
                 >
@@ -93,7 +93,12 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, maxCollectionSize }) => {
                     }
                     alt={item.name}
                     data-orig-url={item.imageURL ?? ""}
-                    className="mx-auto w-full sm:w-auto"
+                    className={classNames(
+                      "mx-auto w-full sm:w-auto",
+                      view === ViewType.Grid
+                        ? "absolute group-hover:scale-125 transition-transform duration-300"
+                        : ""
+                    )}
                     loading="lazy"
                   />
                 </div>
@@ -101,7 +106,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, maxCollectionSize }) => {
                   className={classNames(
                     "w-full block truncate text-white",
                     view === ViewType.Grid
-                      ? "text-center text-xl mt-2 relative group-hover:translate-y-1 transition-transform duration-300"
+                      ? "text-center text-xl mt-2"
                       : "text-left"
                   )}
                 >
@@ -111,7 +116,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, maxCollectionSize }) => {
                   className={classNames(
                     "font-light text-indigo-400",
                     view === ViewType.Grid
-                      ? "w-full text-sm group-hover:translate-y-1 transition-transform duration-300"
+                      ? "w-full text-sm"
                       : "w-[20%] text-right"
                   )}
                 >
