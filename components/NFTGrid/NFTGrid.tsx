@@ -19,10 +19,10 @@ const NFTGrid: React.FC<Props> = ({ nfts }) => {
         return (
           <Link href={`/nft/${nft.mint}`} key={nft.mint}>
             <a
-              className="text-center cursor-pointer block"
+              className="text-center cursor-pointer block group"
               title={shortenedAddress(nft.mint)}
             >
-              <div className="w-full aspect-1 rounded-lg overflow-hidden flex justify-center items-center bg-indigo-500 bg-opacity-5">
+              <div className="w-full relative aspect-1 rounded-lg overflow-hidden flex justify-center items-center bg-indigo-500 bg-opacity-5">
                 <LoadingImage
                   src={proxyImgUrl(imgURL, 320, 320)}
                   loader={
@@ -36,11 +36,11 @@ const NFTGrid: React.FC<Props> = ({ nfts }) => {
                   }
                   alt={name}
                   data-orig-url={imgURL}
-                  className="mx-auto w-full sm:w-auto"
+                  className="mx-auto w-full sm:w-auto absolute group-hover:scale-125 transition-transform duration-300"
                   loading="lazy"
                 />
               </div>
-              <span className="text-center w-full block mt-2 truncate">
+              <span className="text-center w-full block mt-2 truncate text-white group-hover:text-indigo-300">
                 {name}
               </span>
             </a>
