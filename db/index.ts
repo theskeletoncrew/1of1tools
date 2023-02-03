@@ -1,7 +1,7 @@
 import { Firestore } from "@google-cloud/firestore";
 import { randomUUID } from "crypto";
 import { Account, DiscordAccount, DiscordGuild } from "models/account";
-import { Collection } from "models/collection";
+import { Collection, CollectionFloor } from "models/collection";
 import {
   DialectCreatorNotificationSetting,
   DialectNftNotificationSetting,
@@ -353,16 +353,20 @@ export async function setDiscordGuilds(
 }
 
 export async function getBoutiqueCollections(
-  cursor: string | null | undefined
+  cursor: string | null | undefined,
+  limit: number | null = COLLECTIONS_PER_PAGE
 ): Promise<Result<Collection[], Error>> {
   try {
     let query = db
       .collection("boutique-collections")
       .where("approved", "==", true)
-      .limit(COLLECTIONS_PER_PAGE)
       .orderBy("name");
+
     if (cursor) {
       query = query.startAfter(cursor);
+    }
+    if (limit !== null) {
+      query = query.limit(limit);
     }
 
     const snapshot = await query.get();
@@ -372,7 +376,7 @@ export async function getBoutiqueCollections(
       collection.slug = doc.id;
       return collection;
     });
-    console.log(collections);
+
     return ok(collections);
   } catch (error) {
     return err(error as Error);
@@ -426,6 +430,30 @@ export async function addBoutiqueCollection(
       .set(collectionDetails);
 
     return ok(null);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function setBoutiqueCollectionFloor(
+  slug: string,
+  floor: CollectionFloor | null
+): Promise<Result<null, Error>> {
+  try {
+    const existingCollection = await db
+      .collection("boutique-collections")
+      .doc(encodeURIComponent(slug))
+      .get();
+
+    if (existingCollection.exists) {
+      await db
+        .collection("boutique-collections")
+        .doc(slug)
+        .update({ floor: floor });
+      return ok(null);
+    } else {
+      return err(new Error(`Collection does not exist for ${slug}`));
+    }
   } catch (error) {
     return err(error as Error);
   }

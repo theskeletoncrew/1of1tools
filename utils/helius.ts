@@ -1,42 +1,43 @@
 import { EnrichedTransaction } from "models/enrichedTransaction";
+import { Source, TransactionType } from "helius-sdk";
 
 export const humanReadableEventType = (eventType: string) => {
   switch (eventType) {
-    case "NFT_BID":
+    case TransactionType.NFT_BID:
       return "Bid";
-    case "NFT_BID_CANCELLED":
+    case TransactionType.NFT_BID_CANCELLED:
       return "Cancel Bid";
-    case "NFT_LISTING":
+    case TransactionType.NFT_LISTING:
       return "Listing";
-    case "NFT_CANCEL_LISTING":
+    case TransactionType.NFT_CANCEL_LISTING:
       return "Cancel Listing";
-    case "NFT_SALE":
+    case TransactionType.NFT_SALE:
       return "Sale";
-    case "NFT_MINT":
+    case TransactionType.NFT_MINT:
       return "Mint";
-    case "NFT_AUCTION_CREATED":
+    case TransactionType.NFT_AUCTION_CREATED:
       return "Auction Created";
-    case "NFT_AUCTION_UPDATED":
+    case TransactionType.NFT_AUCTION_UPDATED:
       return "Auction Updated";
-    case "NFT_AUCTION_CANCELLED":
+    case TransactionType.NFT_AUCTION_CANCELLED:
       return "Auction Cancelled";
-    case "NFT_PARTICIPATION_REWARD":
+    case TransactionType.NFT_PARTICIPATION_REWARD:
       return "Participation Reward";
-    case "NFT_MINT_REJECTED":
+    case TransactionType.NFT_MINT_REJECTED:
       return "Mint Rejected";
-    case "NFT_GLOBAL_BID":
+    case TransactionType.NFT_GLOBAL_BID:
       return "Global Bid";
-    case "NFT_GLOBAL_BID_CANCELLED":
+    case TransactionType.NFT_GLOBAL_BID_CANCELLED:
       return "Global Bid Cancelled";
-    case "BURN":
+    case TransactionType.BURN:
       return "Burn";
-    case "BURN_NFT":
+    case TransactionType.BURN_NFT:
       return "Burn";
-    case "TRANSFER":
+    case TransactionType.TRANSFER:
       return "Transfer";
-    case "STAKE_TOKEN":
+    case TransactionType.STAKE_TOKEN:
       return "Stake";
-    case "UNSTAKE_TOKEN":
+    case TransactionType.UNSTAKE_TOKEN:
       return "Unstake";
   }
   return eventType;
@@ -44,35 +45,35 @@ export const humanReadableEventType = (eventType: string) => {
 
 export const humanReadableSource = (source: string) => {
   switch (source) {
-    case "CANDY_MACHINE_V1":
+    case Source.CANDY_MACHINE_V1:
       return "Candy Machine (V1)";
-    case "CANDY_MACHINE_V2":
+    case Source.CANDY_MACHINE_V2:
       return "Candy Machine (V2)";
-    case "CANDY_MACHINE_V3":
+    case Source.CANDY_MACHINE_V3:
       return "Candy Machine (V3)";
-    case "FORM_FUNCTION":
+    case Source.FORM_FUNCTION:
       return "Formfunction";
-    case "EXCHANGE_ART":
+    case Source.EXCHANGE_ART:
       return "Exchange Art";
-    case "MAGIC_EDEN":
+    case Source.MAGIC_EDEN:
       return "Magic Eden";
-    case "SOLANART":
+    case Source.SOLANART:
       return "Solanart";
-    case "HYPERSPACE":
+    case Source.HYPERSPACE:
       return "Hyperspace";
-    case "SOLSEA":
+    case Source.SOLSEA:
       return "SolSea";
-    case "YAWWW":
+    case Source.YAWWW:
       return "Yawww";
-    case "DIGITAL_EYES":
+    case Source.DIGITAL_EYES:
       return "Digital Eyes";
-    case "TENSOR":
+    case Source.TENSOR:
       return "Tensor";
-    case "METAPLEX":
+    case Source.METAPLEX:
       return "Metaplex";
-    case "SOLANA_PROGRAM_LIBRARY":
+    case Source.SOLANA_PROGRAM_LIBRARY:
       return "Solana Program Library";
-    case "SYSTEM_PROGRAM":
+    case Source.SYSTEM_PROGRAM:
       return "System Program";
   }
   return source;
@@ -80,35 +81,35 @@ export const humanReadableSource = (source: string) => {
 
 export const humanReadableSourceSm = (source: string) => {
   switch (source) {
-    case "CANDY_MACHINE_V1":
+    case Source.CANDY_MACHINE_V1:
       return "CM1";
-    case "CANDY_MACHINE_V2":
+    case Source.CANDY_MACHINE_V2:
       return "CM2";
-    case "CANDY_MACHINE_V3":
+    case Source.CANDY_MACHINE_V3:
       return "CM3";
-    case "FORM_FUNCTION":
+    case Source.FORM_FUNCTION:
       return "FF";
-    case "EXCHANGE_ART":
+    case Source.EXCHANGE_ART:
       return "EA";
-    case "MAGIC_EDEN":
+    case Source.MAGIC_EDEN:
       return "ME";
-    case "SOLANART":
+    case Source.SOLANART:
       return "SLA";
-    case "HYPERSPACE":
+    case Source.HYPERSPACE:
       return "HYP";
-    case "SOLSEA":
+    case Source.SOLSEA:
       return "SS";
-    case "YAWWW":
+    case Source.YAWWW:
       return "YAW";
-    case "DIGITAL_EYES":
+    case Source.DIGITAL_EYES:
       return "DE";
-    case "TENSOR":
+    case Source.TENSOR:
       return "TEN";
-    case "METAPLEX":
+    case Source.METAPLEX:
       return "MPL";
-    case "SOLANA_PROGRAM_LIBRARY":
+    case Source.SOLANA_PROGRAM_LIBRARY:
       return "SPL";
-    case "SYSTEM_PROGRAM":
+    case Source.SYSTEM_PROGRAM:
       return "SYS";
   }
   return source;
@@ -116,33 +117,33 @@ export const humanReadableSourceSm = (source: string) => {
 
 export const humanReadableEventPastTense = (eventType: string) => {
   switch (eventType) {
-    case "NFT_BID":
+    case TransactionType.NFT_BID:
       return "New bid";
-    case "NFT_BID_CANCELLED":
+    case TransactionType.NFT_BID_CANCELLED:
       return "Cancelled bid";
-    case "NFT_LISTING":
+    case TransactionType.NFT_LISTING:
       return "New listing";
-    case "NFT_CANCEL_LISTING":
+    case TransactionType.NFT_CANCEL_LISTING:
       return "Cancelled listing";
-    case "NFT_SALE":
+    case TransactionType.NFT_SALE:
       return "New sale";
-    case "NFT_MINT":
+    case TransactionType.NFT_MINT:
       return "New mint";
-    case "NFT_AUCTION_CREATED":
+    case TransactionType.NFT_AUCTION_CREATED:
       return "New auction";
-    case "NFT_AUCTION_UPDATED":
+    case TransactionType.NFT_AUCTION_UPDATED:
       return "Updated auction";
-    case "NFT_AUCTION_CANCELLED":
+    case TransactionType.NFT_AUCTION_CANCELLED:
       return "Cancelled auction";
-    case "BURN":
+    case TransactionType.BURN:
       return "NFT Burned";
-    case "BURN_NFT":
+    case TransactionType.BURN_NFT:
       return "NFT Burned";
-    case "TRANSFER":
+    case TransactionType.TRANSFER:
       return "NFT transferred";
-    case "STAKE_TOKEN":
+    case TransactionType.STAKE_TOKEN:
       return "NFT staked";
-    case "UNSTAKE_TOKEN":
+    case TransactionType.UNSTAKE_TOKEN:
       return "NFT unstaked";
   }
   return eventType;
@@ -153,24 +154,26 @@ export const urlForSource = (
   nftAddress: string
 ): string | null => {
   switch (source) {
-    case "FORM_FUNCTION":
+    case Source.FORM_FUNCTION:
       // not predictable, but resolves if using a fake username
       return `https://formfunction.xyz/@1of1tools/${nftAddress}`;
-    case "EXCHANGE_ART":
+    case Source.EXCHANGE_ART:
       return `https://exchange.art/single/${nftAddress}`;
-    case "MAGIC_EDEN":
+    case Source.MAGIC_EDEN:
       return `https://magiceden.io/item-details/${nftAddress}`;
-    case "SOLANART":
+    case Source.SOLANART:
       return `https://solanart.io/nft/${nftAddress}`;
-    case "HYPERSPACE":
+    case Source.HYPERSPACE:
       return `https://hyperspace.xyz/token/${nftAddress}`;
-    case "SOLSEA":
+    case Source.SOLSEA:
       return `https://solsea.io/n/${nftAddress}`;
-    case "YAWWW":
+    case Source.OPENSEA:
+      return `https://opensea.io/assets/solana/${nftAddress}`;
+    case Source.YAWWW:
       return null; // not predictable (uses a different id for each listing)
-    case "DIGITAL_EYES":
+    case Source.DIGITAL_EYES:
       return null; // not predictable format
-    case "TENSOR":
+    case Source.TENSOR:
       return `https://www.tensor.trade/item/${nftAddress}`;
     default:
       return null;
