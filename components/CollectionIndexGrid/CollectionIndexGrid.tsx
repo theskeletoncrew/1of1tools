@@ -13,7 +13,7 @@ import { useState } from "react";
 
 interface Props {
   items: Collection[];
-  maxCollectionSize: number;
+  subtitle: string;
 }
 
 enum ViewType {
@@ -21,14 +21,14 @@ enum ViewType {
   Grid,
 }
 
-const CollectionIndexGrid: React.FC<Props> = ({ items, maxCollectionSize }) => {
+const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
   const [view, setView] = useState<ViewType>(ViewType.Grid);
 
   return (
     <div className="mx-1">
       <div className="flex items-center justify-between">
-        <h3 className="pl-5 text-indigo-400">
-          Hyped collections of {maxCollectionSize} NFTs or less
+        <h3 className="pl-5 text-indigo-400 text-sm sm:text-base">
+          {subtitle}
         </h3>
         <div className="mr-3 border border-1 text-indigo-600 border-indigo-600 rounded-lg flex gap-0 items-center justify-center">
           <button className="py-2 px-4" onClick={() => setView(ViewType.Grid)}>
@@ -107,17 +107,17 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, maxCollectionSize }) => {
                     "w-full block truncate text-white",
                     view === ViewType.Grid
                       ? "text-center text-xl mt-2"
-                      : "text-left"
+                      : "text-left text-sm sm:text-base"
                   )}
                 >
                   {item.name}
                 </span>
                 <span
                   className={classNames(
-                    "font-light text-indigo-400",
+                    "font-light text-indigo-400 text-sm",
                     view === ViewType.Grid
-                      ? "w-full text-sm"
-                      : "w-[20%] text-right"
+                      ? "w-full"
+                      : "w-[33%] sm:w-[20%] text-right"
                   )}
                 >
                   {item.mintAddresses.length} NFTs

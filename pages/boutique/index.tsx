@@ -191,7 +191,7 @@ const IndexPage: NextPage = () => {
               <a
                 href="#"
                 onClick={openSubmitCollection}
-                className="border border-1 border-indigo-600 bg-indigo-800 text-white rounded-xl px-6 py-3 hover:bg-indigo-600 hover:text-white"
+                className="hidden sm:inline border border-1 border-indigo-600 bg-indigo-800 text-white rounded-xl px-6 py-3 hover:bg-indigo-600 hover:text-white"
               >
                 Submit a Collection
               </a>
@@ -210,7 +210,7 @@ const IndexPage: NextPage = () => {
             >
               <CollectionIndexGrid
                 items={collections}
-                maxCollectionSize={MAX_BOUTIQUE_COLLECTION_SIZE}
+                subtitle={`Hyped collections of ${MAX_BOUTIQUE_COLLECTION_SIZE} NFTs or less`}
               />
             </InfiniteScroll>
           ) : isLoading ? (
