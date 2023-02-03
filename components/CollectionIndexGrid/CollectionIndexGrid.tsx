@@ -27,10 +27,10 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
   return (
     <div className="mx-1">
       <div className="flex items-center justify-between">
-        <h3 className="pl-5 text-indigo-400 text-sm sm:text-base">
+        <h3 className="sm:pl-5 text-indigo-400 text-xs sm:text-base">
           {subtitle}
         </h3>
-        <div className="mr-3 border border-1 text-indigo-600 border-indigo-600 rounded-lg flex gap-0 items-center justify-center">
+        <div className="sm:mr-3 border border-1 text-indigo-600 border-indigo-600 rounded-lg flex gap-0 items-center justify-center">
           <button className="py-2 px-4" onClick={() => setView(ViewType.Grid)}>
             <Squares2X2Icon
               className={classNames(
