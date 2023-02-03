@@ -12,6 +12,7 @@ import { network } from "utils/network";
 import { useSession } from "next-auth/react";
 import { CheckBadgeIcon, Square2StackIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
+import Link from "next/link";
 
 interface Props {
   onChainData: NFTMetadataOnChain;
@@ -57,6 +58,18 @@ const NFTDetailsTable: React.FC<Props> = ({
                 toast.success("Copied!");
               }}
             />
+            <Link
+              href={`https://solscan.io/account/${onChainData.mint.toString()}`}
+            >
+              <a target="_blank" rel="noreferrer">
+                <img
+                  src="/images/solscan.png"
+                  alt="Solscan"
+                  width="14"
+                  height="14"
+                />
+              </a>
+            </Link>
           </td>
         </tr>
         {onChainData.collection && (
@@ -71,12 +84,26 @@ const NFTDetailsTable: React.FC<Props> = ({
               <Square2StackIcon
                 className="w-5 h-5 cursor-pointer text-indigo-400"
                 onClick={async () => {
-                  await navigator.clipboard.writeText(
-                    onChainData.collection?.key ?? ""
-                  );
-                  toast.success("Copied!");
+                  if (onChainData.collection) {
+                    await navigator.clipboard.writeText(
+                      onChainData.collection.key
+                    );
+                    toast.success("Copied!");
+                  }
                 }}
               />
+              <Link
+                href={`https://solscan.io/account/${onChainData.collection.key}`}
+              >
+                <a target="_blank" rel="noreferrer">
+                  <img
+                    src="/images/solscan.png"
+                    alt="Solscan"
+                    width="14"
+                    height="14"
+                  />
+                </a>
+              </Link>
             </td>
           </tr>
         )}
@@ -91,8 +118,8 @@ const NFTDetailsTable: React.FC<Props> = ({
           <tr>
             <td className="pr-10">Owner:</td>
             <td className="text-right text-indigo-300 flex items-center justify-end gap-1">
+              {session?.user?.id == owner ? "You! 😎 - " : ""}
               <a href={`/wallet/${owner}`}>{shortenedAddress(owner)}</a>
-              {session?.user?.id == owner ? " - You! 😎" : ""}
               <Square2StackIcon
                 className="w-5 h-5 cursor-pointer text-indigo-400"
                 onClick={async () => {
@@ -100,6 +127,16 @@ const NFTDetailsTable: React.FC<Props> = ({
                   toast.success("Copied!");
                 }}
               />
+              <Link href={`https://solscan.io/account/${owner}`}>
+                <a target="_blank" rel="noreferrer">
+                  <img
+                    src="/images/solscan.png"
+                    alt="Solscan"
+                    width="14"
+                    height="14"
+                  />
+                </a>
+              </Link>
             </td>
           </tr>
         )}
@@ -122,6 +159,18 @@ const NFTDetailsTable: React.FC<Props> = ({
                 toast.success("Copied!");
               }}
             />
+            <Link
+              href={`https://solscan.io/account/${onChainData.updateAuthority.toString()}`}
+            >
+              <a target="_blank" rel="noreferrer">
+                <img
+                  src="/images/solscan.png"
+                  alt="Solscan"
+                  width="14"
+                  height="14"
+                />
+              </a>
+            </Link>
           </td>
         </tr>
         {nft && (
@@ -176,6 +225,18 @@ const NFTDetailsTable: React.FC<Props> = ({
                       toast.success("Copied!");
                     }}
                   />
+                  <Link
+                    href={`https://solscan.io/account/${creator.address.toString()}`}
+                  >
+                    <a target="_blank" rel="noreferrer">
+                      <img
+                        src="/images/solscan.png"
+                        alt="Solscan"
+                        width="14"
+                        height="14"
+                      />
+                    </a>
+                  </Link>
                 </div>
               );
             })}
