@@ -1,14 +1,13 @@
 import { Solana } from "@dialectlabs/blockchain-sdk-solana";
 import { DialectSdk } from "@dialectlabs/sdk";
 import {
-  getSubscribersToNotificationsForCreator,
-  getSubscribersToNotificationsForNft,
+  getDialectSubscribersToNotificationsForCreator,
+  getDialectSubscribersToNotificationsForNft,
 } from "db";
-import { EnrichedTransaction } from "models/enrichedTransaction";
 import {
-  CreatorNotificationSetting,
-  NftNotificationSetting,
-  NotificationSetting,
+  DialectCreatorNotificationSetting,
+  DialectNftNotificationSetting,
+  DialectNotificationSetting,
 } from "models/notificationSetting";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
@@ -81,7 +80,7 @@ apiRoute.get(async (req, res) => {
 
 const sendMessagesForRecipients = async (
   dialect: DialectSdk<Solana>,
-  recipients: NotificationSetting[],
+  recipients: DialectNotificationSetting[],
   message: string
 ) => {
   for (let j = 0; j < recipients.length; j++) {
@@ -102,8 +101,10 @@ const sendMessagesForRecipients = async (
 const nftSubscribers = async (
   mintAddress: string,
   source: string
-): Promise<NftNotificationSetting[]> => {
-  const recipientsRes = await getSubscribersToNotificationsForNft(mintAddress);
+): Promise<DialectNftNotificationSetting[]> => {
+  const recipientsRes = await getDialectSubscribersToNotificationsForNft(
+    mintAddress
+  );
   if (!recipientsRes.isOk()) {
     return [];
   }
@@ -115,8 +116,8 @@ const nftSubscribers = async (
 const creatorSubscribers = async (
   creatorAddress: string,
   source: string
-): Promise<CreatorNotificationSetting[]> => {
-  const recipientsRes = await getSubscribersToNotificationsForCreator(
+): Promise<DialectCreatorNotificationSetting[]> => {
+  const recipientsRes = await getDialectSubscribersToNotificationsForCreator(
     creatorAddress
   );
   if (!recipientsRes.isOk()) {
@@ -128,7 +129,7 @@ const creatorSubscribers = async (
 };
 
 const recipientIsValidForSource = (
-  recipient: NotificationSetting,
+  recipient: DialectNotificationSetting,
   source: string
 ): boolean => {
   if (!recipient.exchangeArtNotifications && source === "EXCHANGE_ART") {

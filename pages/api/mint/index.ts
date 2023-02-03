@@ -21,7 +21,7 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
 apiRoute.post(async (req, res) => {
   try {
     const session = await unstable_getServerSession(req, res, authOptions);
-    const uid = session?.user?.name;
+    const uid = session?.user?.id;
     if (!uid) {
       res.status(401).json({ message: "You must be logged in." });
       return;
@@ -38,9 +38,6 @@ apiRoute.post(async (req, res) => {
       res.status(400).json({ message: "Recipient email address is required." });
       return;
     }
-
-    console.log(metadata);
-    console.log(recipientEmail);
 
     const response = await fetch(
       `https://www.crossmint.com/api/2022-06-09/collections/default-solana/nfts`,

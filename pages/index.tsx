@@ -6,9 +6,7 @@ import { NftsByCreatorForm } from "components/Forms/NftsByCreator";
 import { NftsByWalletOwnerForm } from "components/Forms/NftsByWalletOwner";
 import { NftsByCollectionForm } from "components/Forms/NftsByCollection";
 import Layout from "components/Layout/Layout";
-import { SolanaAuthButton } from "components/Auth";
-import { shortPubKey } from "utils";
-import { signOut, useSession } from "next-auth/react";
+import AuthenticationRow from "components/AuthenticationRow/AuthenticationRow";
 
 enum SearchTab {
   creator,
@@ -27,8 +25,6 @@ const tabsMap: Map<SearchTab, string> = new Map([
 const Home: NextPage = () => {
   const [currentTab, setCurrentTab] = useState<SearchTab>(SearchTab.addresses);
 
-  const { data: session, status } = useSession();
-
   return (
     <Layout isHome={true}>
       <div className="h-full">
@@ -39,33 +35,7 @@ const Home: NextPage = () => {
         </Head>
 
         <div className="absolute top-5 right-5">
-          {session ? (
-            <div className="flex gap-3">
-              <span>
-                Signed in as:{" "}
-                <a href={`/wallet/${session.user?.name}`}>
-                  {shortPubKey(session.user?.name)}
-                </a>
-              </span>
-              <span>|</span>
-              <span>
-                <a href={`/mint`}>Mint an NFT</a>
-              </span>
-              <span>|</span>
-              <a
-                href="#"
-                onClick={() => {
-                  signOut();
-                }}
-              >
-                Logout
-              </a>
-            </div>
-          ) : status == "unauthenticated" ? (
-            <SolanaAuthButton />
-          ) : (
-            ""
-          )}
+          <AuthenticationRow />
         </div>
 
         <div className="mx-auto w-full sm:w-[600px]">

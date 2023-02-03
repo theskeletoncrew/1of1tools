@@ -11,7 +11,10 @@ import {
   createContext,
   useContext,
 } from "react";
-import { WalletReadyState } from "@solana/wallet-adapter-base";
+import {
+  WalletReadyState,
+  WalletSignMessageError,
+} from "@solana/wallet-adapter-base";
 import { toast } from "react-hot-toast";
 import { signIn, signOut } from "next-auth/react";
 import { signInMessage } from "components/Auth";
@@ -73,9 +76,18 @@ export const SolanaSignInProvider: FC<SolanaSignInProviderProps> = ({
           toast.error("Sign in failed.");
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       setIsSigningIn(false);
-      toast.error(`Signing failed: ${error?.message}`);
+      if (error instanceof Error) {
+        if (
+          error.name !== "WalletSignMessageError" ||
+          error.message !== "User rejected the request."
+        ) {
+          toast.error(`Signing failed: ${error.message}`);
+        }
+      } else {
+        console.log(error);
+      }
     }
   }, [domain, publicKey, requestUrl, callbackUrl, signMessage]);
 

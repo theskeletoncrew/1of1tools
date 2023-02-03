@@ -1,14 +1,24 @@
 import { Solana } from "@dialectlabs/blockchain-sdk-solana";
 import { DialectSdk } from "@dialectlabs/sdk";
 import {
-  getSubscribersToNotificationsForCreator,
-  getSubscribersToNotificationsForNft,
+  getDiscordSubscribersToNotificationsForCreator,
+  getDialectSubscribersToNotificationsForCreator,
+  getDialectSubscribersToNotificationsForNft,
 } from "db";
+import {
+  Client,
+  EmbedBuilder,
+  GatewayIntentBits,
+  TextChannel,
+} from "discord.js";
+import { Constants } from "models/constants";
 import { EnrichedTransaction } from "models/enrichedTransaction";
 import {
-  CreatorNotificationSetting,
-  NftNotificationSetting,
-  NotificationSetting,
+  DialectCreatorNotificationSetting,
+  DialectNftNotificationSetting,
+  DialectNotificationSetting,
+  DiscordGuildCreatorNotificationSetting,
+  DiscordGuildNotificationSetting,
 } from "models/notificationSetting";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
@@ -17,6 +27,7 @@ import {
   findOrCreateSolanaThread,
   sendMessage,
 } from "utils/dialect";
+import { discordEmbedForTransaction } from "utils/discord";
 import { humanReadableTransaction } from "utils/helius";
 
 function unique(array: any[], propertyName: string) {
@@ -24,6 +35,9 @@ function unique(array: any[], propertyName: string) {
     (e, i) => array.findIndex((a) => a[propertyName] === e[propertyName]) === i
   );
 }
+
+let dialect: DialectSdk<Solana> | undefined;
+let discordClient: Client | undefined;
 
 const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
   onError(error, req, res) {
@@ -46,8 +60,6 @@ apiRoute.post(async (req, res) => {
   try {
     const transactions = req.body as EnrichedTransaction[];
 
-    const dialect = createDialectSdk();
-
     for (let i = 0; i < transactions.length; i++) {
       const transaction = transactions[i]!;
 
@@ -61,7 +73,7 @@ apiRoute.post(async (req, res) => {
         continue;
       }
 
-      let recipients: NotificationSetting[] = [];
+      let recipients: DialectNotificationSetting[] = [];
 
       if (nft.mint && nft.mint.length > 0) {
         const recipientsSubscribedToNft = await nftSubscribers(
@@ -89,11 +101,42 @@ apiRoute.post(async (req, res) => {
         recipients = recipients.concat(recipientsSubscribedToCreator);
       }
 
-      await sendMessagesForRecipients(
+      if (!dialect) {
+        dialect = createDialectSdk();
+      }
+
+      await sendDialectMessagesForRecipients(
         dialect,
         unique(recipients, "deliveryAddress"),
         customDescription
       );
+
+      if (nftEvent.seller && nftEvent.seller.length > 0) {
+        const discordsSubscribedToCreator = await discordCreatorSubscribers(
+          nftEvent.seller,
+          transaction.source
+        );
+        if (discordsSubscribedToCreator.length > 0) {
+          console.log(
+            `found ${discordsSubscribedToCreator.length} discords subscribed to ${nftEvent.seller}`
+          );
+        }
+
+        const discordEmbed = discordEmbedForTransaction(transaction);
+
+        if (!discordClient) {
+          discordClient = new Client({
+            intents: [GatewayIntentBits.Guilds],
+          });
+          await discordClient.login(Constants.DISCORD_BOT_TOKEN);
+        }
+
+        await sendDiscordMessagesForRecipients(
+          discordClient,
+          discordsSubscribedToCreator,
+          discordEmbed
+        );
+      }
     }
 
     res.status(200).json({
@@ -107,9 +150,9 @@ apiRoute.post(async (req, res) => {
   }
 });
 
-const sendMessagesForRecipients = async (
+const sendDialectMessagesForRecipients = async (
   dialect: DialectSdk<Solana>,
-  recipients: NotificationSetting[],
+  recipients: DialectNotificationSetting[],
   message: string
 ) => {
   for (let j = 0; j < recipients.length; j++) {
@@ -127,11 +170,33 @@ const sendMessagesForRecipients = async (
   }
 };
 
+const sendDiscordMessagesForRecipients = async (
+  discordClient: Client,
+  recipients: DiscordGuildCreatorNotificationSetting[],
+  discordEmbed: EmbedBuilder
+) => {
+  for (let j = 0; j < recipients.length; j++) {
+    const recipient = recipients[j]!;
+
+    const guild = discordClient.guilds.cache.get(recipient.guildId);
+    if (!guild) {
+      continue;
+    }
+    const channel = guild.channels.cache.get(
+      recipient.channelId
+    ) as TextChannel;
+
+    await channel.send({ embeds: [discordEmbed] });
+  }
+};
+
 const nftSubscribers = async (
   mintAddress: string,
   source: string
-): Promise<NftNotificationSetting[]> => {
-  const recipientsRes = await getSubscribersToNotificationsForNft(mintAddress);
+): Promise<DialectNftNotificationSetting[]> => {
+  const recipientsRes = await getDialectSubscribersToNotificationsForNft(
+    mintAddress
+  );
   if (!recipientsRes.isOk()) {
     return [];
   }
@@ -143,8 +208,23 @@ const nftSubscribers = async (
 const creatorSubscribers = async (
   creatorAddress: string,
   source: string
-): Promise<CreatorNotificationSetting[]> => {
-  const recipientsRes = await getSubscribersToNotificationsForCreator(
+): Promise<DialectCreatorNotificationSetting[]> => {
+  const recipientsRes = await getDialectSubscribersToNotificationsForCreator(
+    creatorAddress
+  );
+  if (!recipientsRes.isOk()) {
+    return [];
+  }
+  return recipientsRes.value.filter((r) =>
+    recipientIsValidForSource(r, source)
+  );
+};
+
+const discordCreatorSubscribers = async (
+  creatorAddress: string,
+  source: string
+): Promise<DiscordGuildCreatorNotificationSetting[]> => {
+  const recipientsRes = await getDiscordSubscribersToNotificationsForCreator(
     creatorAddress
   );
   if (!recipientsRes.isOk()) {
@@ -156,7 +236,7 @@ const creatorSubscribers = async (
 };
 
 const recipientIsValidForSource = (
-  recipient: NotificationSetting,
+  recipient: DialectNotificationSetting | DiscordGuildNotificationSetting,
   source: string
 ): boolean => {
   if (!recipient.exchangeArtNotifications && source === "EXCHANGE_ART") {

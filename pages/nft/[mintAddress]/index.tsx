@@ -1,4 +1,4 @@
-import type { GetServerSideProps, NextPage } from "next";
+import type { NextPage } from "next";
 import Head from "next/head";
 import { OneOfOneToolsClient } from "api-client";
 import {
@@ -168,7 +168,7 @@ const NFTPage: NextPage = () => {
     exchangeArtNotifications: boolean,
     dialectAddress: string | undefined
   ) => {
-    if (!mintAddress || !session?.user?.name) {
+    if (!mintAddress || !session?.user?.id) {
       return;
     }
 
@@ -179,9 +179,9 @@ const NFTPage: NextPage = () => {
     setIsShowingNotificationsModal(false);
 
     const result =
-      await OneOfOneToolsClient.setNftNotificationSubscriptionSettings(
+      await OneOfOneToolsClient.setDialectNftNotificationSubscriptionSettings(
         mintAddress,
-        dialectAddress ?? session.user.name,
+        dialectAddress ?? session.user.id,
         formfunctionNotifications,
         exchangeArtNotifications
       );
@@ -200,7 +200,7 @@ const NFTPage: NextPage = () => {
       subscriberAddress: string
     ) => {
       const result =
-        await OneOfOneToolsClient.nftNotificationSubscriptionSettings(
+        await OneOfOneToolsClient.dialectNFTNotificationSubscriptionSettings(
           mintAddress
         );
       if (result.isOk()) {
@@ -216,8 +216,8 @@ const NFTPage: NextPage = () => {
         toast.error(result.error.message);
       }
     };
-    if (session?.user?.name && mintAddress) {
-      loadNotificationSettings(mintAddress, session.user.name);
+    if (session?.user?.id && mintAddress) {
+      loadNotificationSettings(mintAddress, session.user.id);
     }
   }, [session, mintAddress]);
 
@@ -309,7 +309,7 @@ const NFTPage: NextPage = () => {
               subtitle={offChainData?.description}
             />
 
-            {session && session.user?.name && didLoadNotificationSettings && (
+            {session && session.user?.id && didLoadNotificationSettings && (
               <>
                 <a
                   href="#"
@@ -370,7 +370,7 @@ const NFTPage: NextPage = () => {
                     )}
                   </div>
 
-                  {session?.user?.name == owner && wallet && nft && (
+                  {session?.user?.id == owner && wallet && nft && (
                     <div className="px-4 pt-3 pb-4 mb-4 sm:mb-3 rounded-lg bg-white bg-opacity-5 focus:outline-none">
                       <NFTOwnerControls
                         nft={nft}
@@ -381,7 +381,7 @@ const NFTPage: NextPage = () => {
                   )}
 
                   {onChainData &&
-                    session?.user?.name == onChainData.updateAuthority &&
+                    session?.user?.id == onChainData.updateAuthority &&
                     wallet &&
                     nft && (
                       <div className="px-4 pt-3 pb-4 mb-4 sm:mb-3 rounded-lg bg-white bg-opacity-5 focus:outline-none">
@@ -425,7 +425,8 @@ const NFTPage: NextPage = () => {
             saveNotificationSettings={(
               formfunctionNotifications,
               exchangeArtNotifications,
-              dialectAddress
+              dialectAddress,
+              discordSubscriptions // note we are intentionally ignoring here - creator only for now
             ) => {
               saveNotificationSettings(
                 formfunctionNotifications,

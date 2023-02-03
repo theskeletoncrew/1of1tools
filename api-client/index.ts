@@ -3,7 +3,12 @@ import { OneofOneToolsAPIError } from "models/apiError";
 import { NFTMetadata } from "models/nftMetadata";
 import { NFTEvent } from "models/nftEvent";
 import { PaginationToken } from "models/paginationToken";
-import { NotificationSetting } from "models/notificationSetting";
+import {
+  DialectNotificationSetting,
+  DiscordGuildNotificationSetting,
+} from "models/notificationSetting";
+import { Account } from "models/account";
+import { Collection } from "models/collection";
 
 export const SERVER_URL =
   process.env.NODE_ENV !== "production"
@@ -218,9 +223,9 @@ export namespace OneOfOneToolsClient {
     }
   }
 
-  export async function creatorNotificationSubscriptionSettings(
+  export async function dialectCreatorNotificationSubscriptionSettings(
     accountAddress: string
-  ): Promise<Result<NotificationSetting | null, Error>> {
+  ): Promise<Result<DialectNotificationSetting | null, Error>> {
     try {
       const response = await fetch(
         `${SERVER_URL}/api/notifications/creators/${accountAddress}`,
@@ -243,7 +248,7 @@ export namespace OneOfOneToolsClient {
     }
   }
 
-  export async function setCreatorNotificationSubscriptionSettings(
+  export async function setDialectCreatorNotificationSubscriptionSettings(
     accountAddress: string,
     deliveryAddress: string,
     formfunctionNotifications: boolean,
@@ -274,9 +279,62 @@ export namespace OneOfOneToolsClient {
     }
   }
 
-  export async function nftNotificationSubscriptionSettings(
+  export async function discordCreatorNotificationSubscriptionSettings(
+    accountAddress: string
+  ): Promise<Result<DiscordGuildNotificationSetting[], Error>> {
+    try {
+      const response = await fetch(
+        `${SERVER_URL}/api/notifications/creators/${accountAddress}?deliveryType=discord`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const result = await response.json();
+
+      if (response.ok) {
+        return ok(result.settings);
+      }
+      return err(new OneofOneToolsAPIError(response, result));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function setDiscordCreatorNotificationSubscriptionSettings(
+    accountAddress: string,
+    subscriptions: DiscordGuildNotificationSetting[]
+  ): Promise<Result<null, Error>> {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/notifications/creators`, {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          accountAddress: accountAddress,
+          guildSubscriptions: subscriptions,
+          deliveryType: "discord",
+        }),
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        return ok(null);
+      }
+      return err(new OneofOneToolsAPIError(response, result));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function dialectNFTNotificationSubscriptionSettings(
     mintAddress: string
-  ): Promise<Result<NotificationSetting | null, Error>> {
+  ): Promise<Result<DialectNotificationSetting | null, Error>> {
     try {
       const response = await fetch(
         `${SERVER_URL}/api/notifications/nfts/${mintAddress}`,
@@ -299,7 +357,7 @@ export namespace OneOfOneToolsClient {
     }
   }
 
-  export async function setNftNotificationSubscriptionSettings(
+  export async function setDialectNftNotificationSubscriptionSettings(
     mintAddress: string,
     deliveryAddress: string,
     formfunctionNotifications: boolean,
@@ -373,8 +431,6 @@ export namespace OneOfOneToolsClient {
       });
       const result = await response.json();
 
-      console.log(result);
-
       if (response.ok) {
         return ok({
           mintAddress: result.onChain.mintHash,
@@ -382,6 +438,206 @@ export namespace OneOfOneToolsClient {
         });
       }
       return err(new OneofOneToolsAPIError(response, result));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function createAccount(
+    isCreator: boolean,
+    username: string,
+    email: string | undefined,
+    discordId: string | undefined
+  ): Promise<Result<null, Error>> {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/accounts`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          isCreator: isCreator,
+          username: username,
+          email: email ?? null,
+          discordId: discordId ?? null,
+        }),
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        return ok(null);
+      }
+      return err(new OneofOneToolsAPIError(response, result));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function getCurrentUserAccount(): Promise<
+    Result<Account, Error>
+  > {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/accounts`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        return ok(result.account);
+      }
+      return err(new OneofOneToolsAPIError(response, result));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function connectDiscord(
+    discordAccessToken: string,
+    discordTokenType: string,
+    discordRefreshToken: string,
+    guildId: string,
+    cookie: string | undefined
+  ): Promise<Result<boolean, Error>> {
+    const response = await fetch(`${SERVER_URL}/api/accounts/connect/discord`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "Access-Control-Allow-Credentials": "true",
+        "Content-Type": "application/json",
+        Cookie: cookie ?? "",
+      },
+      body: JSON.stringify({
+        discordAccessToken: discordAccessToken,
+        discordTokenType: discordTokenType,
+        discordRefreshToken: discordRefreshToken,
+        guildId: guildId,
+      }),
+    });
+    const result = await response.json();
+    if (response.ok) {
+      return ok(result);
+    }
+    return err(new Error(result.message));
+  }
+
+  export async function selectDiscordChannel(
+    guildId: string,
+    channelId: string
+  ): Promise<Result<boolean, Error>> {
+    const response = await fetch(`${SERVER_URL}/api/accounts/discord-channel`, {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        guildId: guildId,
+        channelId: channelId,
+      }),
+    });
+    const result = await response.json();
+    if (response.ok) {
+      return ok(result);
+    }
+    return err(new Error(result.message));
+  }
+
+  export async function disconnectDiscordGuild(
+    guildId: string
+  ): Promise<Result<boolean, Error>> {
+    const response = await fetch(
+      `${SERVER_URL}/api/accounts/discord-guild/${guildId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const result = await response.json();
+    if (response.ok) {
+      return ok(result);
+    }
+    return err(new Error(result.message));
+  }
+
+  export async function boutiqueCollection(
+    slug: string
+  ): Promise<Result<Collection, Error>> {
+    try {
+      const response = await fetch(
+        `${SERVER_URL}/api/collections/boutique/${slug}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const responseJSON = await response.json();
+
+      if (response.ok) {
+        return ok(responseJSON.collection);
+      }
+      return err(new OneofOneToolsAPIError(response, responseJSON));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function boutiqueCollections(
+    cursor: string | null | undefined
+  ): Promise<Result<Collection[], Error>> {
+    try {
+      const response = await fetch(
+        `${SERVER_URL}/api/collections/boutique?cursor=${
+          cursor ? encodeURIComponent(cursor) : ""
+        }`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const responseJSON = await response.json();
+
+      if (response.ok) {
+        return ok(responseJSON.collections);
+      }
+      return err(new OneofOneToolsAPIError(response, responseJSON));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function addBoutiqueCollection(
+    collection: Collection
+  ): Promise<Result<Collection[], Error>> {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/collections/boutique`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ collection: collection }),
+      });
+      const responseJSON = await response.json();
+
+      if (response.ok) {
+        return ok(responseJSON.collections);
+      }
+      return err(new OneofOneToolsAPIError(response, responseJSON));
     } catch (e) {
       return err(new Error(e instanceof Error ? e.message : ""));
     }

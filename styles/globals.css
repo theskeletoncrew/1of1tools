@@ -60,6 +60,7 @@ a {
 }
 
 input[type="text"],
+input[type="email"],
 input[type="datetime-local"],
 input[type="number"],
 textarea {
@@ -109,6 +110,7 @@ button:disabled,
 }
 
 input[type="text"],
+input[type="email"],
 input[type="datetime-local"],
 input[type="number"],
 textarea {
@@ -128,7 +130,7 @@ label {
 }
 
 .ReactModal__Content {
-  @apply max-w-[640px] sm:min-w-[500px] max-h-[400px] bg-slate-600;
+  @apply max-w-[75%] sm:min-w-[500px] md:min-w-[720px] max-h-[90%] bg-slate-600;
 }
 
 .ReactModal__Content h2 {
@@ -152,6 +154,7 @@ label {
 }
 
 .ReactModal__Content input[type="text"],
+.ReactModal__Content input[type="email"],
 .ReactModal__Content input[type="number"],
 .ReactModal__Content input[type="datetime-local"],
 .ReactModal__Content textarea {

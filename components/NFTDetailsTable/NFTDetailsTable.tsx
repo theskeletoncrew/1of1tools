@@ -73,7 +73,7 @@ const NFTDetailsTable: React.FC<Props> = ({
             <td className="pr-10">Owner:</td>
             <td className="text-right text-indigo-300">
               <a href={`/wallet/${owner}`}>{shortenedAddress(owner)}</a>
-              {session?.user?.name == owner ? " - You! 😎" : ""}
+              {session?.user?.id == owner ? " - You! 😎" : ""}
             </td>
           </tr>
         )}
@@ -84,7 +84,7 @@ const NFTDetailsTable: React.FC<Props> = ({
             <a href={`/creator/${onChainData.updateAuthority.toString()}`}>
               {shortenedAddress(onChainData.updateAuthority)}
             </a>
-            {session?.user?.name == onChainData.updateAuthority
+            {session?.user?.id == onChainData.updateAuthority
               ? " - You! 😎"
               : ""}
           </td>

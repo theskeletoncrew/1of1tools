@@ -1,6 +1,10 @@
+import { OneOfOneToolsClient } from "api-client";
 import MainNavigation from "components/MainNavigation/MainNavigation";
-import React, { ReactNode } from "react";
-import { Toaster } from "react-hot-toast";
+import SignupModal from "components/SignupModal/SignupModal";
+import { create } from "domain";
+import { signOut, useSession } from "next-auth/react";
+import React, { ReactNode, useEffect, useState } from "react";
+import { toast, Toaster } from "react-hot-toast";
 
 type Props = {
   children?: ReactNode;
@@ -8,6 +12,40 @@ type Props = {
 };
 
 const Layout = ({ children, isHome = false }: Props) => {
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const { data: session, status } = useSession();
+
+  const saveAccount = async (
+    isCreator: boolean,
+    username: string,
+    email: string | undefined,
+    discordId: string | undefined
+  ): Promise<boolean> => {
+    const createRes = await OneOfOneToolsClient.createAccount(
+      isCreator,
+      username,
+      email,
+      discordId
+    );
+    if (createRes.isOk()) {
+      toast.success("Account saved");
+      return true;
+    } else {
+      toast.error("Failed to create account: " + createRes.error.message);
+      return false;
+    }
+  };
+
+  const cancelSignup = async () => {
+    signOut();
+  };
+
+  useEffect(() => {
+    if (session && !session.user?.account) {
+      setShowSignupModal(true);
+    }
+  }, [session]);
+
   return (
     <>
       <Toaster
@@ -27,6 +65,11 @@ const Layout = ({ children, isHome = false }: Props) => {
           {children}
         </div>
       </main>
+      <SignupModal
+        isShowing={showSignupModal}
+        close={cancelSignup}
+        saveAccount={saveAccount}
+      />
     </>
   );
 };

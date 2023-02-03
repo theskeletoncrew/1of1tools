@@ -7,6 +7,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { firebaseAdmin } from "utils/firebase";
 import { signInMessage, AUTH_DOMAIN } from "components/Auth";
 import { parsePayload } from "components/Auth";
+import { getAccountByWallet } from "db";
 
 const providers = [
   CredentialsProvider({
@@ -78,16 +79,23 @@ const providers = [
           throw new Error("invalid signature");
         }
 
-        return {
+        const accountRes = await getAccountByWallet(publicKey);
+        const user = {
           id: publicKey,
-          name: publicKey,
-        };
+          account: accountRes.isOk() ? accountRes.value : null,
+        } as User;
+        console.log("returning user:");
+        console.log(user);
+        return user;
       } catch (e) {
         return null;
       }
     },
   }),
 ];
+
+const useSecureCookies = process.env.NODE_ENV !== "development";
+const cookiePrefix = useSecureCookies ? "__Secure-" : "";
 
 export const authOptions: NextAuthOptions = {
   // https://next-auth.js.org/configuration/providers/credentials
@@ -98,9 +106,74 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async session({ session, token }) {
+      session.user = token.user as any;
       return session;
     },
+    async jwt({ token, user }) {
+      if (user) {
+        token.accessToken = user.id;
+        token.user = user;
+      }
+      return token;
+    },
   },
+  // cookies: {
+  //   sessionToken: {
+  //     name: `${cookiePrefix}next-auth.session-token`,
+  //     options: {
+  //       httpOnly: true,
+  //       sameSite: "lax",
+  //       path: "/",
+  //       secure: useSecureCookies,
+  //     },
+  //   },
+  //   callbackUrl: {
+  //     name: `${cookiePrefix}next-auth.callback-url`,
+  //     options: {
+  //       sameSite: "lax",
+  //       path: "/",
+  //       secure: useSecureCookies,
+  //     },
+  //   },
+  //   csrfToken: {
+  //     name: `__Host-next-auth.csrf-token`,
+  //     options: {
+  //       httpOnly: true,
+  //       sameSite: "lax",
+  //       path: "/",
+  //       secure: useSecureCookies,
+  //     },
+  //   },
+  //   pkceCodeVerifier: {
+  //     name: `${cookiePrefix}next-auth.pkce.code_verifier`,
+  //     options: {
+  //       httpOnly: true,
+  //       sameSite: "lax",
+  //       path: "/",
+  //       secure: useSecureCookies,
+  //       maxAge: 900,
+  //     },
+  //   },
+  //   state: {
+  //     name: `${cookiePrefix}next-auth.state`,
+  //     options: {
+  //       httpOnly: true,
+  //       sameSite: "lax",
+  //       path: "/",
+  //       secure: useSecureCookies,
+  //       maxAge: 900,
+  //     },
+  //   },
+  //   nonce: {
+  //     name: `${cookiePrefix}next-auth.nonce`,
+  //     options: {
+  //       httpOnly: true,
+  //       sameSite: "lax",
+  //       path: "/",
+  //       secure: useSecureCookies,
+  //     },
+  //   },
+  // },
   pages: {
     signIn: "/",
     signOut: "/",

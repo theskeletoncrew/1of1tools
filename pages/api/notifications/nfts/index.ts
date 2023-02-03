@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import { unstable_getServerSession } from "next-auth";
 import { authOptions } from "pages/api/auth/[...nextauth]";
-import { setNftNotificationsByUser } from "db";
+import { setDialectNftNotificationsByUser } from "db";
 import {
   createDialectSdk,
   findOrCreateSolanaThread,
@@ -25,7 +25,7 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
 apiRoute.put(async (req, res) => {
   try {
     const session = await unstable_getServerSession(req, res, authOptions);
-    const uid = session?.user?.name;
+    const uid = session?.user?.id;
     if (!uid) {
       res.status(401).json({ message: "You must be logged in." });
       return;
@@ -54,7 +54,7 @@ apiRoute.put(async (req, res) => {
       return;
     }
 
-    const notifRes = await setNftNotificationsByUser(
+    const notifRes = await setDialectNftNotificationsByUser(
       mintAddress,
       uid,
       deliveryAddress,

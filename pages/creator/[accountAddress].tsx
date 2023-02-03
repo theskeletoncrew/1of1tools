@@ -23,6 +23,11 @@ import {
   resolveWalletAddress,
 } from "utils/addressResolution";
 import NotificationSubscriptionModal from "components/NotificationSubscriptionModal/NotificationSubscriptionModal";
+import {
+  DiscordGuildCreatorNotificationSetting,
+  DiscordGuildNotificationSetting,
+} from "models/notificationSetting";
+import { DiscordGuild, DiscordGuildChannelIdPair } from "models/account";
 
 const CreatorPage: NextPage = () => {
   const [isLoading, setLoading] = useState(false);
@@ -51,6 +56,11 @@ const CreatorPage: NextPage = () => {
   const [exchangeArtNotifications, setExchangeArtNotifications] =
     useState(false);
   const [dialectAddress, setDialectAddress] = useState<string>();
+  const [discordGuilds, setDiscordGuilds] = useState<
+    DiscordGuild[] | null | undefined
+  >();
+  const [discordSubscriptions, setDiscordSubscriptions] =
+    useState<DiscordGuildChannelIdPair[]>();
 
   const [errorReason, setErrorReason] = useState<string>();
 
@@ -111,31 +121,56 @@ const CreatorPage: NextPage = () => {
   const saveNotificationSettings = async (
     formfunctionNotifications: boolean,
     exchangeArtNotifications: boolean,
-    dialectAddress: string | undefined
+    dialectAddress: string | undefined,
+    discordSubscriptions: DiscordGuildChannelIdPair[] | undefined
   ) => {
-    if (!accountAddress || !session?.user?.name) {
+    if (!accountAddress || !session?.user?.id) {
       return;
     }
 
     setFormfunctionNotifications(formfunctionNotifications);
     setExchangeArtNotifications(exchangeArtNotifications);
     setDialectAddress(dialectAddress);
+    setDiscordSubscriptions(discordSubscriptions);
 
     setIsShowingNotificationsModal(false);
 
     const result =
-      await OneOfOneToolsClient.setCreatorNotificationSubscriptionSettings(
+      await OneOfOneToolsClient.setDialectCreatorNotificationSubscriptionSettings(
         accountAddress,
-        dialectAddress ?? session.user.name,
+        dialectAddress ?? session.user.id,
         formfunctionNotifications,
         exchangeArtNotifications
       );
-    if (result.isOk()) {
-      toast.success("Notification preferences saved.");
-    } else {
+    if (!result.isOk()) {
       toast.error(
         "Notification preferences failed to save: " + result.error.message
       );
+      return;
+    }
+
+    if (discordGuilds && discordGuilds.length > 0) {
+      const subscriptions = discordSubscriptions?.map((pair) => ({
+        subscriberAddress: session.user.id,
+        guildId: pair.guildId,
+        channelId: pair.channelId,
+        formfunctionNotifications: formfunctionNotifications,
+        exchangeArtNotifications: exchangeArtNotifications,
+      }));
+      const result2 =
+        await OneOfOneToolsClient.setDiscordCreatorNotificationSubscriptionSettings(
+          accountAddress,
+          subscriptions ?? []
+        );
+      if (!result2.isOk()) {
+        console.log(result2.error.message);
+        toast.error(
+          "Notification preferences failed to save: " + result2.error.message
+        );
+        return;
+      }
+
+      toast.success("Notification preferences saved.");
     }
   };
 
@@ -156,24 +191,44 @@ const CreatorPage: NextPage = () => {
       subscriberAddress: string
     ) => {
       const result =
-        await OneOfOneToolsClient.creatorNotificationSubscriptionSettings(
+        await OneOfOneToolsClient.dialectCreatorNotificationSubscriptionSettings(
           accountAddress
         );
-      if (result.isOk()) {
-        setFormfunctionNotifications(
-          result.value?.exchangeArtNotifications ?? false
-        );
-        setExchangeArtNotifications(
-          result.value?.exchangeArtNotifications ?? false
-        );
-        setDialectAddress(result.value?.deliveryAddress ?? subscriberAddress);
-        setDidLoadNotificationSettings(true);
-      } else {
+      if (!result.isOk()) {
         toast.error(result.error.message);
+        return;
       }
+      setFormfunctionNotifications(
+        result.value?.exchangeArtNotifications ?? true
+      );
+      setExchangeArtNotifications(
+        result.value?.exchangeArtNotifications ?? true
+      );
+      setDialectAddress(result.value?.deliveryAddress ?? subscriberAddress);
+
+      const result2 =
+        await OneOfOneToolsClient.discordCreatorNotificationSubscriptionSettings(
+          accountAddress
+        );
+      if (!result2.isOk()) {
+        toast.error(result2.error.message);
+        return;
+      }
+      setDiscordSubscriptions(result2.value);
+
+      const result3 = await OneOfOneToolsClient.getCurrentUserAccount();
+      if (!result3.isOk()) {
+        toast.error(result3.error.message);
+        return;
+      }
+      setDiscordGuilds(
+        result3.value.discordGuilds?.filter((g) => g.selectedChannelId != null)
+      );
+
+      setDidLoadNotificationSettings(true);
     };
-    if (session?.user?.name && accountAddress) {
-      loadNotificationSettings(accountAddress, session.user.name);
+    if (session?.user?.id && accountAddress) {
+      loadNotificationSettings(accountAddress, session.user.id);
     }
   }, [session, accountAddress]);
 
@@ -225,7 +280,7 @@ const CreatorPage: NextPage = () => {
             right={twitterName ? <TwitterHandle handle={twitterName} /> : ""}
           />
 
-          {session && session.user?.name && didLoadNotificationSettings && (
+          {session && session.user?.id && didLoadNotificationSettings && (
             <>
               <a
                 href="#"
@@ -267,15 +322,19 @@ const CreatorPage: NextPage = () => {
           formfunctionNotifications={formfunctionNotifications}
           exchangeArtNotifications={exchangeArtNotifications}
           dialectAddress={dialectAddress}
+          discordGuilds={discordGuilds ?? undefined}
+          discordSubscriptions={discordSubscriptions}
           saveNotificationSettings={(
             formfunctionNotifications,
             exchangeArtNotifications,
-            dialectAddress
+            dialectAddress,
+            discordSubscriptions
           ) => {
             saveNotificationSettings(
               formfunctionNotifications,
               exchangeArtNotifications,
-              dialectAddress
+              dialectAddress,
+              discordSubscriptions
             );
           }}
         />

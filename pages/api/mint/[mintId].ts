@@ -21,7 +21,7 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
 apiRoute.get(async (req, res) => {
   try {
     const session = await unstable_getServerSession(req, res, authOptions);
-    const uid = session?.user?.name;
+    const uid = session?.user?.id;
     if (!uid) {
       res.status(401).json({ message: "You must be logged in." });
       return;

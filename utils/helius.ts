@@ -1,4 +1,4 @@
-import { shortenedAddress } from "utils";
+import { EnrichedTransaction } from "models/enrichedTransaction";
 
 export const humanReadableEventType = (eventType: string) => {
   switch (eventType) {
@@ -177,15 +177,18 @@ export const urlForSource = (
   }
 };
 
-export const humanReadableTransaction = (transaction: any): string => {
+export const humanReadableTransaction = (
+  transaction: EnrichedTransaction
+): string => {
   const source = transaction.source;
   const type = transaction.type;
   const nft =
     transaction.events.nft?.nfts?.length > 0
       ? transaction.events.nft?.nfts[0]
       : null;
-  const url = urlForSource(source, nft.mint);
-  return `${humanReadableEventPastTense(
+  const url = nft ? urlForSource(source, nft.mint) : null;
+  const description = `${humanReadableEventPastTense(
     transaction.type
   )} on ${humanReadableSource(source)}${url ? ": " + url : ""}`;
+  return description;
 };

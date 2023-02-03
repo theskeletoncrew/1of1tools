@@ -1,14 +1,29 @@
-export interface CreatorNotificationSetting extends NotificationSetting {
+export interface DialectCreatorNotificationSetting
+  extends DialectNotificationSetting {
   creatorAddress: string;
 }
 
-export interface NftNotificationSetting extends NotificationSetting {
+export interface DialectNftNotificationSetting
+  extends DialectNotificationSetting {
   mintAddress: string;
 }
 
-export interface NotificationSetting {
+export interface DialectNotificationSetting {
   subscriberAddress: string;
   deliveryAddress: string;
+  formfunctionNotifications: boolean;
+  exchangeArtNotifications: boolean;
+}
+
+export interface DiscordGuildCreatorNotificationSetting
+  extends DiscordGuildNotificationSetting {
+  creatorAddress: string;
+}
+
+export interface DiscordGuildNotificationSetting {
+  subscriberAddress: string;
+  guildId: string;
+  channelId: string;
   formfunctionNotifications: boolean;
   exchangeArtNotifications: boolean;
 }
