@@ -11,6 +11,7 @@
     "@bonfida/spl-name-service": "^0.1.62",
     "@dialectlabs/blockchain-sdk-solana": "^1.0.1",
     "@dialectlabs/sdk": "^1.5.2",
+    "@google-cloud/tasks": "^3.1.0",
     "@google/model-viewer": "^2.1.1",
     "@headlessui/react": "^1.7.3",
     "@heroicons/react": "^2.0.11",
