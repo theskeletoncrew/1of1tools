@@ -24,7 +24,7 @@ const NFTGrid: React.FC<Props> = ({ nfts }) => {
             >
               <div className="w-full relative aspect-1 rounded-lg overflow-hidden flex justify-center items-center bg-indigo-500 bg-opacity-5">
                 <LoadingImage
-                  src={proxyImgUrl(imgURL, 320, 320)}
+                  src={proxyImgUrl(imgURL, 640, 640)}
                   loader={
                     <div className="w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs animate-pulse"></div>
                   }

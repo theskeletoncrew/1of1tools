@@ -162,7 +162,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                 <Link href={`/boutique/${item.slug}`}>
                   <a>
                     <LoadingImage
-                      src={proxyImgUrl(item.imageURL ?? "", 320, 320)}
+                      src={proxyImgUrl(item.imageURL ?? "", 640, 640)}
                       loader={
                         <div className="w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs animate-pulse"></div>
                       }
