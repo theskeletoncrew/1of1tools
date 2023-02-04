@@ -116,13 +116,19 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
           className={
             view === ViewType.Grid
               ? "hidden"
-              : "flex mx-4 my-4 text-indigo-400 border-b border-indigo-300 pb-4"
+              : "flex mx-2 sm:mx-4 my-4 text-indigo-400 border-b border-indigo-300 pb-4"
           }
         >
-          <h3 className="w-[64%] text-xs sm:text-base">Collection Name</h3>
-          <div className="w-[12%] text-right">Current Supply</div>
-          <div className="w-[12%] text-right">Floor Price</div>
-          <div className="w-[12%] text-right">Total Volume</div>
+          <h3 className="flex-[3] pr-[80px]">Collection Name</h3>
+          <div className="flex-1 text-right hidden sm:block">
+            <span className="px-3">Supply</span>
+          </div>
+          <div className="flex-1 text-right">
+            <span className="px-3">Floor</span>
+          </div>
+          <div className="flex-1 text-right">
+            <span>Volume</span>
+          </div>
         </div>
         {items.map((item, i) => {
           const floorUrl =
@@ -137,7 +143,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                 "text-center flex items-center justify-center group relative",
                 view == ViewType.Grid
                   ? "flex-col"
-                  : "gap-y-4 hover:bg-indigo-300 hover:bg-opacity-5 p-4 rounded-2xl"
+                  : "gap-y-4 hover:bg-indigo-300 hover:bg-opacity-5 p-1 sm:p-4 rounded-2xl"
               )}
             >
               <div
@@ -177,10 +183,10 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
               </div>
               <span
                 className={classNames(
-                  "w-full block truncate",
+                  "block truncate",
                   view === ViewType.Grid
-                    ? "text-center text-xl mt-2"
-                    : "text-left text-sm sm:text-base"
+                    ? "w-full text-center text-xl mt-2"
+                    : "flex-[3] text-left text-sm sm:text-base"
                 )}
               >
                 <Link href={`/boutique/${item.slug}`}>
@@ -196,10 +202,10 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
               </span>
               <span
                 className={classNames(
-                  "font-light  text-sm",
+                  "font-light text-sm",
                   view === ViewType.Grid
                     ? "w-full"
-                    : "w-[12%] sm:w-[20%] text-right"
+                    : "hidden sm:block flex-1 text-right"
                 )}
               >
                 <Link href={`/boutique/${item.slug}`}>
@@ -216,9 +222,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
               <span
                 className={classNames(
                   "font-light text-sm",
-                  view === ViewType.Grid
-                    ? "w-full"
-                    : "w-[12%] sm:w-[20%] text-right"
+                  view === ViewType.Grid ? "w-full" : "flex-1 text-right"
                 )}
               >
                 <Link href={floorUrl ?? "#"}>
@@ -253,7 +257,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                           </svg>
                         </>
                       ) : (
-                        "No Listings"
+                        "-"
                       )}
                     </span>
                   </a>
@@ -262,9 +266,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
               <span
                 className={classNames(
                   "font-light text-sm",
-                  view === ViewType.Grid
-                    ? "hidden"
-                    : "w-[12%] sm:w-[20%] text-right"
+                  view === ViewType.Grid ? "hidden" : "flex-1 text-right"
                 )}
               >
                 <Link href={floorUrl ?? "#"}>
@@ -275,7 +277,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                     className={classNames(
                       "z-2 text-indigo-400",
                       view === ViewType.List
-                        ? "px-3 py-4 w-full h-full block"
+                        ? "py-4 w-full h-full block"
                         : "text-xs text-indigo-400 absolute top-2 right-2 bg-black px-2 py-1 rounded-lg bg-opacity-75"
                     )}
                   >
