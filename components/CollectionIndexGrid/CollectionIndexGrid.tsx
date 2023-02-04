@@ -112,6 +112,18 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
             : "flex flex-col"
         )}
       >
+        <div
+          className={
+            view === ViewType.Grid
+              ? "hidden"
+              : "flex mx-4 my-4 text-indigo-400 border-b border-indigo-300 pb-4"
+          }
+        >
+          <h3 className="w-[64%] text-xs sm:text-base">Collection Name</h3>
+          <div className="w-[12%] text-right">Current Supply</div>
+          <div className="w-[12%] text-right">Floor Price</div>
+          <div className="w-[12%] text-right">Total Volume</div>
+        </div>
         {items.map((item, i) => {
           const floorUrl =
             item.floor && item.floor.listing
@@ -187,7 +199,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                   "font-light  text-sm",
                   view === ViewType.Grid
                     ? "w-full"
-                    : "w-[33%] sm:w-[20%] text-right"
+                    : "w-[12%] sm:w-[20%] text-right"
                 )}
               >
                 <Link href={`/boutique/${item.slug}`}>
@@ -197,7 +209,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                       view === ViewType.List ? "px-3 py-4" : ""
                     )}
                   >
-                    {item.mintAddresses.length} NFTs
+                    {item.mintAddresses.length}
                   </a>
                 </Link>
               </span>
@@ -206,7 +218,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                   "font-light text-sm",
                   view === ViewType.Grid
                     ? "w-full"
-                    : "w-[33%] sm:w-[20%] text-right"
+                    : "w-[12%] sm:w-[20%] text-right"
                 )}
               >
                 <Link href={floorUrl ?? "#"}>
@@ -242,6 +254,50 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                         </>
                       ) : (
                         "No Listings"
+                      )}
+                    </span>
+                  </a>
+                </Link>
+              </span>
+              <span
+                className={classNames(
+                  "font-light text-sm",
+                  view === ViewType.Grid
+                    ? "hidden"
+                    : "w-[12%] sm:w-[20%] text-right"
+                )}
+              >
+                <Link href={floorUrl ?? "#"}>
+                  <a
+                    title={item.floor ? item.floor.name : "No Listings"}
+                    target={floorUrl ? "_blank" : "_self"}
+                    rel="noreferrer"
+                    className={classNames(
+                      "z-2 text-indigo-400",
+                      view === ViewType.List
+                        ? "px-3 py-4 w-full h-full block"
+                        : "text-xs text-indigo-400 absolute top-2 right-2 bg-black px-2 py-1 rounded-lg bg-opacity-75"
+                    )}
+                  >
+                    <span className="flex items-center justify-end gap-1 text-right">
+                      {item.totalVolume ? (
+                        <>
+                          {item.totalVolume.toLocaleString(undefined, {
+                            maximumFractionDigits: 0,
+                            minimumFractionDigits: 0,
+                          })}{" "}
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 20 20"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <use href="#solana-icon"></use>
+                          </svg>
+                        </>
+                      ) : (
+                        "-"
                       )}
                     </span>
                   </a>

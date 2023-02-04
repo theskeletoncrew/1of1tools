@@ -360,7 +360,7 @@ export async function getBoutiqueCollections(
     let query = db
       .collection("boutique-collections")
       .where("approved", "==", true)
-      .orderBy("name");
+      .orderBy("totalVolume", "desc");
 
     if (cursor) {
       query = query.startAfter(cursor);
@@ -440,20 +440,41 @@ export async function setBoutiqueCollectionFloor(
   floor: CollectionFloor | null
 ): Promise<Result<null, Error>> {
   try {
-    const existingCollection = await db
+    await db
       .collection("boutique-collections")
-      .doc(encodeURIComponent(slug))
-      .get();
+      .doc(slug)
+      .update({ floor: floor });
+    return ok(null);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
 
-    if (existingCollection.exists) {
-      await db
-        .collection("boutique-collections")
-        .doc(slug)
-        .update({ floor: floor });
-      return ok(null);
-    } else {
-      return err(new Error(`Collection does not exist for ${slug}`));
-    }
+export async function setBoutiqueCollectionFilters(
+  slug: string,
+  collectionAddress: string | null,
+  firstVerifiedCreator: string | null
+): Promise<Result<null, Error>> {
+  try {
+    await db.collection("boutique-collections").doc(slug).update({
+      collectionAddress: collectionAddress,
+      firstVerifiedCreator: firstVerifiedCreator,
+    });
+    return ok(null);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function setBoutiqueCollectionTotalVolume(
+  slug: string,
+  totalVolume: number
+): Promise<Result<null, Error>> {
+  try {
+    await db.collection("boutique-collections").doc(slug).update({
+      totalVolume: totalVolume,
+    });
+    return ok(null);
   } catch (error) {
     return err(error as Error);
   }

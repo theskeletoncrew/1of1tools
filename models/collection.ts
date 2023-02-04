@@ -12,6 +12,7 @@ export interface Collection {
   approved: boolean;
   mintAddresses: string[];
   floor?: CollectionFloor | null;
+  totalVolume?: number | null;
 }
 
 export interface CollectionFloor {
