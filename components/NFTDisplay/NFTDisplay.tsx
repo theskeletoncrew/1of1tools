@@ -41,7 +41,7 @@ const NFTDisplay: React.FC<Props> = ({ nft }) => {
   } else {
     return (
       <LoadingImage
-        src={proxyImgUrl(uri, 1024, 1024)}
+        src={proxyImgUrl(uri, 2048, 2048)}
         backupSrc={uri}
         loader={
           <div className="flex flex-col gap-2 justify-center items-center w-full h-[400px] rounded-xl bg-indigo-500 bg-opacity-10 text-xs animate-pulse">
