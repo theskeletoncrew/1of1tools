@@ -1,6 +1,7 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { Collection } from "models/collection";
+import { classNames } from "utils";
 
 interface Props {
   collection: Collection;
@@ -69,7 +70,14 @@ const CollectionStats: React.FC<Props> = ({ collection }) => {
         </div>
         <div className="flex flex-col flex-1">
           <label className="text-indigo-400 text-sm text-center">Floor</label>
-          <span className="text-xs text-center flex items-center justify-end gap-1">
+          <span
+            className={classNames(
+              "text-xs text-center flex items-center gap-1",
+              collection.floor && collection.floor.listing
+                ? "justify-end"
+                : "justify-center"
+            )}
+          >
             {collection.floor && collection.floor.listing ? (
               <>
                 {(
@@ -95,7 +103,7 @@ const CollectionStats: React.FC<Props> = ({ collection }) => {
         </div>
         <div className="flex flex-col flex-1">
           <label className="text-indigo-400 text-sm text-center">Volume</label>
-          <span className="text-xs flex items-center justify-end gap-1 text-right">
+          <span className="text-xs flex items-center justify-end gap-1">
             {collection.totalVolume ? (
               <>
                 {collection.totalVolume.toLocaleString(undefined, {
