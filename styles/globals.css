@@ -80,11 +80,6 @@ select {
   @apply px-4 py-[0.8rem] inline-flex items-center justify-center border shadow-sm leading-4 focus:ring-2;
 }
 
-header .button,
-header .walletButton {
-  @apply text-[9px] px-2 sm:text-xs sm:px-4;
-}
-
 .submitbutton {
   @apply inline-flex justify-center min-w-[200px] mx-auto;
 }

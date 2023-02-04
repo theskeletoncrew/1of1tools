@@ -1,17 +1,8 @@
 import React from "react";
 import { useSolanaSignIn } from "components/Auth";
-import { shortenedAddress } from "utils";
 
 export const SolanaAuthButton = () => {
-  const {
-    authenticate,
-    wallet,
-    walletNotSelected,
-    publicKey,
-    disconnectWallet,
-  } = useSolanaSignIn();
-
-  const pubKeySlice = publicKey ? shortenedAddress(publicKey.toString()) : null;
+  const { authenticate, wallet, walletNotSelected } = useSolanaSignIn();
 
   return (
     <div className="flex flex-col items-center">
@@ -19,7 +10,7 @@ export const SolanaAuthButton = () => {
         className="button walletButton thinbutton solana-auth-btn sign-in gap-2"
         onClick={() => authenticate()}
       >
-        {wallet && (
+        {wallet && !walletNotSelected && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             width={18}
@@ -29,17 +20,7 @@ export const SolanaAuthButton = () => {
           />
         )}{" "}
         Sign in
-        {/* {!walletNotSelected && pubKeySlice ? " with " + pubKeySlice : ""} */}
       </button>
-
-      {/* {wallet && (
-        <button
-          className="solana-auth-btn change-wallet text-[11px] font-display text-slate-400 bold mt-10 hover:underline"
-          onClick={() => disconnectWallet()}
-        >
-          or use a different wallet
-        </button>
-      )} */}
     </div>
   );
 };

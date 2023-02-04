@@ -11,12 +11,9 @@ import {
   createContext,
   useContext,
 } from "react";
-import {
-  WalletReadyState,
-  WalletSignMessageError,
-} from "@solana/wallet-adapter-base";
+import { WalletReadyState } from "@solana/wallet-adapter-base";
 import { toast } from "react-hot-toast";
-import { signIn, signOut } from "next-auth/react";
+import { getSession, signIn, signOut } from "next-auth/react";
 import { signInMessage } from "components/Auth";
 import { useRouter } from "next/router";
 
@@ -44,7 +41,6 @@ export const SolanaSignInProvider: FC<SolanaSignInProviderProps> = ({
     useWallet();
   const { setVisible } = useWalletModal();
   const [isSigningIn, setIsSigningIn] = useState<boolean>(false);
-  const router = useRouter();
 
   const authenticate = useCallback(async () => {
     setIsSigningIn(true);
@@ -77,7 +73,6 @@ export const SolanaSignInProvider: FC<SolanaSignInProviderProps> = ({
         }
       }
     } catch (error) {
-      setIsSigningIn(false);
       if (error instanceof Error) {
         if (
           error.name !== "WalletSignMessageError" ||
@@ -89,18 +84,25 @@ export const SolanaSignInProvider: FC<SolanaSignInProviderProps> = ({
         console.log(error);
       }
     }
+    setIsSigningIn(false);
   }, [domain, publicKey, requestUrl, callbackUrl, signMessage]);
 
-  useEffect(() => {
-    if (wallet?.readyState == WalletReadyState.Installed) {
-      connect();
-    }
-  }, [wallet?.readyState, connect]);
+  // useEffect(() => {
+  //   if (wallet?.readyState == WalletReadyState.Installed) {
+  //     connect();
+  //   }
+  // }, [wallet?.readyState, connect]);
 
   useEffect(() => {
     if (isSigningIn) {
       if (connected) {
-        authenticate();
+        const loadAndAuthenticate = async () => {
+          const session = await getSession();
+          if (!session || !session.user) {
+            authenticate();
+          }
+        };
+        loadAndAuthenticate();
       } else {
         openWalletModal();
       }
@@ -108,6 +110,7 @@ export const SolanaSignInProvider: FC<SolanaSignInProviderProps> = ({
   }, [connected, authenticate, isSigningIn]);
 
   const disconnectWallet = async () => {
+    setIsSigningIn(false);
     await disconnect();
     await signOut();
   };
@@ -121,7 +124,9 @@ export const SolanaSignInProvider: FC<SolanaSignInProviderProps> = ({
   return (
     <SolanaAuthContext.Provider
       value={{
-        authenticate: () => setIsSigningIn(true),
+        authenticate: () => {
+          setIsSigningIn(true);
+        },
         publicKey,
         wallet,
         walletNotSelected,
