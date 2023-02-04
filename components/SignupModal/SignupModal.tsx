@@ -40,12 +40,7 @@ const SignupModal: React.FC<Props> = ({ isShowing, close, saveAccount }) => {
 
       if (discordId !== undefined) {
         const parts = discordId.split("#");
-        if (
-          parts.length != 2 ||
-          parts[0]!.length < 1 ||
-          parts[1]!.length < 1 ||
-          parseInt(parts[1]!).toString() !== parts[1]
-        ) {
+        if (parts.length != 2 || parts[0]!.length < 1 || parts[1]!.length < 1) {
           throw new Error("Please enter a valid Discord Id.");
         }
       }
