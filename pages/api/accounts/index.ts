@@ -82,12 +82,7 @@ apiRoute.post(async (req, res) => {
     const discordId: string = req.body.discordId;
     if (discordId) {
       const parts = discordId.split("#");
-      if (
-        parts.length != 2 ||
-        parts[0]!.length < 1 ||
-        parts[1]!.length < 1 ||
-        parseInt(parts[1]!).toString() !== parts[1]
-      ) {
+      if (parts.length != 2 || parts[0]!.length < 1 || parts[1]!.length < 1) {
         res
           .status(400)
           .json({ message: "The provided Discord Id is invalid." });
