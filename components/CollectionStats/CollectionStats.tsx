@@ -69,7 +69,12 @@ const CollectionStats: React.FC<Props> = ({ collection }) => {
           </span>
         </div>
         <div className="flex flex-col flex-1">
-          <label className="text-indigo-400 text-sm text-center">Floor</label>
+          <label
+            className="text-indigo-400 text-sm text-center cursor-help"
+            title="Alpha: Note that some stale listings may appear"
+          >
+            Floor*
+          </label>
           <span
             className={classNames(
               "text-xs text-center flex items-center gap-1",

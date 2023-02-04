@@ -124,7 +124,12 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
             <span className="px-3">Items</span>
           </div>
           <div className="flex-1 text-right">
-            <span className="px-3">Floor</span>
+            <span
+              className="px-3 cursor-help"
+              title="Alpha: Note that some stale listings may appear"
+            >
+              Floor*
+            </span>
           </div>
           <div className="flex-1 text-right">
             <span>Volume</span>
