@@ -1,0 +1,67 @@
+.homeRow {
+  @apply font-display relative mb-10 mx-auto w-full;
+}
+
+.rowTitle {
+  @apply text-2xl mb-4 text-[#38BDF8] bg-gradient-to-r from-indigo-400 via-sky-400 to-indigo-400 bg-clip-text tracking-tighter text-transparent;
+}
+
+.rowDrop {
+  @apply rounded-lg overflow-hidden border-slate-500 border-[1px] border-opacity-30;
+}
+
+.rowDropDescription {
+  @apply block text-center py-3;
+}
+
+.rowDropTitle {
+  @apply text-base text-white mb-1;
+}
+
+.rowDropCategory {
+  @apply text-xs text-slate-400;
+}
+
+.rowDropImage {
+  @apply w-full aspect-[4/3] object-cover;
+}
+
+.dropImageWrapper {
+  @apply h-full md:w-[50%] bg-red-200 order-1 md:order-2 md:flex-shrink-0 overflow-hidden;
+}
+.dropImage {
+  @apply object-cover w-full h-full md:aspect-1;
+}
+
+.dropButton {
+  @apply hidden md:inline-flex text-sm px-4 py-2 min-h-[40px] w-[150px] font-display font-light text-slate-200 border-sky-800 rounded-md focus:outline-none focus:ring-sky-500 items-center justify-center border shadow-sm leading-4 focus:ring-2 bg-sky-700 hover:bg-sky-600 cursor-pointer;
+}
+
+.dropDescription {
+  @apply flex order-2 md:order-1 flex-col justify-center font-display md:w-1/2 md:max-h-[75%] text-left px-[5%] py-[3%] md:p-[8%];
+}
+.dropTitle {
+  @apply text-xl md:text-3xl mb-2;
+}
+.dropBody {
+  @apply text-sm md:text-base mb-2 md:mb-6 overflow-hidden;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3 !important;
+  -webkit-box-orient: vertical !important;
+}
+
+.rowDropNav {
+  @apply absolute top-1/2 w-10 h-10 z-10 text-white text-opacity-75 hover:text-opacity-100 cursor-pointer;
+}
+
+.rowDropNavPrev {
+  @apply -left-14;
+}
+
+.rowDropNavNext {
+  @apply -right-14;
+}
+
+.rowDropMetaDetail {
+  @apply mx-auto rounded-full inline-block px-2 text-[10px] font-mono font-bold;
+}

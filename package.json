@@ -46,6 +46,7 @@
     "react-infinite-scroll-component": "^6.1.0",
     "react-modal": "^3.16.1",
     "react-visibility-sensor": "^5.1.1",
+    "swiper": "^9.0.2",
     "tweetnacl-util": "^0.15.1",
     "yup": "^0.32.11"
   },

@@ -31,7 +31,6 @@ body {
   padding: 0;
   margin: 0;
   color: #fff;
-  min-height: 100vh;
 }
 
 body {
@@ -41,12 +40,6 @@ body {
   background-repeat: no-repeat;
   background-size: cover;
   @apply text-slate-100 font-display;
-}
-
-body > div:first-child,
-div#__next,
-div#__next > div {
-  min-height: 100vh;
 }
 
 a {

@@ -17,9 +17,13 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
 
 apiRoute.get(async (req, res) => {
   try {
-    const { cursor } = req.query;
+    const { cursor, limit: limitStr } = req.query;
+    const limit = parseInt(limitStr?.toString() ?? "0");
 
-    const collectionsRes = await getBoutiqueCollections(cursor?.toString());
+    const collectionsRes = await getBoutiqueCollections(
+      cursor?.toString(),
+      limit > 0 ? limit : null
+    );
     if (!collectionsRes.isOk()) {
       res
         .status(500)

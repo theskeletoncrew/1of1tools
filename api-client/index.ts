@@ -594,13 +594,14 @@ export namespace OneOfOneToolsClient {
   }
 
   export async function boutiqueCollections(
-    cursor: string | null | undefined
+    cursor: string | null | undefined,
+    limit: number | null
   ): Promise<Result<Collection[], Error>> {
     try {
       const response = await fetch(
         `${SERVER_URL}/api/collections/boutique?cursor=${
           cursor ? encodeURIComponent(cursor) : ""
-        }`,
+        }&limit=${limit ? limit : ""}`,
         {
           method: "GET",
           headers: {

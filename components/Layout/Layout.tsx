@@ -54,14 +54,8 @@ const Layout = ({ children, isHome = false }: Props) => {
         toastOptions={{ style: { fontSize: "13px" } }}
       />
       <main>
-        <div
-          className={
-            isHome
-              ? "p-8 min-h-[100vh] flex items-center justify-center"
-              : "m-4 mt-3 sm:m-8 sm:mt-4"
-          }
-        >
-          {!isHome && <MainNavigation />}
+        <div className="m-4 mt-3 sm:m-8 sm:mt-4">
+          <MainNavigation />
           {children}
         </div>
       </main>
