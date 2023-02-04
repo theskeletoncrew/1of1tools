@@ -215,7 +215,10 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                       view === ViewType.List ? "px-3 py-4" : ""
                     )}
                   >
-                    {item.mintAddresses.length}
+                    {item.mintAddresses.length}{" "}
+                    <span className={view == ViewType.List ? "hidden" : ""}>
+                      NFTs
+                    </span>
                   </a>
                 </Link>
               </span>
@@ -234,7 +237,11 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                       "z-2 text-indigo-400",
                       view === ViewType.List
                         ? "px-3 py-4 w-full h-full block"
-                        : "text-xs text-indigo-400 absolute top-2 right-2 bg-black px-2 py-1 rounded-lg bg-opacity-75"
+                        : "text-xs text-indigo-400 absolute top-2 right-2 bg-black px-2 py-1 rounded-lg bg-opacity-75",
+                      view === ViewType.Grid &&
+                        (!item.floor || !item.floor.listing)
+                        ? "hidden"
+                        : ""
                     )}
                   >
                     <span className="flex items-center justify-end gap-1">
