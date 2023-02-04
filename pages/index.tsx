@@ -169,13 +169,15 @@ const Home: NextPage = () => {
                 <SwiperSlide key={`row-fest-drop-${i}`}>
                   <div className={styles.rowDrop}>
                     <Link href={`/boutique/${collection.slug}`}>
-                      <a className={styles.rowDropImageWrapper}>
+                      <a className={`${styles.rowDropImageWrapper} group`}>
                         {collection.imageURL && (
-                          <img
-                            className={styles.rowDropImage}
-                            src={collection.imageURL}
-                            alt={collection.name}
-                          />
+                          <div className={styles.dropImageWrapper}>
+                            <img
+                              className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
+                              src={collection.imageURL}
+                              alt={collection.name}
+                            />
+                          </div>
                         )}
                         <span className={styles.rowDropDescription}>
                           <h5 className={styles.rowDropTitle}>

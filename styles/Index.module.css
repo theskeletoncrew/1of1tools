@@ -15,22 +15,22 @@
 }
 
 .rowDropTitle {
-  @apply text-base text-white mb-1;
+  @apply text-sm text-white truncate px-4 max-h-[20px];
 }
 
 .rowDropCategory {
   @apply text-xs text-slate-400;
 }
 
-.rowDropImage {
-  @apply w-full aspect-[4/3] object-cover;
+.rowDropImageWrapper {
+  @apply w-full aspect-[4/3] order-1 md:order-2 md:flex-shrink-0 overflow-hidden;
 }
 
 .dropImageWrapper {
-  @apply h-full md:w-[50%] bg-red-200 order-1 md:order-2 md:flex-shrink-0 overflow-hidden;
+  @apply w-full h-full overflow-hidden;
 }
 .dropImage {
-  @apply object-cover w-full h-full md:aspect-1;
+  @apply w-full h-full object-cover overflow-hidden;
 }
 
 .dropButton {
