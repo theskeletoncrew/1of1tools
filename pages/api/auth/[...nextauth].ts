@@ -84,8 +84,6 @@ const providers = [
           id: publicKey,
           account: accountRes.isOk() ? accountRes.value : null,
         } as User;
-        console.log("returning user:");
-        console.log(user);
         return user;
       } catch (e) {
         return null;

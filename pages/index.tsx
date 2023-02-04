@@ -131,7 +131,9 @@ const Home: NextPage = () => {
         <div className={`mt-10 ${styles.homeRow}`}>
           <div className="flex justify-between items-center">
             <h5 className={styles.rowTitle}>Popular Boutique Collections</h5>
-            <a href="/boutique">See All</a>
+            <Link href="/boutique">
+              <a>See All</a>
+            </Link>
           </div>
           <Swiper
             slidesPerView={2}
