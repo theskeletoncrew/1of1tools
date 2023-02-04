@@ -19,6 +19,8 @@ import LoadingIndicator from "components/LoadingIndicator/LoadingIndicator";
 import Layout from "components/Layout/Layout";
 import LoadingGrid from "components/LoadingGrid/LoadingGrid";
 import { Collection } from "models/collection";
+import CollectionSocial from "components/CollectionSocial/CollectionSocial";
+import CollectionStats from "components/CollectionStats/CollectionStats";
 
 const CollectionPage: NextPage = () => {
   const [isLoading, setLoading] = useState(false);
@@ -103,8 +105,9 @@ const CollectionPage: NextPage = () => {
           {collection ? (
             <Header
               title={collection.name}
-              subtitle={`${collection.mintAddresses.length} NFTs`}
+              subtitle={<CollectionSocial collection={collection} />}
               imgUrl={collection.imageURL ?? undefined}
+              right={<CollectionStats collection={collection} />}
             />
           ) : (
             <Header title={`NFTs in the collection: ${slug}`} />
