@@ -63,7 +63,7 @@ const CollectionStats: React.FC<Props> = ({ collection }) => {
       </svg>
       <div className="bg-indigo-300 bg-opacity-10 px-3 py-2 sm:p-5 rounded-xl flex gap-5 sm:gap-8 mr-1 justify-evenly items-center">
         <div className="flex-col flex-1 hidden sm:flex">
-          <label className="text-indigo-400 text-sm text-center">Supply</label>
+          <label className="text-indigo-400 text-sm text-center">Items</label>
           <span className="text-xs text-center">
             {collection.mintAddresses.length}
           </span>

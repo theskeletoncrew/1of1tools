@@ -121,7 +121,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
         >
           <h3 className="flex-[3] pr-[80px]">Collection Name</h3>
           <div className="flex-1 text-right hidden sm:block">
-            <span className="px-3">Supply</span>
+            <span className="px-3">Items</span>
           </div>
           <div className="flex-1 text-right">
             <span className="px-3">Floor</span>
