@@ -82,14 +82,14 @@ const BoutiqueCollectionsModal: React.FC<Props> = ({
                 className="flex justify-between items-center"
               >
                 <span>URL Slug:</span>
-                <span className="text-xs">magiceden.io/marketplace/[slug]</span>
+                <span className="text-xs">1of1.tools/boutique/[slug]</span>
               </label>
               <input
                 type="text"
                 id="slug"
                 name="slug"
                 defaultValue={slug}
-                placeholder="ex. skeleton_crew_skulls"
+                placeholder="ex. skeleton-crew-skulls"
                 onChange={(e) => {
                   setSlug(e.currentTarget.value);
                 }}
