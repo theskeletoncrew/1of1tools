@@ -32,10 +32,7 @@ const AccountPage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="mt-4">
-        <Header
-          title={"Account Settings"}
-          right={`@${session?.user.account?.username}`}
-        />
+        <Header title={"Account Settings"} />
       </div>
 
       <AccountSettingsNav currentTab="notifications" />
