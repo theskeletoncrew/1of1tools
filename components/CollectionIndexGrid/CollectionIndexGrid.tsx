@@ -4,6 +4,8 @@ import { proxyImgUrl } from "utils/imgproxy";
 import { Collection, CollectionFloor } from "models/collection";
 import {
   Bars3Icon,
+  ChevronDownIcon,
+  ChevronUpIcon,
   ExclamationCircleIcon,
   Squares2X2Icon,
 } from "@heroicons/react/24/outline";
@@ -11,10 +13,15 @@ import LoadingImage from "components/LoadingImage/LoadingImage";
 import { useState } from "react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { humanReadableSource, urlForSource } from "utils/helius";
+import CollectionSort, {
+  CollectionSortType,
+} from "components/CollectionSort/CollectionSort";
 
 interface Props {
   items: Collection[];
   subtitle: string;
+  sort: CollectionSortType;
+  updateSort: (newSort: CollectionSortType) => void;
 }
 
 enum ViewType {
@@ -22,7 +29,12 @@ enum ViewType {
   Grid,
 }
 
-const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
+const CollectionIndexGrid: React.FC<Props> = ({
+  items,
+  subtitle,
+  sort,
+  updateSort,
+}) => {
   const [view, setView] = useState<ViewType>(ViewType.Grid);
 
   return (
@@ -79,29 +91,39 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
         </defs>
       </svg>
       <div className="flex items-center justify-between">
-        <h3 className="sm:pl-5 text-indigo-400 text-xs sm:text-base">
+        <h3 className="hidden md:block pl-5 text-indigo-400 text-base">
           {subtitle}
         </h3>
-        <div className="sm:mr-3 border border-1 text-indigo-600 border-indigo-600 rounded-lg flex gap-0 items-center justify-center">
-          <button className="py-2 px-4" onClick={() => setView(ViewType.Grid)}>
-            <Squares2X2Icon
-              className={classNames(
-                "w-5 h-5",
-                view === ViewType.Grid ? "text-indigo-400" : ""
-              )}
+        <div className="flex gap-3 items-center h-[40px] justify-between w-full md:w-auto md:justify-end">
+          <div className="h-full order-1 md:order-0">
+            <CollectionSort
+              sort={sort}
+              didChangeSort={(newSort) => {
+                updateSort(newSort);
+              }}
             />
-          </button>
-          <button
-            className="py-2 px-4 border-l border-indigo-600"
-            onClick={() => setView(ViewType.List)}
-          >
-            <Bars3Icon
-              className={classNames(
-                "w-5 h-5",
-                view === ViewType.List ? "text-indigo-400" : ""
-              )}
-            />
-          </button>
+          </div>
+          <div className="sm:mr-3 border border-1 text-indigo-600 border-indigo-600 h-full rounded-lg flex gap-0 items-center justify-center order-0 md:order-1">
+            <button className="px-4" onClick={() => setView(ViewType.Grid)}>
+              <Squares2X2Icon
+                className={classNames(
+                  "w-5 h-5",
+                  view === ViewType.Grid ? "text-indigo-400" : ""
+                )}
+              />
+            </button>
+            <button
+              className="py-2 px-4 border-l border-indigo-600"
+              onClick={() => setView(ViewType.List)}
+            >
+              <Bars3Icon
+                className={classNames(
+                  "w-5 h-5",
+                  view === ViewType.List ? "text-indigo-400" : ""
+                )}
+              />
+            </button>
+          </div>
         </div>
       </div>
       <div
@@ -119,29 +141,111 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
               : "flex mx-2 sm:mx-4 my-4 text-indigo-400 border-b border-indigo-300 pb-4"
           }
         >
-          <h3 className="flex-[3] pr-[80px]">Collection Name</h3>
+          <div className="flex-[3] pr-[80px]">
+            <a
+              href="#"
+              onClick={() => updateSort(CollectionSortType.NAME_ASC)}
+              className="pr-3 flex gap-1 items-center"
+            >
+              Collection Name
+              <ChevronUpIcon
+                className={classNames(
+                  "w-4 h-4",
+                  sort === CollectionSortType.NAME_ASC ? "" : "hidden"
+                )}
+              />
+            </a>
+          </div>
           <div className="flex-1 text-right whitespace-nowrap hidden lg:block">
-            <span className="px-3">Items</span>
+            <a
+              href="#"
+              onClick={() => updateSort(CollectionSortType.SIZE_ASC)}
+              className="px-3 flex gap-1 items-center justify-end"
+            >
+              Items
+              <ChevronUpIcon
+                className={classNames(
+                  "w-4 h-4",
+                  sort === CollectionSortType.SIZE_ASC ? "" : "hidden"
+                )}
+              />
+            </a>
           </div>
           <div className="flex-1 text-right whitespace-nowrap">
-            <span
-              className="px-3 cursor-help"
+            <a
+              href="#"
+              onClick={() => updateSort(CollectionSortType.FLOOR_DESC)}
+              className="px-3 flex gap-1 items-center justify-end"
               title="Alpha: Note that some stale listings may appear"
             >
               Floor*
-            </span>
+              <ChevronDownIcon
+                className={classNames(
+                  "w-4 h-4",
+                  sort === CollectionSortType.FLOOR_DESC ? "" : "hidden"
+                )}
+              />
+            </a>
           </div>
           <div className="flex-1 text-right whitespace-nowrap hidden lg:block">
-            <span>ATH Sale</span>
+            <a
+              href="#"
+              onClick={() => updateSort(CollectionSortType.ATH_SALE_DESC)}
+              className="px-3 flex gap-1 items-center justify-end"
+            >
+              ATH Sale
+              <ChevronDownIcon
+                className={classNames(
+                  "w-4 h-4",
+                  sort === CollectionSortType.ATH_SALE_DESC ? "" : "hidden"
+                )}
+              />
+            </a>
           </div>
           <div className="flex-1 text-right whitespace-nowrap hidden lg:block">
-            <span>24hr Vol</span>
+            <a
+              href="#"
+              onClick={() => updateSort(CollectionSortType.DAILY_VOLUME_DESC)}
+              className="px-3 flex gap-1 items-center justify-end"
+            >
+              24hr Vol
+              <ChevronDownIcon
+                className={classNames(
+                  "w-4 h-4",
+                  sort === CollectionSortType.DAILY_VOLUME_DESC ? "" : "hidden"
+                )}
+              />
+            </a>
           </div>
           <div className="flex-1 text-right whitespace-nowrap hidden sm:block">
-            <span>1wk Vol</span>
+            <a
+              href="#"
+              onClick={() => updateSort(CollectionSortType.WEEKLY_VOLUME_DESC)}
+              className="px-3 flex gap-1 items-center justify-end"
+            >
+              1wk Vol
+              <ChevronDownIcon
+                className={classNames(
+                  "w-4 h-4",
+                  sort === CollectionSortType.WEEKLY_VOLUME_DESC ? "" : "hidden"
+                )}
+              />
+            </a>
           </div>
           <div className="flex-1 text-right whitespace-nowrap">
-            <span>Total Vol</span>
+            <a
+              href="#"
+              onClick={() => updateSort(CollectionSortType.TOTAL_VOLUME_DESC)}
+              className="px-3 flex gap-1 items-center justify-end"
+            >
+              Total Vol
+              <ChevronDownIcon
+                className={classNames(
+                  "w-4 h-4",
+                  sort === CollectionSortType.TOTAL_VOLUME_DESC ? "" : "hidden"
+                )}
+              />
+            </a>
           </div>
         </div>
         {items.map((item, i) => {
@@ -299,7 +403,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                 >
                   <a
                     className={classNames(
-                      "w-full text-indigo-400",
+                      "w-full text-indigo-400 block",
                       view === ViewType.List ? "px-3 py-4" : ""
                     )}
                     title={

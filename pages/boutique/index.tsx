@@ -17,6 +17,7 @@ import LoadingGrid from "components/LoadingGrid/LoadingGrid";
 import ErrorMessage from "components/ErrorMessage/ErrorMessage";
 import LoadingIndicator from "components/LoadingIndicator/LoadingIndicator";
 import BoutiqueCollectionsModal from "components/BoutiqueCollectionModal/BoutiqueCollectionModal";
+import { CollectionSortType } from "components/CollectionSort/CollectionSort";
 
 const MAX_BOUTIQUE_COLLECTION_SIZE = 250;
 
@@ -27,11 +28,18 @@ const IndexPage: NextPage = () => {
   const [hasMore, setHasMore] = useState(true);
   const [submitCollectionModalShown, setSubmitCollectionModalShown] =
     useState(false);
+  const [sort, setSort] = useState<CollectionSortType>(
+    CollectionSortType.TOTAL_VOLUME_DESC
+  );
 
-  const getMoreBoutiqueCollections = async () => {
-    const collectionsRes = await OneOfOneToolsClient.boutiqueCollections(
-      cursor
-    );
+  const getMoreBoutiqueCollections = async (
+    chosenSort: CollectionSortType | undefined,
+    providedCursor: string | undefined = undefined
+  ) => {
+    const collectionsRes = await OneOfOneToolsClient.boutiqueCollections({
+      sort: chosenSort,
+      cursor: providedCursor,
+    });
 
     if (collectionsRes.isErr()) {
       toast.error(
@@ -42,12 +50,17 @@ const IndexPage: NextPage = () => {
 
     const retCollections = collectionsRes.value;
 
-    setCollections((prevCollections) => [
-      ...prevCollections,
-      ...retCollections.filter(
-        (c) => prevCollections.find((c2) => c2.slug === c.slug) === undefined
-      ),
-    ]);
+    if (!providedCursor) {
+      setCollections(retCollections);
+    } else {
+      setCollections((prevCollections) => [
+        ...prevCollections,
+        ...retCollections.filter(
+          (c) => prevCollections.find((c2) => c2.slug === c.slug) === undefined
+        ),
+      ]);
+    }
+
     setHasMore(retCollections.length >= COLLECTIONS_PER_PAGE);
 
     const lastCollection = retCollections.pop();
@@ -59,11 +72,19 @@ const IndexPage: NextPage = () => {
   useEffect(() => {
     if (!isLoading) {
       setLoading(true);
-      getMoreBoutiqueCollections().then(() => {
+      getMoreBoutiqueCollections(sort).then(() => {
         setLoading(false);
       });
     }
   }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    setHasMore(true);
+    getMoreBoutiqueCollections(sort).then(() => {
+      setLoading(false);
+    });
+  }, [sort]);
 
   const loadNft = async (publicKey: PublicKey): Promise<Nft | null> => {
     try {
@@ -203,7 +224,7 @@ const IndexPage: NextPage = () => {
           {collections.length > 0 ? (
             <InfiniteScroll
               dataLength={collections.length}
-              next={getMoreBoutiqueCollections}
+              next={() => getMoreBoutiqueCollections(sort, cursor)}
               hasMore={hasMore}
               loader={<LoadingIndicator />}
               endMessage={""}
@@ -211,6 +232,10 @@ const IndexPage: NextPage = () => {
               <CollectionIndexGrid
                 items={collections}
                 subtitle={`Hyped collections of ${MAX_BOUTIQUE_COLLECTION_SIZE} NFTs or less`}
+                sort={sort}
+                updateSort={(newSort) => {
+                  setSort(newSort);
+                }}
               />
             </InfiniteScroll>
           ) : isLoading ? (

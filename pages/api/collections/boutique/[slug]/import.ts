@@ -1,6 +1,6 @@
 import { Metaplex, Nft } from "@metaplex-foundation/js";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { getBoutiqueCollection, setBoutiqueCollectionFilters } from "db";
+import { getBoutiqueCollection, setBoutiqueCollectionFiltersAndSize } from "db";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import { clusterApiUrl, network } from "utils/network";
@@ -71,10 +71,11 @@ apiRoute.post(async (req, res) => {
         (!collection.collectionAddress && collectionAddress) ||
         !collection.firstVerifiedCreator
       ) {
-        const setVerifiedCreatorRes = await setBoutiqueCollectionFilters(
+        const setVerifiedCreatorRes = await setBoutiqueCollectionFiltersAndSize(
           slug,
           collectionAddress,
-          firstVerifiedCreator
+          firstVerifiedCreator,
+          collection.mintAddresses.length
         );
         if (!setVerifiedCreatorRes.isOk()) {
           res.status(500).json({

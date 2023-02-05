@@ -17,7 +17,7 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
 
 apiRoute.post(async (req, res) => {
   try {
-    const collectionsRes = await getBoutiqueCollections(null, null);
+    const collectionsRes = await getBoutiqueCollections(null);
     if (!collectionsRes.isOk()) {
       res.status(500).json({
         success: false,

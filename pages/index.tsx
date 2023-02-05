@@ -49,10 +49,9 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     const loadBoutiqueCollections = async () => {
-      const collectionsRes = await OneOfOneToolsClient.boutiqueCollections(
-        null,
-        8
-      );
+      const collectionsRes = await OneOfOneToolsClient.boutiqueCollections({
+        limit: 8,
+      });
       if (collectionsRes.isOk()) {
         setBoutiqueCollections(collectionsRes.value);
       }

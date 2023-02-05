@@ -9,6 +9,9 @@ import {
 } from "models/notificationSetting";
 import { Account } from "models/account";
 import { Collection } from "models/collection";
+import CollectionSort, {
+  CollectionSortType,
+} from "components/CollectionSort/CollectionSort";
 
 export const SERVER_URL =
   process.env.NODE_ENV !== "production"
@@ -593,15 +596,18 @@ export namespace OneOfOneToolsClient {
     }
   }
 
-  export async function boutiqueCollections(
-    cursor: string | null | undefined = null,
-    limit: number | null = null
-  ): Promise<Result<Collection[], Error>> {
+  export async function boutiqueCollections(options: {
+    sort?: CollectionSortType | undefined;
+    cursor?: string | null | undefined;
+    limit?: number | null;
+  }): Promise<Result<Collection[], Error>> {
     try {
       const response = await fetch(
         `${SERVER_URL}/api/collections/boutique?cursor=${
-          cursor ? encodeURIComponent(cursor) : ""
-        }&limit=${limit ? limit : ""}`,
+          options.cursor ? encodeURIComponent(options.cursor) : ""
+        }&limit=${options.limit ? options.limit : ""}&sort=${
+          options.sort !== undefined ? options.sort : ""
+        }`,
         {
           method: "GET",
           headers: {

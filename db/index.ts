@@ -1,4 +1,5 @@
 import { Firestore } from "@google-cloud/firestore";
+import { CollectionSortType } from "components/CollectionSort/CollectionSort";
 import { randomUUID } from "crypto";
 import { Account, DiscordAccount, DiscordGuild } from "models/account";
 import { ATHSale } from "models/athSale";
@@ -354,16 +355,44 @@ export async function setDiscordGuilds(
 }
 
 export async function getBoutiqueCollections(
-  cursor: string | null | undefined,
-  limit: number | null = COLLECTIONS_PER_PAGE
+  cursor: string | null | undefined = null,
+  limit: number | null = COLLECTIONS_PER_PAGE,
+  sort: CollectionSortType | null = CollectionSortType.TOTAL_VOLUME_DESC
 ): Promise<Result<Collection[], Error>> {
   try {
     let query = db
       .collection("boutique-collections")
-      .where("approved", "==", true)
-      .orderBy("totalVolume", "desc");
+      .where("approved", "==", true);
 
-    if (cursor) {
+    console.log(sort);
+    switch (sort) {
+      case CollectionSortType.ATH_SALE_DESC:
+        query = query.orderBy("athSale.amount", "desc");
+        break;
+      case CollectionSortType.DAILY_VOLUME_DESC:
+        query = query.orderBy("dayVolume", "desc");
+        break;
+      case CollectionSortType.FLOOR_DESC:
+        query = query.orderBy("floor.listing.amount", "desc");
+        break;
+      case CollectionSortType.SIZE_ASC:
+        query = query.orderBy("numItems", "asc");
+        break;
+      case CollectionSortType.TOTAL_VOLUME_DESC:
+        query = query.orderBy("totalVolume", "desc");
+        break;
+      case CollectionSortType.WEEKLY_VOLUME_DESC:
+        query = query.orderBy("weekVolume", "desc");
+        break;
+      case CollectionSortType.NAME_ASC:
+        query = query.orderBy("name", "asc");
+        break;
+      default:
+        console.log("no sort matching " + sort);
+    }
+
+    if (cursor && cursor.length > 0) {
+      console.log("cursor: " + cursor);
       query = query.startAfter(cursor);
     }
     if (limit !== null) {
@@ -451,15 +480,17 @@ export async function setBoutiqueCollectionFloor(
   }
 }
 
-export async function setBoutiqueCollectionFilters(
+export async function setBoutiqueCollectionFiltersAndSize(
   slug: string,
   collectionAddress: string | null,
-  firstVerifiedCreator: string | null
+  firstVerifiedCreator: string | null,
+  numItems: number
 ): Promise<Result<null, Error>> {
   try {
     await db.collection("boutique-collections").doc(slug).update({
       collectionAddress: collectionAddress,
       firstVerifiedCreator: firstVerifiedCreator,
+      numItems: numItems,
     });
     return ok(null);
   } catch (error) {
