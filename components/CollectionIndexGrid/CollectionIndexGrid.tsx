@@ -9,7 +9,9 @@ import {
   ExclamationCircleIcon,
   Squares2X2Icon,
 } from "@heroicons/react/24/outline";
-import LoadingImage from "components/LoadingImage/LoadingImage";
+import LoadingImage, {
+  LazyLoadingImage,
+} from "components/LoadingImage/LoadingImage";
 import { useState } from "react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { humanReadableSource, urlForSource } from "utils/helius";
@@ -249,6 +251,11 @@ const CollectionIndexGrid: React.FC<Props> = ({
           </div>
         </div>
         {items.map((item, i) => {
+          const collectionImageURL = item.imageURL
+            ? `/api/assets/collection/${
+                item.slug
+              }/640?originalURL=${encodeURIComponent(item.imageURL)}`
+            : "";
           const floorUrl =
             item.floor && item.floor.listing
               ? urlForSource(item.floor.listing.marketplace, item.floor.mint)
@@ -274,13 +281,16 @@ const CollectionIndexGrid: React.FC<Props> = ({
               >
                 <Link href={`/boutique/${item.slug}`}>
                   <a>
-                    <LoadingImage
-                      src={proxyImgUrl(item.imageURL ?? "", 640, 640)}
+                    <LazyLoadingImage
+                      src={collectionImageURL}
                       loader={
                         <div className="w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs animate-pulse"></div>
                       }
                       unloader={
-                        <div className="flex flex-col gap-2 justify-center items-center w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs">
+                        <div
+                          className="flex flex-col gap-2 justify-center items-center w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs"
+                          data-url={collectionImageURL}
+                        >
                           <ExclamationCircleIcon className="w-8 h-8" />
                           <span>Too Large for Preview</span>
                         </div>
@@ -294,7 +304,6 @@ const CollectionIndexGrid: React.FC<Props> = ({
                           ? "absolute group-hover:scale-125 transition-transform duration-300"
                           : ""
                       )}
-                      loading="lazy"
                     />
                   </a>
                 </Link>
