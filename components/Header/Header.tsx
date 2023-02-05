@@ -15,7 +15,7 @@ const Header: React.FC<Props> = ({
   right = undefined,
 }) => {
   return (
-    <div className="flex items-center justify-between bg-white bg-opacity-5 p-3 sm:p-4 rounded-2xl text-indigo-300">
+    <div className="flex items-center justify-between min-h-[85px] sm:min-h-[120px] bg-white bg-opacity-5 p-3 sm:p-4 rounded-2xl text-indigo-300">
       <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
         {imgUrl && (
           <img

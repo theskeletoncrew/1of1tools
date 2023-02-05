@@ -110,7 +110,7 @@ const CollectionPage: NextPage = () => {
               right={<CollectionStats collection={collection} />}
             />
           ) : (
-            <Header title={`NFTs in the collection: ${slug}`} />
+            <Header title="" />
           )}
         </div>
 
