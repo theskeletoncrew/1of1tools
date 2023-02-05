@@ -175,7 +175,15 @@ const Home: NextPage = () => {
                           <div className={styles.dropImageWrapper}>
                             <img
                               className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
-                              src={collection.imageURL}
+                              src={
+                                collection.imageURL
+                                  ? `/api/assets/collection/${
+                                      collection.slug
+                                    }/640?originalURL=${encodeURIComponent(
+                                      collection.imageURL
+                                    )}`
+                                  : ""
+                              }
                               alt={collection.name}
                             />
                           </div>
