@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useInView } from "react-intersection-observer";
-import JSXStyle from "styled-jsx/style";
 
 export type LoadingImgProps = Omit<
   React.DetailedHTMLProps<
