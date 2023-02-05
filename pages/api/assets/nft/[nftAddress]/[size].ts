@@ -66,45 +66,36 @@ apiRoute.get(async (req, res) => {
       return;
     }
 
+    const response = await axios.get(imageURL, {
+      responseType: "stream",
+      adapter: httpAdapter,
+    });
+
+    if (response.status != 200) {
+      res.status(400).json({ success: false });
+      return;
+    }
+
+    const remoteWriteStream = bucket.file(fileName).createWriteStream({
+      gzip: true,
+      metadata: {
+        contentType: response.headers["content-type"],
+      },
+    });
+
+    const stream = response.data;
+
     await new Promise<null>(async (resolve, reject) => {
-      const response = await axios.get(imageURL, {
-        responseType: "stream",
-        adapter: httpAdapter,
-      });
-
-      if (response.status != 200) {
-        reject(new Error(response.statusText));
-        return;
-      }
-
-      const remoteWriteStream = bucket.file(fileName).createWriteStream({
-        gzip: true,
-        metadata: {
-          contentType: response.headers["content-type"],
-        },
-      });
-
-      const stream = response.data;
-
       stream
         .pipe(remoteWriteStream)
-        .on("error", function (err: any) {
-          reject(err);
+        .on("error", function (error: any) {
+          res.status(400).json({ message: (error as Error).message });
         })
         .on("finish", function () {
-          resolve(null);
+          const gcsUrl = bucket.file(fileName).publicUrl();
+          res.redirect(gcsUrl);
         });
-    })
-      .then(() => {
-        const gcsUrl = bucket.file(fileName).publicUrl();
-        res.redirect(gcsUrl);
-      })
-      .catch((error) => {
-        res.status(500).json({
-          success: false,
-          message: (error as Error).message,
-        });
-      });
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
