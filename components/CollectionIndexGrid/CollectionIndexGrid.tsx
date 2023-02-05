@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { classNames } from "utils";
+import { classNames, shortenedAddress } from "utils";
 import { proxyImgUrl } from "utils/imgproxy";
 import { Collection, CollectionFloor } from "models/collection";
 import {
@@ -10,7 +10,7 @@ import {
 import LoadingImage from "components/LoadingImage/LoadingImage";
 import { useState } from "react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { urlForSource } from "utils/helius";
+import { humanReadableSource, urlForSource } from "utils/helius";
 
 interface Props {
   items: Collection[];
@@ -132,7 +132,16 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
             </span>
           </div>
           <div className="flex-1 text-right">
-            <span>Volume</span>
+            <span>ATH Sale</span>
+          </div>
+          <div className="flex-1 text-right">
+            <span>24hr Volume</span>
+          </div>
+          <div className="flex-1 text-right">
+            <span>1wk Volume</span>
+          </div>
+          <div className="flex-1 text-right">
+            <span>Total Volume</span>
           </div>
         </div>
         {items.map((item, i) => {
@@ -281,16 +290,136 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                   view === ViewType.Grid ? "hidden" : "flex-1 text-right"
                 )}
               >
-                <Link href={floorUrl ?? "#"}>
+                <Link
+                  href={
+                    item.athSale
+                      ? `https://explorer.solana.com/tx/${item.athSale.signature}`
+                      : `/boutique/${item.slug}`
+                  }
+                >
                   <a
-                    title={item.floor ? item.floor.name : "No Listings"}
-                    target={floorUrl ? "_blank" : "_self"}
-                    rel="noreferrer"
                     className={classNames(
-                      "z-2 text-indigo-400",
-                      view === ViewType.List
-                        ? "py-4 w-full h-full block"
-                        : "text-xs text-indigo-400 absolute top-2 right-2 bg-black px-2 py-1 rounded-lg bg-opacity-75"
+                      "w-full block text-indigo-400",
+                      view === ViewType.List ? "px-3 py-4" : ""
+                    )}
+                    title={
+                      item.athSale
+                        ? `${item.athSale.name} sold by ${shortenedAddress(
+                            item.athSale.seller
+                          )} to ${shortenedAddress(
+                            item.athSale.buyer
+                          )} on ${humanReadableSource(
+                            item.athSale.source
+                          )} for ${(
+                            item.athSale.amount / LAMPORTS_PER_SOL
+                          ).toLocaleString(undefined, {
+                            maximumFractionDigits: 0,
+                            minimumFractionDigits: 0,
+                          })} SOL`
+                        : ""
+                    }
+                  >
+                    <span className="flex items-center justify-end gap-1 text-right">
+                      {item.athSale ? (
+                        <>
+                          {(
+                            item.athSale.amount / LAMPORTS_PER_SOL
+                          ).toLocaleString(undefined, {
+                            maximumFractionDigits: 0,
+                            minimumFractionDigits: 0,
+                          })}{" "}
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 20 20"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <use href="#solana-icon"></use>
+                          </svg>
+                        </>
+                      ) : (
+                        "-"
+                      )}
+                    </span>
+                  </a>
+                </Link>
+              </span>
+              <span
+                className={classNames(
+                  "font-light text-sm",
+                  view === ViewType.Grid ? "hidden" : "flex-1 text-right"
+                )}
+              >
+                <Link href={`/boutique/${item.slug}`}>
+                  <a
+                    className={classNames(
+                      "w-full block text-indigo-400",
+                      view === ViewType.List ? "px-3 py-4" : ""
+                    )}
+                  >
+                    <span className="flex items-center justify-end gap-1 text-right">
+                      <>
+                        {(item.dayVolume ?? 0).toLocaleString(undefined, {
+                          maximumFractionDigits: 0,
+                          minimumFractionDigits: 0,
+                        })}{" "}
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <use href="#solana-icon"></use>
+                        </svg>
+                      </>
+                    </span>
+                  </a>
+                </Link>
+              </span>
+              <span
+                className={classNames(
+                  "font-light text-sm",
+                  view === ViewType.Grid ? "hidden" : "flex-1 text-right"
+                )}
+              >
+                <Link href={`/boutique/${item.slug}`}>
+                  <a
+                    className={classNames(
+                      "w-full block text-indigo-400",
+                      view === ViewType.List ? "px-3 py-4" : ""
+                    )}
+                  >
+                    <span className="flex items-center justify-end gap-1 text-right">
+                      {(item.weekVolume ?? 0).toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                        minimumFractionDigits: 0,
+                      })}{" "}
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <use href="#solana-icon"></use>
+                      </svg>
+                    </span>
+                  </a>
+                </Link>
+              </span>
+              <span
+                className={classNames(
+                  "font-light text-sm",
+                  view === ViewType.Grid ? "hidden" : "flex-1 text-right"
+                )}
+              >
+                <Link href={`/boutique/${item.slug}`}>
+                  <a
+                    className={classNames(
+                      "w-full block text-indigo-400",
+                      view === ViewType.List ? "px-3 py-4" : ""
                     )}
                   >
                     <span className="flex items-center justify-end gap-1 text-right">

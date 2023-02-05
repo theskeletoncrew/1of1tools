@@ -62,7 +62,7 @@ const CollectionStats: React.FC<Props> = ({ collection }) => {
         </defs>
       </svg>
       <div className="bg-indigo-300 bg-opacity-10 px-3 py-2 sm:p-5 rounded-xl flex gap-5 sm:gap-8 mr-1 justify-evenly items-center">
-        <div className="flex-col flex-1 hidden sm:flex">
+        <div className="flex-col flex-1 hidden md:flex">
           <label className="text-indigo-400 text-sm text-center">Items</label>
           <span className="text-xs text-center">
             {collection.mintAddresses.length}
@@ -106,6 +106,36 @@ const CollectionStats: React.FC<Props> = ({ collection }) => {
             )}
           </span>
         </div>
+        {collection.athSale && (
+          <div className="flex-col flex-1 hidden sm:flex">
+            <label className="text-indigo-400 text-sm text-center whitespace-nowrap">
+              ATH Sale
+            </label>
+            <span className="text-xs flex items-center justify-end gap-1">
+              {collection.athSale ? (
+                <>
+                  {(
+                    collection.athSale.amount / LAMPORTS_PER_SOL
+                  ).toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                    minimumFractionDigits: 0,
+                  })}{" "}
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <use href="#solana-icon"></use>
+                  </svg>
+                </>
+              ) : (
+                "-"
+              )}
+            </span>
+          </div>
+        )}
         <div className="flex flex-col flex-1">
           <label className="text-indigo-400 text-sm text-center">Volume</label>
           <span className="text-xs flex items-center justify-end gap-1">

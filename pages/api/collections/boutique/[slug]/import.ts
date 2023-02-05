@@ -1,16 +1,10 @@
 import { Metaplex, Nft } from "@metaplex-foundation/js";
-import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import {
-  getBoutiqueCollection,
-  setBoutiqueCollectionFilters,
-  setBoutiqueCollectionTotalVolume,
-} from "db";
-import { NFTEvent } from "models/nftEvent";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { getBoutiqueCollection, setBoutiqueCollectionFilters } from "db";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import { clusterApiUrl, network } from "utils/network";
-
-const HELIUS_API_KEY = process.env.HELIUS_API_KEY || "";
+import { updateVolumeForCollection } from "utils/volume";
 
 const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
   onError(error, req, res) {
@@ -91,82 +85,26 @@ apiRoute.post(async (req, res) => {
           return;
         }
       }
+
+      collection.collectionAddress = collectionAddress;
+      collection.firstVerifiedCreator = firstVerifiedCreator;
     }
 
-    let totalVolume = 0;
-    let paginationToken = null;
-
-    let query: any = {
-      types: ["NFT_SALE"],
-      nftCollectionFilters: {},
-    };
-
-    if (collectionAddress) {
-      query.nftCollectionFilters.verifiedCollectionAddress = [
-        collectionAddress,
-      ];
-    } else {
-      query.nftCollectionFilters.firstVerifiedCreator = [firstVerifiedCreator];
-    }
-    let options: { [key: string]: any } = {
-      limit: 1000,
-    };
-
-    do {
-      if (paginationToken) {
-        options["paginationToken"] = paginationToken;
-      }
-
-      const response = await fetch(
-        `https://api.helius.xyz/v1/nft-events?api-key=${HELIUS_API_KEY}`,
-        {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            query: query,
-            options: options,
-          }),
-        }
-      );
-
-      const responseJSON: any = await response.json();
-
-      if (!response.ok) {
-        res.status(500).json({
-          success: false,
-          message: responseJSON.error,
-        });
-        return;
-      }
-
-      const events = responseJSON.result as NFTEvent[];
-      events.forEach((event) => {
-        const nft = event.nfts[0];
-        if (nft && collection.mintAddresses.includes(nft.mint)) {
-          totalVolume += event.amount / LAMPORTS_PER_SOL;
-        }
-      });
-
-      paginationToken = responseJSON.paginationToken;
-    } while (paginationToken);
-
-    const setTotalVolumeRes = await setBoutiqueCollectionTotalVolume(
-      slug,
-      totalVolume
-    );
-    if (!setTotalVolumeRes.isOk()) {
+    const updateRes = await updateVolumeForCollection(collection);
+    if (!updateRes.isOk()) {
       res.status(500).json({
         success: false,
-        message: "Failed to set collection total volume.",
+        message: updateRes.error.message,
       });
       return;
     }
 
     res.status(200).json({
       success: true,
+      totalVolume: updateRes.value.totalVolume,
+      weekVolume: updateRes.value.weekVolume,
+      dayVolume: updateRes.value.dayVolume,
+      athSale: updateRes.value.athSale,
     });
   } catch (error) {
     res.status(500).json({

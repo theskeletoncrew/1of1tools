@@ -1,6 +1,7 @@
 import { Firestore } from "@google-cloud/firestore";
 import { randomUUID } from "crypto";
 import { Account, DiscordAccount, DiscordGuild } from "models/account";
+import { ATHSale } from "models/athSale";
 import { Collection, CollectionFloor } from "models/collection";
 import {
   DialectCreatorNotificationSetting,
@@ -466,13 +467,19 @@ export async function setBoutiqueCollectionFilters(
   }
 }
 
-export async function setBoutiqueCollectionTotalVolume(
+export async function setBoutiqueCollectionStats(
   slug: string,
-  totalVolume: number
+  totalVolume: number,
+  weekVolume: number,
+  dayVolume: number,
+  athSale: ATHSale
 ): Promise<Result<null, Error>> {
   try {
     await db.collection("boutique-collections").doc(slug).update({
       totalVolume: totalVolume,
+      weekVolume: weekVolume,
+      dayVolume: dayVolume,
+      athSale: athSale,
     });
     return ok(null);
   } catch (error) {

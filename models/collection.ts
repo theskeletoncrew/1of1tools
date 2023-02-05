@@ -1,3 +1,4 @@
+import { ATHSale } from "./athSale";
 import { NFTListing } from "./nftListings";
 
 export interface Collection {
@@ -12,7 +13,10 @@ export interface Collection {
   approved: boolean;
   mintAddresses: string[];
   floor?: CollectionFloor | null;
+  dayVolume?: number | null;
+  weekVolume?: number | null;
   totalVolume?: number | null;
+  athSale?: ATHSale | null;
 }
 
 export interface CollectionFloor {
