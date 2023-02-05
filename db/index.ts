@@ -364,7 +364,6 @@ export async function getBoutiqueCollections(
       .collection("boutique-collections")
       .where("approved", "==", true);
 
-    console.log(sort);
     switch (sort) {
       case CollectionSortType.ATH_SALE_DESC:
         query = query.orderBy("athSale.amount", "desc");
