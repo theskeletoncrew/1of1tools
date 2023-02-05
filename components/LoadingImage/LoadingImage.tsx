@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useInView } from "react-intersection-observer";
+import JSXStyle from "styled-jsx/style";
 
 export type LoadingImgProps = Omit<
   React.DetailedHTMLProps<
@@ -15,13 +17,13 @@ export type LoadingImgProps = Omit<
 
 const passthroughContainer = (x: any) => x;
 
-export default function LoadingImage({
+const LoadingImage = ({
   src,
   backupSrc = null,
   loader = null,
   unloader = null,
   ...imgProps
-}: LoadingImgProps): JSX.Element | null {
+}: LoadingImgProps): JSX.Element | null => {
   const { loadedSrc, isLoading } = useImage({ src, backupSrc });
 
   if (loadedSrc) return <img src={loadedSrc} {...imgProps} />;
@@ -29,7 +31,19 @@ export default function LoadingImage({
   if (unloader) return passthroughContainer(unloader);
 
   return null;
-}
+};
+
+export const LazyLoadingImage = ({
+  ...props
+}: LoadingImgProps): JSX.Element | null => {
+  const { inView, ref } = useInView({
+    /* Optional options */
+    threshold: 0,
+    triggerOnce: true,
+  });
+
+  return inView ? <LoadingImage {...props} /> : <span ref={ref}></span>;
+};
 
 export type useImageProps = {
   src: string;
@@ -85,3 +99,5 @@ function useImage({ src, backupSrc }: useImageProps): {
 
   return { isLoading: isLoading, loadedSrc: loadedSrc };
 }
+
+export default LoadingImage;
