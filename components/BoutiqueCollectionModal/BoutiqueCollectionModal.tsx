@@ -94,7 +94,7 @@ const BoutiqueCollectionsModal: React.FC<Props> = ({
                   e.currentTarget.value = e.currentTarget.value
                     .toLowerCase()
                     .replace(/[\s]+/g, "-")
-                    .replace(/[^a-z\-]/g, "");
+                    .replace(/[^a-z0-9\-]/g, "");
                 }}
                 onChange={(e) => {
                   setSlug(e.currentTarget.value);
