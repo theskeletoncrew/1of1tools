@@ -36,9 +36,16 @@ const IndexPage: NextPage = () => {
     chosenSort: CollectionSortType | undefined,
     providedCursor: string | undefined = undefined
   ) => {
+    if (isLoading) {
+      return;
+    }
+
+    setLoading(true);
+
     const collectionsRes = await OneOfOneToolsClient.boutiqueCollections({
       sort: chosenSort,
       cursor: providedCursor,
+      limit: COLLECTIONS_PER_PAGE,
     });
 
     if (collectionsRes.isErr()) {
@@ -65,13 +72,12 @@ const IndexPage: NextPage = () => {
 
     const lastCollection = retCollections.pop();
     if (lastCollection) {
-      setCursor(lastCollection.name);
+      setCursor(lastCollection.slug);
     }
   };
 
   useEffect(() => {
     if (!isLoading) {
-      setLoading(true);
       getMoreBoutiqueCollections(sort).then(() => {
         setLoading(false);
       });

@@ -1,4 +1,4 @@
-import { Firestore } from "@google-cloud/firestore";
+import { Firestore, FieldPath } from "@google-cloud/firestore";
 import { CollectionSortType } from "components/CollectionSort/CollectionSort";
 import { randomUUID } from "crypto";
 import { Account, DiscordAccount, DiscordGuild } from "models/account";
@@ -391,8 +391,13 @@ export async function getBoutiqueCollections(
     }
 
     if (cursor && cursor.length > 0) {
-      console.log("cursor: " + cursor);
-      query = query.startAfter(cursor);
+      const docRef = await db
+        .collection("boutique-collections")
+        .doc(cursor)
+        .get();
+      if (docRef) {
+        query = query.startAfter(docRef);
+      }
     }
     if (limit !== null) {
       query = query.limit(limit);
