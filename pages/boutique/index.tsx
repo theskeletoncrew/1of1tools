@@ -49,9 +49,6 @@ const IndexPage: NextPage = () => {
     });
 
     if (collectionsRes.isErr()) {
-      toast.error(
-        "Failed to load collections: " + collectionsRes.error.message
-      );
       return;
     }
 
