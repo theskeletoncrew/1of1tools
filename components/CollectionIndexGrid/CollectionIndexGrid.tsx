@@ -120,10 +120,10 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
           }
         >
           <h3 className="flex-[3] pr-[80px]">Collection Name</h3>
-          <div className="flex-1 text-right hidden sm:block">
+          <div className="flex-1 text-right whitespace-nowrap hidden lg:block">
             <span className="px-3">Items</span>
           </div>
-          <div className="flex-1 text-right">
+          <div className="flex-1 text-right whitespace-nowrap">
             <span
               className="px-3 cursor-help"
               title="Alpha: Note that some stale listings may appear"
@@ -131,17 +131,17 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
               Floor*
             </span>
           </div>
-          <div className="flex-1 text-right">
+          <div className="flex-1 text-right whitespace-nowrap hidden lg:block">
             <span>ATH Sale</span>
           </div>
-          <div className="flex-1 text-right">
-            <span>24hr Volume</span>
+          <div className="flex-1 text-right whitespace-nowrap hidden lg:block">
+            <span>24hr Vol</span>
           </div>
-          <div className="flex-1 text-right">
-            <span>1wk Volume</span>
+          <div className="flex-1 text-right whitespace-nowrap hidden sm:block">
+            <span>1wk Vol</span>
           </div>
-          <div className="flex-1 text-right">
-            <span>Total Volume</span>
+          <div className="flex-1 text-right whitespace-nowrap">
+            <span>Total Vol</span>
           </div>
         </div>
         {items.map((item, i) => {
@@ -219,7 +219,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                   "font-light text-sm",
                   view === ViewType.Grid
                     ? "w-full"
-                    : "hidden sm:block flex-1 text-right"
+                    : "hidden lg:block flex-1 text-right"
                 )}
               >
                 <Link href={`/boutique/${item.slug}`}>
@@ -286,8 +286,8 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
               </span>
               <span
                 className={classNames(
-                  "font-light text-sm",
-                  view === ViewType.Grid ? "hidden" : "flex-1 text-right"
+                  "font-light text-sm hidden",
+                  view === ViewType.Grid ? "" : "flex-1 text-right lg:block"
                 )}
               >
                 <Link
@@ -299,7 +299,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                 >
                   <a
                     className={classNames(
-                      "w-full block text-indigo-400",
+                      "w-full text-indigo-400",
                       view === ViewType.List ? "px-3 py-4" : ""
                     )}
                     title={
@@ -347,8 +347,8 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
               </span>
               <span
                 className={classNames(
-                  "font-light text-sm",
-                  view === ViewType.Grid ? "hidden" : "flex-1 text-right"
+                  "font-light text-sm hidden",
+                  view === ViewType.Grid ? "" : "flex-1 text-right lg:block"
                 )}
               >
                 <Link href={`/boutique/${item.slug}`}>
@@ -357,6 +357,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                       "w-full block text-indigo-400",
                       view === ViewType.List ? "px-3 py-4" : ""
                     )}
+                    title="1 Day Volume"
                   >
                     <span className="flex items-center justify-end gap-1 text-right">
                       <>
@@ -380,8 +381,8 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
               </span>
               <span
                 className={classNames(
-                  "font-light text-sm",
-                  view === ViewType.Grid ? "hidden" : "flex-1 text-right"
+                  "font-light text-sm hidden",
+                  view === ViewType.Grid ? "" : "flex-1 text-right sm:block"
                 )}
               >
                 <Link href={`/boutique/${item.slug}`}>
@@ -390,6 +391,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                       "w-full block text-indigo-400",
                       view === ViewType.List ? "px-3 py-4" : ""
                     )}
+                    title="1 Week Volume"
                   >
                     <span className="flex items-center justify-end gap-1 text-right">
                       {(item.weekVolume ?? 0).toLocaleString(undefined, {
@@ -421,6 +423,7 @@ const CollectionIndexGrid: React.FC<Props> = ({ items, subtitle }) => {
                       "w-full block text-indigo-400",
                       view === ViewType.List ? "px-3 py-4" : ""
                     )}
+                    title="Total Volume"
                   >
                     <span className="flex items-center justify-end gap-1 text-right">
                       {item.totalVolume ? (
