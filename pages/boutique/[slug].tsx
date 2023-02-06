@@ -47,7 +47,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 };
 
 const CollectionPage: NextPage<Props> = ({ collection }) => {
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(true);
   const [nftsMetadata, setNFTsMetadata] = useState<NFTMetadata[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
