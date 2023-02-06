@@ -1,4 +1,3 @@
-import { proxyImgUrl } from "utils/imgproxy";
 import { CloudArrowDownIcon } from "@heroicons/react/24/outline";
 import { Nft, NftWithToken, Sft, SftWithToken } from "@metaplex-foundation/js";
 import dynamic from "next/dynamic";
