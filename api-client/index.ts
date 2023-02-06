@@ -9,9 +9,8 @@ import {
 } from "models/notificationSetting";
 import { Account } from "models/account";
 import { Collection } from "models/collection";
-import CollectionSort, {
-  CollectionSortType,
-} from "components/CollectionSort/CollectionSort";
+import { CollectionSortType } from "components/CollectionSort/CollectionSort";
+import { NFTListings } from "models/nftListings";
 
 export const SERVER_URL =
   process.env.NODE_ENV !== "production"
@@ -643,6 +642,31 @@ export namespace OneOfOneToolsClient {
 
       if (response.ok) {
         return ok(responseJSON.collections);
+      }
+      return err(new OneofOneToolsAPIError(response, responseJSON));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function activeListings(
+    slug: string
+  ): Promise<Result<NFTListings[], Error>> {
+    try {
+      const response = await fetch(
+        `${SERVER_URL}/api/collections/boutique/${slug}/listings`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const responseJSON = await response.json();
+
+      if (response.ok) {
+        return ok(responseJSON.listings);
       }
       return err(new OneofOneToolsAPIError(response, responseJSON));
     } catch (e) {

@@ -82,8 +82,6 @@ const IndexPage: NextPage = () => {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    setHasMore(true);
     getMoreBoutiqueCollections(sort).then(() => {
       setLoading(false);
     });

@@ -3,13 +3,7 @@ import { toast } from "react-hot-toast";
 import { OneOfOneToolsClient } from "api-client";
 import { NFTMetadata } from "models/nftMetadata";
 import Head from "next/head";
-import { shortPubKey, tryPublicKey } from "utils";
-import { useRouter } from "next/router";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { Metaplex, Nft } from "@metaplex-foundation/js";
-import { network } from "utils/network";
 import { useEffect, useState } from "react";
-import { clusterApiUrl } from "utils/network";
 import NFTGrid from "components/NFTGrid/NFTGrid";
 import Header from "components/Header/Header";
 import ErrorMessage from "components/ErrorMessage/ErrorMessage";
@@ -22,6 +16,10 @@ import { Collection } from "models/collection";
 import CollectionSocial from "components/CollectionSocial/CollectionSocial";
 import CollectionStats from "components/CollectionStats/CollectionStats";
 import { GetServerSideProps } from "next";
+import { NFTListings } from "models/nftListings";
+import NFTCollectionFilter, {
+  NFTFilterType,
+} from "components/NFTCollectionFilter/NFTCollectionFilter";
 
 interface Props {
   collection: Collection;
@@ -52,43 +50,87 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string>();
+  const [listings, setListings] = useState<NFTListings[]>([]);
+  const [filter, setFilter] = useState<NFTFilterType>(NFTFilterType.ALL_ITEMS);
 
-  const getMoreNfts = async () => {
-    if (!collection.mintAddresses) {
+  const getMoreNfts = async (
+    currentPage: number,
+    currentFilter: NFTFilterType
+  ) => {
+    if (!collection.mintAddresses || collection.mintAddresses.length === 0) {
+      setHasMore(false);
       return;
     }
-    const nftsRes = await OneOfOneToolsClient.nfts(
-      collection.mintAddresses.slice(
-        page * NFTS_PER_PAGE,
-        (page + 1) * NFTS_PER_PAGE
-      )
+
+    setLoading(true);
+
+    const mintAddresses =
+      currentFilter === NFTFilterType.ALL_ITEMS
+        ? collection.mintAddresses
+        : collection.mintAddresses.filter((m) =>
+            listings.find((l) => l.mint === m)
+          );
+
+    const pageOfMintAddresses = mintAddresses.slice(
+      currentPage * NFTS_PER_PAGE,
+      (currentPage + 1) * NFTS_PER_PAGE
     );
+
+    const nftsRes = await OneOfOneToolsClient.nfts(pageOfMintAddresses);
 
     if (nftsRes.isErr()) {
       toast.error("Failed to load more nfts: " + nftsRes.error.message);
       return;
     }
 
-    setNFTsMetadata((nftsMetadata) => [
-      ...nftsMetadata,
-      ...nftsRes.value.filter(
-        (n) => nftsMetadata.find((n2) => n2.mint === n.mint) === undefined
-      ),
-    ]);
-    setHasMore((page + 1) * NFTS_PER_PAGE < collection.mintAddresses.length);
-    setPage(page + 1);
+    const newNFTMetadata =
+      currentPage === 0
+        ? nftsRes.value
+        : nftsRes.value.filter(
+            (n) => nftsMetadata.find((n2) => n2.mint === n.mint) === undefined
+          );
+
+    if (currentPage > 0) {
+      setNFTsMetadata((nftsMetadata) => [...nftsMetadata, ...newNFTMetadata]);
+    } else {
+      setNFTsMetadata(newNFTMetadata);
+    }
+    setHasMore(
+      (currentPage + 1) * NFTS_PER_PAGE < collection.mintAddresses.length
+    );
+    setPage(currentPage + 1);
+  };
+
+  const loadListings = async () => {
+    if (!collection.mintAddresses) {
+      return;
+    }
+    const listingsRes = await OneOfOneToolsClient.activeListings(
+      collection.slug
+    );
+
+    if (listingsRes.isErr()) {
+      return;
+    }
+
+    const validListings = listingsRes.value.filter((l) =>
+      collection.mintAddresses.includes(l.mint)
+    );
+    setListings(validListings);
   };
 
   useEffect(() => {
-    setNFTsMetadata([]);
-    if (collection.mintAddresses.length > 0) {
-      getMoreNfts().then(() => {
-        setLoading(false);
-      });
-    } else {
+    getMoreNfts(0, NFTFilterType.ALL_ITEMS).then(() => {
+      loadListings();
       setLoading(false);
-    }
+    });
   }, []);
+
+  useEffect(() => {
+    getMoreNfts(0, filter).then(() => {
+      setLoading(false);
+    });
+  }, [filter]);
 
   const title = `1of1.tools | ${collection.name} NFT Listings`;
   const url = `https://1of1.tools/boutique/${collection.slug}`;
@@ -132,7 +174,12 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
               title={collection.name}
               subtitle={<CollectionSocial collection={collection} />}
               imgUrl={collection.imageURL ?? undefined}
-              right={<CollectionStats collection={collection} />}
+              right={
+                <CollectionStats
+                  collection={collection}
+                  numListings={listings.length}
+                />
+              }
             />
           ) : (
             <Header title="" />
@@ -140,15 +187,23 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
         </div>
 
         <div className="mt-4">
+          {listings && (
+            <div className="mx-1 flex items-end justify-end h-[40px]">
+              <NFTCollectionFilter
+                filter={filter}
+                didChangeFilter={(newFilter) => setFilter(newFilter)}
+              />
+            </div>
+          )}
           {nftsMetadata.length > 0 ? (
             <InfiniteScroll
               dataLength={nftsMetadata.length}
-              next={getMoreNfts}
+              next={() => getMoreNfts(page + 1, filter)}
               hasMore={hasMore}
               loader={<LoadingIndicator />}
               endMessage={""}
             >
-              <NFTGrid nfts={nftsMetadata} />
+              <NFTGrid nfts={nftsMetadata} listings={listings} />
             </InfiniteScroll>
           ) : isLoading ? (
             <LoadingGrid />

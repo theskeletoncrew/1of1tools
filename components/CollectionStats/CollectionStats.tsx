@@ -5,9 +5,10 @@ import { classNames } from "utils";
 
 interface Props {
   collection: Collection;
+  numListings: number;
 }
 
-const CollectionStats: React.FC<Props> = ({ collection }) => {
+const CollectionStats: React.FC<Props> = ({ collection, numListings }) => {
   return (
     <>
       <svg width="0" height="0" xmlns="http://www.w3.org/2000/svg">
@@ -63,9 +64,9 @@ const CollectionStats: React.FC<Props> = ({ collection }) => {
       </svg>
       <div className="bg-indigo-300 bg-opacity-10 px-3 py-2 sm:p-5 rounded-xl flex gap-5 sm:gap-8 mr-1 justify-evenly items-center">
         <div className="flex-col flex-1 hidden md:flex">
-          <label className="text-indigo-400 text-sm text-center">Items</label>
-          <span className="text-xs text-center">
-            {collection.mintAddresses.length}
+          <label className="text-indigo-400 text-sm text-center">Listed</label>
+          <span className="text-xs text-center whitespace-nowrap">
+            {numListings} / {collection.mintAddresses.length}
           </span>
         </div>
         <div className="flex flex-col flex-1">
