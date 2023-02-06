@@ -39,9 +39,13 @@ const NFTDisplay: React.FC<Props> = ({ nft }) => {
       </audio>
     );
   } else {
+    const apiURL = `/api/assets/nft/${nft.address.toString()}/2048?originalURL=${encodeURIComponent(
+      uri
+    )}`;
+
     return (
       <LoadingImage
-        src={proxyImgUrl(uri, 2048, 2048)}
+        src={apiURL}
         backupSrc={uri}
         loader={
           <div className="flex flex-col gap-2 justify-center items-center w-full h-[400px] rounded-xl bg-indigo-500 bg-opacity-10 text-xs animate-pulse">
