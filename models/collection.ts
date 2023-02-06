@@ -3,6 +3,7 @@ import { NFTListing } from "./nftListings";
 
 export interface Collection {
   name: string;
+  nameLowercase: string;
   slug: string;
   collectionAddress?: string | null;
   firstVerifiedCreator?: string | null;

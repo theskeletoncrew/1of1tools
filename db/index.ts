@@ -384,7 +384,7 @@ export async function getBoutiqueCollections(
         query = query.orderBy("weekVolume", "desc");
         break;
       case CollectionSortType.NAME_ASC:
-        query = query.orderBy("name", "asc");
+        query = query.orderBy("nameLowercase", "asc");
         break;
       default:
         console.log("no sort matching " + sort);
