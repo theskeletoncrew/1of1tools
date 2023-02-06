@@ -1,11 +1,7 @@
-import type { NextPage } from "next";
+import type { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { OneOfOneToolsClient } from "api-client";
-import {
-  NFTMetadata,
-  NFTMetadataOnChain,
-  NFTMetadataOffChain,
-} from "models/nftMetadata";
+import { NFTMetadata } from "models/nftMetadata";
 import { NFTEvent } from "models/nftEvent";
 import { shortenedAddress, tryPublicKey } from "utils";
 import { clusterApiUrl, network } from "utils/network";
@@ -31,7 +27,6 @@ import NFTOwnerControls from "components/NFTOwnerControls/NFTOwnerControls";
 import NFTCreatorControls from "components/NFTCreatorControls/NFTCreatorControls";
 import { useWallet } from "@solana/wallet-adapter-react";
 import NFTDisplay from "components/NFTDisplay/NFTDisplay";
-import { useRouter } from "next/router";
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingIndicator from "components/LoadingIndicator/LoadingIndicator";
 import { toast } from "react-hot-toast";
@@ -40,15 +35,69 @@ import { BellAlertIcon } from "@heroicons/react/24/outline";
 
 const EVENTS_PER_PAGE = 25;
 
-const NFTPage: NextPage = () => {
+interface Props {
+  nftMetadata: NFTMetadata;
+}
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const mintAddress = context.query.mintAddress as string;
+
+  try {
+    let nftMetadata: NFTMetadata | null = null;
+
+    const maxRetries = 1;
+    for (let i = 0; i <= maxRetries; i++) {
+      let metadataRes = await OneOfOneToolsClient.nfts([mintAddress], true);
+      if (metadataRes.isErr()) {
+        throw new Error("Unable to load NFT: " + metadataRes.error.message);
+      }
+
+      nftMetadata = metadataRes.value[0] ?? null;
+      if (
+        (!nftMetadata ||
+          !nftMetadata.onChainData ||
+          !nftMetadata.offChainData) &&
+        i < maxRetries
+      ) {
+        continue;
+      }
+      break;
+    }
+
+    if (!nftMetadata || !nftMetadata.onChainData || !nftMetadata.offChainData) {
+      throw new Error("Metadata unavailable");
+    }
+
+    // if (
+    //   nftMetadata.onChainData.tokenStandard &&
+    //   nftMetadata.onChainData.tokenStandard != "NonFungible" &&
+    //   nftMetadata.onChainData.tokenStandard != "NonFungibleEdition"
+    // ) {
+    //   throw new Error(
+    //     "Unexpected token type: " + nftMetadata.onChainData.tokenStandard
+    //   );
+    // }
+
+    return { props: { nftMetadata } };
+  } catch (error) {
+    console.log(error);
+    return {
+      redirect: {
+        destination:
+          "/error?msg=" +
+          encodeURIComponent((error as Error) ? (error as Error).message : ""),
+        permanent: false,
+      },
+    };
+  }
+};
+
+const NFTPage: NextPage<Props> = ({ nftMetadata }) => {
+  const onChainData = nftMetadata.onChainData!;
+  const offChainData = nftMetadata.offChainData!;
+
   const [isLoading, setLoading] = useState(false);
-
-  const router = useRouter();
-  const mintAddress = router.query.mintAddress as string;
-
   const [events, setEvents] = useState<NFTEvent[]>();
-  const [onChainData, setOnChainData] = useState<NFTMetadataOnChain>();
-  const [offChainData, setOffChainData] = useState<NFTMetadataOffChain>();
   const [errorMessage, setErrorMessage] = useState<string>();
   const [eventsPaginationToken, setEventsPaginationToken] = useState<
     PaginationToken | undefined
@@ -129,7 +178,7 @@ const NFTPage: NextPage = () => {
 
   const getMoreEvents = async (isFirstLoad: boolean = false) => {
     const eventsRes = await OneOfOneToolsClient.events(
-      mintAddress,
+      nftMetadata.mint,
       EVENTS_PER_PAGE,
       eventsPaginationToken
     );
@@ -168,7 +217,7 @@ const NFTPage: NextPage = () => {
     exchangeArtNotifications: boolean,
     dialectAddress: string | undefined
   ) => {
-    if (!mintAddress || !session?.user?.id) {
+    if (!nftMetadata.mint || !session?.user?.id) {
       return;
     }
 
@@ -180,7 +229,7 @@ const NFTPage: NextPage = () => {
 
     const result =
       await OneOfOneToolsClient.setDialectNftNotificationSubscriptionSettings(
-        mintAddress,
+        nftMetadata.mint,
         dialectAddress ?? session.user.id,
         formfunctionNotifications,
         exchangeArtNotifications
@@ -216,97 +265,57 @@ const NFTPage: NextPage = () => {
         toast.error(result.error.message);
       }
     };
-    if (session?.user?.id && mintAddress) {
-      loadNotificationSettings(mintAddress, session.user.id);
+    if (session?.user?.id && nftMetadata.mint) {
+      loadNotificationSettings(nftMetadata.mint, session.user.id);
     }
-  }, [session, mintAddress]);
+  }, [session, nftMetadata.mint]);
 
   useEffect(() => {
-    const loadNFTData = async (address: string) => {
-      try {
-        let nftMetadata: NFTMetadata | null = null;
-
-        const maxRetries = 1;
-        for (let i = 0; i <= maxRetries; i++) {
-          let metadataRes = await OneOfOneToolsClient.nfts([address], true);
-          if (metadataRes.isErr()) {
-            console.log(metadataRes.error.message);
-            setErrorMessage("Failed to load NFT.");
-            throw new Error("Unable to load NFT: " + metadataRes.error.message);
-          }
-
-          nftMetadata = metadataRes.value[0] ?? null;
-          if (
-            (!nftMetadata ||
-              !nftMetadata.onChainData ||
-              !nftMetadata.offChainData) &&
-            i < maxRetries
-          ) {
-            continue;
-          }
-          break;
-        }
-
-        if (
-          !nftMetadata ||
-          !nftMetadata.onChainData ||
-          !nftMetadata.offChainData
-        ) {
-          throw new Error("Metadata unavailable");
-        }
-
-        // if (
-        //   nftMetadata.onChainData.tokenStandard &&
-        //   nftMetadata.onChainData.tokenStandard != "NonFungible" &&
-        //   nftMetadata.onChainData.tokenStandard != "NonFungibleEdition"
-        // ) {
-        //   throw new Error(
-        //     "Unexpected token type: " + nftMetadata.onChainData.tokenStandard
-        //   );
-        // }
-
-        setOnChainData(nftMetadata.onChainData);
-        setOffChainData(nftMetadata.offChainData);
-      } catch (error) {
-        console.log(error);
-        setErrorMessage(
-          (error as Error) ? (error as Error).message : undefined
-        );
-      }
-    };
-
-    if (mintAddress && !isLoading) {
-      setEvents(undefined);
-      setLoading(true);
-      loadNFTData(mintAddress).then(() => {
-        getMoreEvents(true).then(() => {
-          setLoading(false);
-        });
-      });
-    }
-  }, [mintAddress]);
+    setLoading(true);
+    getMoreEvents(true).then(() => {
+      setLoading(false);
+    });
+  }, []);
 
   if (!isLoading && errorMessage) {
     return <ErrorPage message={errorMessage} />;
   } else {
-    const title = `one / one tools${
-      " - " + offChainData?.name + ": " + onChainData?.mint
-    }`;
-    const desc = title;
+    const title = `1of1.tools - ${offChainData.name}: ${onChainData.mint}`;
+    const url = `https://1of1.tools/nft/${nftMetadata.mint}`;
+    const description = `View ${offChainData.name} aggregated nft listings, owner information, and historical activity across all marketplaces.`;
+    const featuredImageURL = offChainData.image
+      ? `https://1of1.tools/api/assets/nft/${
+          nftMetadata.mint
+        }/640?originalURL=${encodeURIComponent(offChainData.image)}`
+      : "https://1of1.tools/images/1of1tools-boutique-collections.png";
 
     return (
       <Layout>
         <div>
           <Head>
             <title>{title}</title>
-            <meta name="description" content={desc} />
+            <meta name="description" content={description} />
             <link rel="icon" href="/favicon.ico" />
+
+            <meta name="description" content={description} />
+            <meta name="theme-color" content="#ffffff" />
+
+            <meta property="og:url" content={url} />
+            <meta property="og:type" content="website" />
+            <meta property="og:title" content={title} />
+            <meta property="og:description" content={description} />
+            <meta property="og:image" content={featuredImageURL} />
+
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content={title} />
+            <meta name="twitter:description" content={description} />
+            <meta name="twitter:image" content={featuredImageURL} />
           </Head>
 
           <div className="mt-4">
             <Header
-              title={isLoading ? "Loading..." : offChainData?.name ?? ""}
-              subtitle={offChainData?.description}
+              title={offChainData.name}
+              subtitle={offChainData.description}
             />
 
             {session && session.user?.id && didLoadNotificationSettings && (
@@ -347,10 +356,10 @@ const NFTPage: NextPage = () => {
                       ))}
                     </div>
                   ) : (
-                    (offChainData?.attributes ?? []).length > 0 && (
+                    (offChainData.attributes ?? []).length > 0 && (
                       <div className="mb-4">
                         <NFTAttributesTable
-                          attributes={offChainData?.attributes ?? []}
+                          attributes={offChainData.attributes ?? []}
                         />
                       </div>
                     )
@@ -375,7 +384,7 @@ const NFTPage: NextPage = () => {
                       <NFTOwnerControls
                         nft={nft}
                         wallet={wallet}
-                        imageUrl={offChainData?.image ?? ""}
+                        imageUrl={offChainData.image ?? ""}
                       />
                     </div>
                   )}
@@ -411,31 +420,29 @@ const NFTPage: NextPage = () => {
             </div>
           </div>
         </div>
-        {mintAddress && (
-          <NotificationSubscriptionModal
-            prompt={`Get notified about events affecting ${shortenedAddress(
-              mintAddress
-            )} on the
+        <NotificationSubscriptionModal
+          prompt={`Get notified about events affecting ${shortenedAddress(
+            nftMetadata.mint
+          )} on the
           following exchanges:`}
-            isShowing={isShowingNotificationsModal}
-            close={() => setIsShowingNotificationsModal(false)}
-            formfunctionNotifications={formfunctionNotifications}
-            exchangeArtNotifications={exchangeArtNotifications}
-            dialectAddress={dialectAddress}
-            saveNotificationSettings={(
+          isShowing={isShowingNotificationsModal}
+          close={() => setIsShowingNotificationsModal(false)}
+          formfunctionNotifications={formfunctionNotifications}
+          exchangeArtNotifications={exchangeArtNotifications}
+          dialectAddress={dialectAddress}
+          saveNotificationSettings={(
+            formfunctionNotifications,
+            exchangeArtNotifications,
+            dialectAddress,
+            discordSubscriptions // note we are intentionally ignoring here - creator only for now
+          ) => {
+            saveNotificationSettings(
               formfunctionNotifications,
               exchangeArtNotifications,
-              dialectAddress,
-              discordSubscriptions // note we are intentionally ignoring here - creator only for now
-            ) => {
-              saveNotificationSettings(
-                formfunctionNotifications,
-                exchangeArtNotifications,
-                dialectAddress
-              );
-            }}
-          />
-        )}
+              dialectAddress
+            );
+          }}
+        />
       </Layout>
     );
   }

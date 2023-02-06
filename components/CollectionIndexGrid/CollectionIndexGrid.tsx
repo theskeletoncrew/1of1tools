@@ -263,7 +263,7 @@ const CollectionIndexGrid: React.FC<Props> = ({
 
           return (
             <div
-              key={i}
+              key={item.slug}
               className={classNames(
                 "text-center flex items-center justify-center group relative",
                 view == ViewType.Grid

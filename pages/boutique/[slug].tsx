@@ -21,40 +21,47 @@ import LoadingGrid from "components/LoadingGrid/LoadingGrid";
 import { Collection } from "models/collection";
 import CollectionSocial from "components/CollectionSocial/CollectionSocial";
 import CollectionStats from "components/CollectionStats/CollectionStats";
+import { GetServerSideProps } from "next";
 
-const CollectionPage: NextPage = () => {
+interface Props {
+  collection: Collection;
+}
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const slug = context.query.slug as string;
+
+  const collectionRes = await OneOfOneToolsClient.boutiqueCollection(slug);
+  if (collectionRes.isErr()) {
+    return {
+      redirect: {
+        destination:
+          "/error?msg=" +
+          encodeURIComponent(
+            "Unable to retrieve collection: " + collectionRes.error.message
+          ),
+        permanent: false,
+      },
+    };
+  }
+  const collection = collectionRes.value;
+  return { props: { collection } };
+};
+
+const CollectionPage: NextPage<Props> = ({ collection }) => {
   const [isLoading, setLoading] = useState(false);
-
-  const router = useRouter();
-  const slug = router.query.slug as string;
-
-  const [collection, setCollection] = useState<Collection>();
-  const [mintList, setMintList] = useState<string[]>();
   const [nftsMetadata, setNFTsMetadata] = useState<NFTMetadata[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string>();
 
-  const getCollection = async () => {
-    const collectionRes = await OneOfOneToolsClient.boutiqueCollection(slug);
-    if (collectionRes.isErr()) {
-      setLoading(false);
-      setErrorMessage(
-        "Unable to retrieve collection: " + collectionRes.error.message
-      );
-      return;
-    }
-    const collection = collectionRes.value;
-    setCollection(collection);
-    setMintList(collection.mintAddresses);
-  };
-
   const getMoreNfts = async () => {
-    if (!mintList) {
+    if (!collection.mintAddresses) {
       return;
     }
     const nftsRes = await OneOfOneToolsClient.nfts(
-      mintList.slice(page * NFTS_PER_PAGE, (page + 1) * NFTS_PER_PAGE)
+      collection.mintAddresses.slice(
+        page * NFTS_PER_PAGE,
+        (page + 1) * NFTS_PER_PAGE
+      )
     );
 
     if (nftsRes.isErr()) {
@@ -68,37 +75,55 @@ const CollectionPage: NextPage = () => {
         (n) => nftsMetadata.find((n2) => n2.mint === n.mint) === undefined
       ),
     ]);
-    setHasMore((page + 1) * NFTS_PER_PAGE < mintList.length);
+    setHasMore((page + 1) * NFTS_PER_PAGE < collection.mintAddresses.length);
     setPage(page + 1);
   };
 
   useEffect(() => {
-    if (slug && nftsMetadata.length == 0 && !isLoading) {
-      setLoading(true);
-      getCollection();
-    }
-  }, [slug]);
-
-  useEffect(() => {
     setNFTsMetadata([]);
-    if (mintList) {
-      if (mintList.length > 0) {
-        getMoreNfts().then(() => {
-          setLoading(false);
-        });
-      } else {
+    if (collection.mintAddresses.length > 0) {
+      getMoreNfts().then(() => {
         setLoading(false);
-      }
+      });
+    } else {
+      setLoading(false);
     }
-  }, [mintList]);
+  }, []);
+
+  const title = `1of1.tools | ${collection.name} NFT Listings`;
+  const url = `https://1of1.tools/boutique/${collection.slug}`;
+  const description = `View ${collection.name} aggregated nft listings, owner information, historical activity, and all-time high sales across all marketplaces.`;
+  const featuredImageURL = collection.imageURL
+    ? `https://1of1.tools/api/assets/collection/${
+        collection.slug
+      }/640?originalURL=${encodeURIComponent(collection.imageURL)}`
+    : null;
 
   return (
     <Layout>
       <div>
         <Head>
-          <title>one / one tools</title>
-          <meta name="description" content="one / one tools" />
+          <title>{title}</title>
+          <meta name="description" content={description} />
           <link rel="icon" href="/favicon.ico" />
+
+          <meta name="description" content={description} />
+          <meta name="theme-color" content="#ffffff" />
+
+          <meta property="og:url" content={url} />
+          <meta property="og:type" content="website" />
+          <meta property="og:title" content={title} />
+          <meta property="og:description" content={description} />
+          {featuredImageURL && (
+            <meta property="og:image" content={featuredImageURL} />
+          )}
+
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={title} />
+          <meta name="twitter:description" content={description} />
+          {featuredImageURL && (
+            <meta name="twitter:image" content={featuredImageURL} />
+          )}
         </Head>
 
         <div className="mt-4">

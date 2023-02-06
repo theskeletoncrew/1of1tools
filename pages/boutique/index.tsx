@@ -199,13 +199,35 @@ const IndexPage: NextPage = () => {
     return true;
   };
 
+  const title = `1of1.tools | Boutique NFT Collection Listings`;
+  const url = `https://1of1.tools/boutique`;
+  const description = `View Boutique Collections and their aggregated nft listings, owner information, historical activity, and all-time high sales across all marketplaces.`;
+  const featuredImageURL =
+    "https://1of1.tools/images/1of1tools-boutique-collections.png";
+
   return (
     <Layout>
       <div>
         <Head>
-          <title>one / one tools</title>
-          <meta name="description" content="one / one tools" />
+          <title>{title}</title>
+          <meta name="description" content={description} />
           <link rel="icon" href="/favicon.ico" />
+
+          <meta name="description" content={description} />
+          <meta name="theme-color" content="#ffffff" />
+
+          <meta property="og:url" content={url} />
+          <meta property="og:type" content="website" />
+          <meta property="og:title" content={title} />
+          <meta property="og:description" content={description} />
+          {featuredImageURL && (
+            <meta property="og:image" content={featuredImageURL} />
+          )}
+
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={title} />
+          <meta name="twitter:description" content={description} />
+          <meta name="twitter:image" content={featuredImageURL} />
         </Head>
 
         <div className="mt-4">
