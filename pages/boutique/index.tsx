@@ -125,6 +125,17 @@ const IndexPage: NextPage = () => {
       return false;
     }
 
+    if (mintList) {
+      const firstInvalidMint = mintList.find((m) => tryPublicKey(m) === null);
+      if (firstInvalidMint !== undefined) {
+        toast.error(
+          "Your mint list contains one or more invalid addresses: " +
+            firstInvalidMint
+        );
+        return false;
+      }
+    }
+
     if (collectionAddress) {
       const publicKey = tryPublicKey(collectionAddress);
       if (!publicKey) {

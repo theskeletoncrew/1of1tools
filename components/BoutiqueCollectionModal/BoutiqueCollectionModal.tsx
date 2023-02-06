@@ -1,7 +1,7 @@
 import { XCircleIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import Modal from "react-modal";
-import { toast } from "react-hot-toast";
+import { notEmptyOrEmptyString } from "utils";
 
 interface Props {
   prompt: string;
@@ -188,7 +188,7 @@ const BoutiqueCollectionsModal: React.FC<Props> = ({
             >
               <span>Mint List:</span>
               <span className="text-xs">
-                enter one address per line, no commas
+                enter addresses one per line, or separated by commas
               </span>
             </label>
             <textarea
@@ -213,11 +213,15 @@ const BoutiqueCollectionsModal: React.FC<Props> = ({
               type="button"
               className="button"
               onClick={async () => {
+                const mintList = mintListStr
+                  ? mintListStr
+                      ?.split(/[\n,]/)
+                      .map((m) => m.trim())
+                      .filter(notEmptyOrEmptyString)
+                  : null;
                 const success = await submitCollection(
                   collectionAddress,
-                  mintListStr
-                    ? mintListStr?.split("\n").map((m) => m.trim())
-                    : null,
+                  mintList,
                   collectionName,
                   slug,
                   twitterURL,
