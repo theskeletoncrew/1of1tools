@@ -30,7 +30,7 @@
   @apply w-full h-full overflow-hidden;
 }
 .dropImage {
-  @apply w-full h-full object-cover overflow-hidden;
+  @apply w-full h-full object-cover overflow-hidden aspect-1 bg-slate-900;
 }
 
 .dropButton {
