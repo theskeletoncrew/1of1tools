@@ -23,6 +23,27 @@ import { NextPage } from "next";
 import { network, clusterApiUrl } from "utils/network";
 import { SolanaAuthProvider } from "components/Auth";
 import { SessionProvider } from "next-auth/react";
+import Router from 'next/router';
+import { toast } from "react-hot-toast";
+
+let loadingToastId: string | undefined;
+let loadingTimeoutId: any;
+
+Router.events.on('routeChangeStart', () => {
+  loadingTimeoutId = setTimeout(() => {
+    loadingToastId = toast.loading("Loading...");    
+  }, 500);
+});
+Router.events.on('routeChangeComplete', () => {
+  clearTimeout(loadingTimeoutId);
+  toast.dismiss(loadingToastId);
+  loadingToastId == undefined;
+});
+Router.events.on('routeChangeError', () => {
+  clearTimeout(loadingTimeoutId);
+  toast.dismiss(loadingToastId);
+  loadingToastId == undefined;
+});
 
 export interface DialectProvidersProps {
   endpoint: string;
