@@ -65,7 +65,7 @@ apiRoute.post(async (req, res) => {
         task: {
           name: taskName,
           httpRequest: {
-            url: "https://1of1.tools/api/collection/boutique/webhook/handle-task",
+            url: "https://1of1.tools/api/collections/boutique/webhook/handle-task",
             headers: {
               "Content-Type": "application/json",
             },
