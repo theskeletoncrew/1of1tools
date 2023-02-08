@@ -1,20 +1,14 @@
 export interface NFTEvent {
   signature: string;
   timestamp: number;
-  slot: number;
   type: string;
   source: string;
   description: string;
   amount: number;
-  fee: number;
-  feePayer: string;
   saleType: string;
   buyer: string;
   seller: string;
-  staker: string;
   nfts: NFTDetails[];
-  tokenTransfers: TokenTransfer[];
-  nativeTransfers: NativeTransfer[];
 }
 
 export interface NFTDetails {
@@ -26,18 +20,47 @@ export interface NFTDetails {
   tokenStandard?: string;
 }
 
-export interface TokenTransfer {
-  fromTokenAccount: string;
-  toTokenAccount: string;
-  fromUserAccount: string;
-  toUserAccount: string;
-  tokenAmount: number;
+export interface OneOfOneNFTEvent {
+  signature: string;
+  timestamp: number;
+  type: string;
+  source: string;
+  description: string;
+  amount: number;
+  saleType: string;
+  buyer: string;
+  seller: string;
   mint: string;
-  tokenStandard: string;
+  name: string;
+  firstVerifiedCreator?: string;
+  verifiedCollectionAddress?: string;
+  burned?: boolean;
 }
 
-export interface NativeTransfer {
-  fromUserAccount: string;
-  toUserAccount: string;
-  amount: number;
-}
+export const oneOfOneNFTEvent = (
+  nftEvent: NFTEvent
+): OneOfOneNFTEvent | undefined => {
+  const nft = nftEvent.nfts?.length ?? 0 > 0 ? nftEvent.nfts[0] : null;
+  if (!nft) {
+    console.log("No NFT for event:");
+    console.log(nftEvent);
+    return undefined;
+  }
+
+  return {
+    signature: nftEvent.signature,
+    timestamp: nftEvent.timestamp,
+    type: nftEvent.type,
+    source: nftEvent.source,
+    description: nftEvent.description,
+    amount: nftEvent.amount,
+    saleType: nftEvent.saleType,
+    buyer: nftEvent.buyer,
+    seller: nftEvent.seller,
+    mint: nft.mint,
+    name: nft.name,
+    firstVerifiedCreator: nft.firstVerifiedCreator,
+    verifiedCollectionAddress: nft.verifiedCollectionAddress,
+    burned: nft.burned,
+  };
+};

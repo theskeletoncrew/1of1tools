@@ -1,9 +1,11 @@
-import { Firestore, FieldPath } from "@google-cloud/firestore";
+import { Firestore, FieldValue } from "@google-cloud/firestore";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { CollectionSortType } from "components/CollectionSort/CollectionSort";
 import { randomUUID } from "crypto";
+import { TransactionType } from "helius-sdk";
 import { Account, DiscordAccount, DiscordGuild } from "models/account";
-import { ATHSale } from "models/athSale";
-import { Collection, CollectionFloor } from "models/collection";
+import { Collection, CollectionNFT } from "models/collection";
+import { OneOfOneNFTEvent } from "models/nftEvent";
 import {
   DialectCreatorNotificationSetting,
   DialectNftNotificationSetting,
@@ -12,6 +14,7 @@ import {
 } from "models/notificationSetting";
 import { err, ok, Result } from "neverthrow";
 import { COLLECTIONS_PER_PAGE } from "utils/config";
+import { recalculateFloorPrice } from "utils/floorPrice";
 
 const db = new Firestore({
   projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
@@ -469,15 +472,21 @@ export async function addBoutiqueCollection(
   }
 }
 
-export async function setBoutiqueCollectionFloor(
-  slug: string,
-  floor: CollectionFloor | null
+export async function addAllMintsAsTracked(
+  collection: Collection
 ): Promise<Result<null, Error>> {
   try {
-    await db
-      .collection("boutique-collections")
-      .doc(slug)
-      .update({ floor: floor });
+    const batch = db.batch();
+
+    collection.mintAddresses.forEach((address) => {
+      var docRef = db.collection("boutique-collection-items").doc(address);
+      batch.set(docRef, {
+        collectionSlug: collection.slug,
+      });
+    });
+
+    await batch.commit();
+
     return ok(null);
   } catch (error) {
     return err(error as Error);
@@ -505,17 +514,185 @@ export async function setBoutiqueCollectionFiltersAndSize(
 export async function setBoutiqueCollectionStats(
   slug: string,
   totalVolume: number,
+  monthVolume: number,
   weekVolume: number,
   dayVolume: number,
-  athSale: ATHSale
+  athSale: OneOfOneNFTEvent | null
 ): Promise<Result<null, Error>> {
   try {
     await db.collection("boutique-collections").doc(slug).update({
       totalVolume: totalVolume,
+      monthVolume: monthVolume,
       weekVolume: weekVolume,
       dayVolume: dayVolume,
       athSale: athSale,
     });
+    return ok(null);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function addBoutiqueCollectionEvent(
+  slug: string,
+  event: OneOfOneNFTEvent
+): Promise<Result<null, Error>> {
+  try {
+    const { signature, ...eventDetails } = event;
+
+    // add the event
+    await db
+      .collection(`boutique-collection-events`)
+      .doc(signature)
+      .set({
+        ...eventDetails,
+        ...{ collectionSlug: slug },
+      });
+    return ok(null);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
+  event: OneOfOneNFTEvent
+): Promise<Result<null, Error>> {
+  try {
+    const nftRef = await db
+      .collection("boutique-collection-items")
+      .doc(event.mint)
+      .get();
+    if (!nftRef.exists) {
+      return err(new Error("NFT is not tracked"));
+    }
+
+    const nft = nftRef.data() as CollectionNFT;
+    const slug = nft.collectionSlug;
+
+    const { signature, ...eventDetails } = event;
+
+    await db.runTransaction(async (transaction) => {
+      // add the event
+      const eventRef = db
+        .collection(`boutique-collection-events`)
+        .doc(signature);
+      await transaction.set(eventRef, {
+        ...eventDetails,
+        ...{ collectionSlug: slug },
+      });
+
+      let collection: Collection | null = null;
+
+      // for mints and sales, update stats as part of the same transaction
+      if (
+        [TransactionType.NFT_MINT, TransactionType.NFT_SALE].includes(
+          event.type as TransactionType
+        )
+      ) {
+        const collectionRes = await getBoutiqueCollection(slug);
+        if (!collectionRes.isOk() || !collectionRes.value) {
+          return err(new Error("Collection does not exist"));
+        }
+        collection = collectionRes.value;
+
+        // get all events in the collection for the last 30 days
+        const nowInSeconds = new Date().getTime() / 1000.0;
+        const dayInSeconds = 60 * 60 * 24;
+        const snapshot = await transaction.get(
+          db
+            .collection("boutique-collection-events")
+            .where("collectionSlug", "==", slug)
+            .where("timestamp", ">", nowInSeconds - 30 * dayInSeconds)
+        );
+
+        const events = snapshot.docs.map((doc) => {
+          const event = doc.data() as OneOfOneNFTEvent;
+          event.signature = doc.id;
+          return event;
+        });
+
+        // recalculate 30d, 7d, 1d volume, and we'll just increment total volume
+        const monthVolume = events.reduce(
+          (prev, current) => prev + current.amount / LAMPORTS_PER_SOL,
+          0
+        );
+        const weekVolume = events
+          .filter((e) => e.timestamp > nowInSeconds - 7 * dayInSeconds)
+          .reduce(
+            (prev, current) => prev + current.amount / LAMPORTS_PER_SOL,
+            0
+          );
+        const dayVolume = events
+          .filter((e) => e.timestamp > nowInSeconds - dayInSeconds)
+          .reduce(
+            (prev, current) => prev + current.amount / LAMPORTS_PER_SOL,
+            0
+          );
+
+        const update: any = {
+          monthVolume: monthVolume,
+          weekVolume: weekVolume,
+          dayVolume: dayVolume,
+          totalVolume: FieldValue.increment(event.amount / LAMPORTS_PER_SOL),
+        };
+
+        // change ATH sale if this event qualifies
+        if (!collection.athSale || event.amount > collection.athSale.amount) {
+          update.athSale = {
+            amount: event.amount,
+            buyer: event.buyer,
+            mint: event.mint,
+            name: event.name,
+            seller: event.seller,
+            signature: event.signature,
+            source: event.source,
+            timestamp: event.timestamp,
+          };
+        }
+
+        // update 30d, 7d, 1d, increment total volume
+        await transaction.set(
+          db.collection(`boutique-collections`).doc(slug),
+          update
+        );
+      }
+
+      // for events that could effect floor price, recalculate floor price
+      if (
+        [
+          TransactionType.NFT_LISTING ||
+            TransactionType.NFT_CANCEL_LISTING ||
+            TransactionType.NFT_SALE ||
+            TransactionType.NFT_MINT ||
+            TransactionType.BURN ||
+            TransactionType.BURN_NFT,
+        ].includes(event.type as TransactionType)
+      ) {
+        if (!collection) {
+          const collectionRes = await getBoutiqueCollection(slug);
+          if (!collectionRes.isOk() || !collectionRes.value) {
+            return err(new Error("Collection does not exist"));
+          }
+          collection = collectionRes.value;
+        }
+        if (!collection) {
+          return err(new Error("Collection does not exist"));
+        }
+
+        const floorRes = await recalculateFloorPrice(collection);
+        if (floorRes.isOk()) {
+          const floor = floorRes.value;
+          await transaction.update(
+            db.collection("boutique-collections").doc(slug),
+            { floor: floor }
+          );
+          console.log(
+            `Saved floor of collection: ${collection.name} as ${floor}`
+          );
+        }
+      }
+    });
+
     return ok(null);
   } catch (error) {
     return err(error as Error);

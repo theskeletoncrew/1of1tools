@@ -1,27 +1,29 @@
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { setBoutiqueCollectionStats } from "db";
+import { addBoutiqueCollectionEvent, setBoutiqueCollectionStats } from "db";
 import { TransactionType } from "helius-sdk";
-import { ATHSale } from "models/athSale";
 import { Collection } from "models/collection";
-import { NFTEvent } from "models/nftEvent";
+import { NFTEvent, OneOfOneNFTEvent, oneOfOneNFTEvent } from "models/nftEvent";
 import { err, ok, Result } from "neverthrow";
+import { notEmpty } from "utils";
 
 const HELIUS_API_KEY = process.env.HELIUS_API_KEY || "";
 
-export const updateVolumeForCollection = async (
+export const importAllEventsForCollection = async (
   collection: Collection
 ): Promise<
   Result<
     {
       totalVolume: number;
+      monthVolume: number;
       weekVolume: number;
       dayVolume: number;
-      athSale: ATHSale;
+      athSale: OneOfOneNFTEvent | undefined;
     },
     Error
   >
 > => {
   let totalVolume = 0;
+  let monthVolume = 0;
   let dayVolume = 0;
   let weekVolume = 0;
 
@@ -48,16 +50,7 @@ export const updateVolumeForCollection = async (
     limit: 1000,
   };
 
-  let athSale = {
-    amount: 0,
-    mint: "",
-    name: "",
-    signature: "",
-    timestamp: 0,
-    source: "",
-    buyer: "",
-    seller: "",
-  };
+  let athSale: OneOfOneNFTEvent | undefined;
 
   do {
     if (paginationToken) {
@@ -86,33 +79,31 @@ export const updateVolumeForCollection = async (
     }
 
     const events = responseJSON.result as NFTEvent[];
-    events.forEach((event) => {
-      const nft = event.nfts[0];
-      if (nft && collection.mintAddresses.includes(nft.mint)) {
-        const solAmount = event.amount / LAMPORTS_PER_SOL;
+    events
+      .map((e) => oneOfOneNFTEvent(e))
+      .filter(notEmpty)
+      .forEach(async (event) => {
+        if (collection.mintAddresses.includes(event.mint)) {
+          const solAmount = event.amount / LAMPORTS_PER_SOL;
 
-        totalVolume += solAmount;
+          totalVolume += solAmount;
 
-        if (event.timestamp > nowInSeconds - dayInSeconds) {
-          dayVolume += solAmount;
+          if (event.timestamp > nowInSeconds - dayInSeconds) {
+            dayVolume += solAmount;
+          }
+          if (event.timestamp > nowInSeconds - 30 * dayInSeconds) {
+            monthVolume += solAmount;
+          }
+          if (event.timestamp > nowInSeconds - 7 * dayInSeconds) {
+            weekVolume += solAmount;
+          }
+          if (!athSale || event.amount > athSale.amount) {
+            athSale = event;
+          }
         }
-        if (event.timestamp > nowInSeconds - 7 * dayInSeconds) {
-          weekVolume += solAmount;
-        }
-        if (event.amount > athSale.amount) {
-          athSale = {
-            amount: event.amount,
-            mint: nft.mint,
-            name: nft.name,
-            signature: event.signature,
-            timestamp: event.timestamp,
-            source: event.source,
-            buyer: event.buyer,
-            seller: event.seller,
-          };
-        }
-      }
-    });
+
+        await addBoutiqueCollectionEvent(collection.slug, event);
+      });
 
     paginationToken = responseJSON.paginationToken;
   } while (paginationToken);
@@ -120,9 +111,10 @@ export const updateVolumeForCollection = async (
   const setTotalVolumeRes = await setBoutiqueCollectionStats(
     collection.slug,
     totalVolume,
+    monthVolume,
     weekVolume,
     dayVolume,
-    athSale
+    athSale ?? null
   );
   if (!setTotalVolumeRes.isOk()) {
     return err(new Error("Failed to set collection total volume."));
@@ -130,6 +122,7 @@ export const updateVolumeForCollection = async (
 
   return ok({
     totalVolume: totalVolume,
+    monthVolume: monthVolume,
     weekVolume: weekVolume,
     dayVolume: dayVolume,
     athSale: athSale,

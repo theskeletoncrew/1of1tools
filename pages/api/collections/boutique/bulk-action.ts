@@ -1,7 +1,6 @@
 import { getBoutiqueCollections } from "db";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
-import { updateVolumeForCollection } from "utils/volume";
 
 const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
   onError(error, req, res) {
@@ -30,7 +29,7 @@ apiRoute.post(async (req, res) => {
 
     for (let i = 0; i < collections.length; i++) {
       const collection = collections[i]!;
-      await updateVolumeForCollection(collection);
+      // await updateVolumeForCollection(collection);
     }
 
     res.status(200).json({

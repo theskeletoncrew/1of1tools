@@ -1,4 +1,4 @@
-import { ATHSale } from "./athSale";
+import { NFTEvent, OneOfOneNFTEvent } from "./nftEvent";
 import { NFTListing } from "./nftListings";
 
 export interface Collection {
@@ -17,11 +17,19 @@ export interface Collection {
   dayVolume?: number | null;
   weekVolume?: number | null;
   totalVolume?: number | null;
-  athSale?: ATHSale | null;
+  athSale?: OneOfOneNFTEvent | null;
 }
 
 export interface CollectionFloor {
   mint: string;
   name: string;
   listing: NFTListing;
+}
+
+export interface CollectionNFT {
+  address: string;
+  collectionSlug: string;
+  name?: string | null;
+  localImage?: string | null;
+  metadata?: any | null;
 }

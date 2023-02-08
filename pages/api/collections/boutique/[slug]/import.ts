@@ -1,10 +1,18 @@
 import { Metaplex, Nft } from "@metaplex-foundation/js";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { getBoutiqueCollection, setBoutiqueCollectionFiltersAndSize } from "db";
+import {
+  addAllMintsAsTracked,
+  getBoutiqueCollection,
+  setBoutiqueCollectionFiltersAndSize,
+} from "db";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import { clusterApiUrl, network } from "utils/network";
-import { updateVolumeForCollection } from "utils/volume";
+import { importAllEventsForCollection } from "utils/import";
+import { Helius } from "helius-sdk";
+
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY || "";
+const HELIUS_WEBHOOK_ID = process.env.HELIUS_WEBHOOK_ID || "";
 
 const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
   onError(error, req, res) {
@@ -44,6 +52,7 @@ apiRoute.post(async (req, res) => {
       return;
     }
 
+    // determine the collection address and first creator address
     let collectionAddress = collection.collectionAddress;
     let firstVerifiedCreator = collection.firstVerifiedCreator;
 
@@ -91,7 +100,18 @@ apiRoute.post(async (req, res) => {
       collection.firstVerifiedCreator = firstVerifiedCreator;
     }
 
-    const updateRes = await updateVolumeForCollection(collection);
+    // add all of the mint addresses to the list of tracked addresses
+    const addRes = await addAllMintsAsTracked(collection);
+    if (!addRes.isOk()) {
+      res.status(500).json({
+        success: false,
+        message: addRes.error.message,
+      });
+      return;
+    }
+
+    // import all of the historical events and calculate stats
+    const updateRes = await importAllEventsForCollection(collection);
     if (!updateRes.isOk()) {
       res.status(500).json({
         success: false,
@@ -100,12 +120,19 @@ apiRoute.post(async (req, res) => {
       return;
     }
 
+    // subscribe webhook to events about this creator address
+    const helius = new Helius(HELIUS_API_KEY);
+    await helius.appendAddressesToWebhook(HELIUS_WEBHOOK_ID, [
+      firstVerifiedCreator,
+    ]);
+
     res.status(200).json({
       success: true,
       totalVolume: updateRes.value.totalVolume,
+      monthVolume: updateRes.value.monthVolume,
       weekVolume: updateRes.value.weekVolume,
       dayVolume: updateRes.value.dayVolume,
-      athSale: updateRes.value.athSale,
+      athSale: updateRes.value.athSale ?? null,
     });
   } catch (error) {
     res.status(500).json({
