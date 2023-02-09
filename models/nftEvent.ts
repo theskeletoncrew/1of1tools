@@ -41,7 +41,7 @@ export const oneOfOneNFTEvent = (
   nftEvent: NFTEvent
 ): OneOfOneNFTEvent | undefined => {
   const nft = nftEvent.nfts?.length ?? 0 > 0 ? nftEvent.nfts[0] : null;
-  if (!nft) {
+  if (!nft || !nft.mint) {
     console.log("No NFT for event:");
     console.log(nftEvent);
     return undefined;
@@ -58,9 +58,9 @@ export const oneOfOneNFTEvent = (
     buyer: nftEvent.buyer,
     seller: nftEvent.seller,
     mint: nft.mint,
-    name: nft.name,
-    firstVerifiedCreator: nft.firstVerifiedCreator,
-    verifiedCollectionAddress: nft.verifiedCollectionAddress,
-    burned: nft.burned,
+    name: nft.name ?? "",
+    firstVerifiedCreator: nft.firstVerifiedCreator ?? "",
+    verifiedCollectionAddress: nft.verifiedCollectionAddress ?? "",
+    burned: nft.burned ?? false,
   };
 };

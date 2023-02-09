@@ -877,21 +877,19 @@ export async function addNewTrackedMint(
     return undefined;
   }
 
-  const updatedMints = collection.mintAddresses.concat(mintAddress);
-  // add mint address to collection
-  console.log(
-    "updating the mint addresses on the collection " + collection.slug
-  );
-  await db.collection(`boutique-collections`).doc(collection.slug).set(
-    {
-      mintAddresses: updatedMints,
-    },
-    { merge: true }
-  );
+  if (!collection.mintAddresses.includes(mintAddress)) {
+    const updatedMints = collection.mintAddresses.concat(mintAddress);
+    // add mint address to collection
+    await db.collection(`boutique-collections`).doc(collection.slug).set(
+      {
+        mintAddresses: updatedMints,
+      },
+      { merge: true }
+    );
 
-  // add all of the mint addresses to the list of tracked addresses
-  console.log("adding as tracked");
-  await addMintAsTracked(mintAddress, collection.slug);
+    // add the mint address to the list of tracked addresses
+    await addMintAsTracked(mintAddress, collection.slug);
+  }
 
   const nft = {
     address: mintAddress,
