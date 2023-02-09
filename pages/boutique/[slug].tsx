@@ -203,7 +203,11 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
               loader={<LoadingIndicator />}
               endMessage={""}
             >
-              <NFTGrid nfts={nftsMetadata} listings={listings} />
+              <NFTGrid
+                nfts={nftsMetadata}
+                listings={listings}
+                isImported={true}
+              />
             </InfiniteScroll>
           ) : isLoading ? (
             <LoadingGrid />

@@ -12,6 +12,7 @@ import {
   DiscordGuildCreatorNotificationSetting,
   DiscordGuildNotificationSetting,
 } from "models/notificationSetting";
+import { PaginationToken } from "models/paginationToken";
 import { err, ok, Result } from "neverthrow";
 import { COLLECTIONS_PER_PAGE } from "utils/config";
 import { recalculateFloorPrice } from "utils/floorPrice";
@@ -533,6 +534,44 @@ export async function setBoutiqueCollectionStats(
   }
 }
 
+export async function getBoutiqueCollectionEvents(
+  mintAddress: string,
+  limit: number = 100,
+  cursor: PaginationToken | undefined
+): Promise<Result<OneOfOneNFTEvent[], Error>> {
+  try {
+    console.log("getting firebase events for " + mintAddress);
+    let query = await db
+      .collection(`boutique-collection-events`)
+      .where("mint", "==", mintAddress)
+      .orderBy("timestamp", "desc")
+      .limit(limit);
+
+    if (cursor && cursor.length > 0) {
+      console.log(cursor);
+      const docRef = await db
+        .collection("boutique-collection-events")
+        .doc(cursor)
+        .get();
+      if (docRef) {
+        query = query.startAfter(docRef);
+      }
+    }
+
+    const snapshot = await query.get();
+
+    const events = snapshot.docs.map((doc) => {
+      const event = doc.data() as OneOfOneNFTEvent;
+      event.signature = doc.id;
+      return event;
+    });
+
+    return ok(events);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
 export async function addBoutiqueCollectionEvent(
   slug: string,
   event: OneOfOneNFTEvent
@@ -694,6 +733,27 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
     });
 
     return ok(null);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function getAllEvents(): Promise<
+  Result<OneOfOneNFTEvent[], Error>
+> {
+  try {
+    const snapshot = await db.collection(`boutique-collection-events`).get();
+
+    const events = snapshot.docs.map((doc) => {
+      const event = doc.data() as OneOfOneNFTEvent;
+      event.signature = doc.id;
+      if (!event.timestamp) {
+        console.log(event);
+      }
+      return event;
+    });
+
+    return ok(events);
   } catch (error) {
     return err(error as Error);
   }

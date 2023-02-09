@@ -19,9 +19,9 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
 apiRoute.get(async (req, res) => {
   try {
     const { cursor, limit: limitStr, sort: sortStr } = req.query;
-    const limit = parseInt(limitStr?.toString() ?? "0");
-    const sort = sortStr?.toString()
-      ? parseInt(sortStr?.toString())
+    const limit = limitStr ? parseInt(limitStr.toString()) : 0;
+    const sort = sortStr
+      ? parseInt(sortStr.toString())
       : CollectionSortType.TOTAL_VOLUME_DESC;
 
     const collectionsRes = await getBoutiqueCollections(

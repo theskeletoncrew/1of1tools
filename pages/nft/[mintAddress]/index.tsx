@@ -32,15 +32,19 @@ import LoadingIndicator from "components/LoadingIndicator/LoadingIndicator";
 import { toast } from "react-hot-toast";
 import NotificationSubscriptionModal from "components/NotificationSubscriptionModal/NotificationSubscriptionModal";
 import { BellAlertIcon } from "@heroicons/react/24/outline";
+import { useRouter } from "next/router";
 
 const EVENTS_PER_PAGE = 25;
 
 interface Props {
   nftMetadata: NFTMetadata;
+  isImported: boolean;
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const mintAddress = context.query.mintAddress as string;
+  const i = context.query.i as string;
+  const isImported = i === "1" ? true : false;
 
   try {
     let nftMetadata: NFTMetadata | null = null;
@@ -78,7 +82,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     //   );
     // }
 
-    return { props: { nftMetadata } };
+    return { props: { nftMetadata, isImported } };
   } catch (error) {
     console.log(error);
     return {
@@ -92,7 +96,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 };
 
-const NFTPage: NextPage<Props> = ({ nftMetadata }) => {
+const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
+  const router = useRouter();
+
   const onChainData = nftMetadata.onChainData!;
   const offChainData = nftMetadata.offChainData!;
 
@@ -179,6 +185,7 @@ const NFTPage: NextPage<Props> = ({ nftMetadata }) => {
   const getMoreEvents = async (isFirstLoad: boolean = false) => {
     const eventsRes = await OneOfOneToolsClient.events(
       nftMetadata.mint,
+      isImported,
       EVENTS_PER_PAGE,
       eventsPaginationToken
     );

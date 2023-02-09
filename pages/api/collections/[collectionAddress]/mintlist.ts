@@ -15,9 +15,9 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
   },
 });
 
-apiRoute.post(async (req, res) => {
+apiRoute.get(async (req, res) => {
   try {
-    const collectionAddress: string = req.body.collectionAddress;
+    const collectionAddress = req.query.collectionAddress as string;
     if (!collectionAddress || collectionAddress.length == 0) {
       res.status(400).json({ message: "Collection address is required." });
       return;

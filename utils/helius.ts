@@ -195,3 +195,18 @@ export const humanReadableTransaction = (
   )} on ${humanReadableSource(source)}${url ? ": " + url : ""}`;
   return description;
 };
+
+export const isEventTypeAmountDisplayable = (
+  type: TransactionType
+): boolean => {
+  return [
+    TransactionType.NFT_BID,
+    TransactionType.NFT_LISTING,
+    TransactionType.NFT_SALE,
+    TransactionType.NFT_MINT,
+    TransactionType.NFT_AUCTION_CREATED,
+    TransactionType.NFT_AUCTION_UPDATED,
+    TransactionType.NFT_PARTICIPATION_REWARD,
+    TransactionType.NFT_GLOBAL_BID,
+  ].includes(type);
+};

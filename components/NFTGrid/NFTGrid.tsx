@@ -10,9 +10,10 @@ import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 interface Props {
   nfts: NFTMetadata[];
   listings?: NFTListings[];
+  isImported?: boolean;
 }
 
-const NFTGrid: React.FC<Props> = ({ nfts, listings }) => {
+const NFTGrid: React.FC<Props> = ({ nfts, listings, isImported }) => {
   return (
     <div className="mt-10 mx-1 grid gap-10 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 2xl:grid-cols-6">
       {nfts.map((nft) => {
@@ -34,7 +35,9 @@ const NFTGrid: React.FC<Props> = ({ nfts, listings }) => {
 
         return (
           <div className="relative" key={nft.mint}>
-            <Link href={`/nft/${nft.mint}`}>
+            <Link
+              href={isImported ? `/nft/${nft.mint}?i=1` : `/nft/${nft.mint}`}
+            >
               <a
                 className="text-center cursor-pointer block group"
                 title={shortenedAddress(nft.mint)}

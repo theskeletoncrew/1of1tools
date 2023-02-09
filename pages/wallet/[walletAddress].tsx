@@ -45,7 +45,7 @@ const WalletPage: NextPage = () => {
       return;
     }
 
-    const nftAddressesRes = await OneOfOneToolsClient.nftsOwnedBy(
+    const nftAddressesRes = await OneOfOneToolsClient.walletNFTs(
       walletAddress,
       page + 1
     );

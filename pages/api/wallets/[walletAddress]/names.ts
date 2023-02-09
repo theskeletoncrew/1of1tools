@@ -1,4 +1,3 @@
-import { PaginationToken } from "models/paginationToken";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 
@@ -16,34 +15,22 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
   },
 });
 
-apiRoute.post(async (req, res) => {
+apiRoute.get(async (req, res) => {
   try {
-    const mintAccount: string = req.body.mintAccount?.toString();
-    const limit: string = req.body.limit;
-    const page: PaginationToken = req.body.page;
-
-    if (!mintAccount) {
-      res.status(400).json({ message: "NFT Address is required." });
+    const walletAddress = req.query.walletAddress as string;
+    if (!walletAddress || walletAddress.length == 0) {
+      res.status(400).json({ message: "Wallet address is required." });
       return;
     }
 
     const response = await fetch(
-      `https://api.helius.xyz/v1/nft-events?api-key=${HELIUS_API_KEY}`,
+      `https://api.helius.xyz/v0/addresses/${walletAddress}/names?api-key=${HELIUS_API_KEY}`,
       {
-        method: "POST",
+        method: "GET",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          query: {
-            accounts: [mintAccount],
-          },
-          options: {
-            limit: limit ?? 100,
-            paginationToken: page,
-          },
-        }),
       }
     );
 
@@ -52,8 +39,7 @@ apiRoute.post(async (req, res) => {
     if (response.ok) {
       res.status(200).json({
         success: true,
-        events: responseJSON.result,
-        paginationToken: responseJSON.paginationToken,
+        domainNames: responseJSON.domainNames,
       });
     } else {
       res.status(500).json({

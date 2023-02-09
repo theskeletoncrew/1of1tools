@@ -11,8 +11,10 @@ import {
   humanReadableEventType,
   humanReadableSource,
   humanReadableSourceSm,
+  isEventTypeAmountDisplayable,
   urlForSource,
 } from "utils/helius";
+import { TransactionType } from "helius-sdk";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -135,12 +137,18 @@ const EventsTable: React.FC<Props> = ({ events }) => {
                       )}
                     </td>
                     <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75">
-                      <span className="hidden sm:block">
-                        {event.amount / LAMPORTS_PER_SOL} SOL
-                      </span>
-                      <span className="block sm:hidden">
-                        {event.amount / LAMPORTS_PER_SOL}
-                      </span>
+                      {isEventTypeAmountDisplayable(
+                        event.type as TransactionType
+                      ) && (
+                        <>
+                          <span className="hidden sm:block">
+                            {event.amount / LAMPORTS_PER_SOL} SOL
+                          </span>
+                          <span className="block sm:hidden">
+                            {event.amount / LAMPORTS_PER_SOL}
+                          </span>
+                        </>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-1 sm:px-2 py-4 text-slate-400 border-slate-700 border-opacity-75">
                       {event.seller && (

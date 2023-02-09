@@ -77,7 +77,7 @@ export namespace OneOfOneToolsClient {
     }
   }
 
-  export async function nftsCreatedBy(
+  export async function creatorNFTs(
     creatorAddress: string,
     limit: number = 10,
     page?: PaginationToken
@@ -85,18 +85,24 @@ export namespace OneOfOneToolsClient {
     Result<{ events: NFTEvent[]; paginationToken: PaginationToken }, Error>
   > {
     try {
-      const response = await fetch(`${SERVER_URL}/api/nfts/created-by`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          creatorAddress: creatorAddress,
-          limit: limit,
-          page: page,
-        }),
-      });
+      let params: Record<string, string> = {
+        limit: limit.toString(),
+      };
+      if (page) {
+        params.page = page;
+      }
+      const query = new URLSearchParams(params).toString();
+
+      const response = await fetch(
+        `${SERVER_URL}/api/creators/${creatorAddress}/nfts?${query}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
       const responseJSON = await response.json();
 
       if (response.ok) {
@@ -111,22 +117,21 @@ export namespace OneOfOneToolsClient {
     }
   }
 
-  export async function nftsOwnedBy(
+  export async function walletNFTs(
     walletAddress: string,
     page: number = 1
   ): Promise<Result<{ mints: string[]; numberOfPages: number }, Error>> {
     try {
-      const response = await fetch(`${SERVER_URL}/api/nfts/owned-by`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          walletAddress: walletAddress,
-          page: page,
-        }),
-      });
+      const response = await fetch(
+        `${SERVER_URL}/api/wallets/${walletAddress}/nfts?page=${page}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
       const responseJSON = await response.json();
 
       if (response.ok) {
@@ -142,25 +147,33 @@ export namespace OneOfOneToolsClient {
   }
 
   export async function events(
-    mintAccount: string,
+    mintAddress: string,
+    isImported: boolean,
     limit: number = 10,
     page?: PaginationToken
   ): Promise<
     Result<{ events: NFTEvent[]; paginationToken: PaginationToken }, Error>
   > {
+    let params: Record<string, string> = {
+      limit: limit.toString(),
+      isImported: isImported ? "1" : "0",
+    };
+    if (page) {
+      params.page = page;
+    }
+    const query = new URLSearchParams(params).toString();
+
     try {
-      const response = await fetch(`${SERVER_URL}/api/nfts/events`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mintAccount: mintAccount,
-          limit: limit,
-          page: page,
-        }),
-      });
+      const response = await fetch(
+        `${SERVER_URL}/api/nfts/${mintAddress}/events?${query}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
       const result = await response.json();
 
       if (response.ok) {
@@ -179,16 +192,16 @@ export namespace OneOfOneToolsClient {
     collectionAddress: string
   ): Promise<Result<string[], Error>> {
     try {
-      const response = await fetch(`${SERVER_URL}/api/collections/mintlist`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          collectionAddress: collectionAddress,
-        }),
-      });
+      const response = await fetch(
+        `${SERVER_URL}/api/collections/${collectionAddress}/mintlist`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
       const result = await response.json();
 
       if (response.ok) {
@@ -204,16 +217,16 @@ export namespace OneOfOneToolsClient {
     walletAddress: string
   ): Promise<Result<string[], Error>> {
     try {
-      const response = await fetch(`${SERVER_URL}/api/accounts/names`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          walletAddress: walletAddress,
-        }),
-      });
+      const response = await fetch(
+        `${SERVER_URL}/api/wallets/${walletAddress}/names`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
       const result = await response.json();
 
       if (response.ok) {
@@ -601,12 +614,20 @@ export namespace OneOfOneToolsClient {
     limit?: number | null;
   }): Promise<Result<Collection[], Error>> {
     try {
+      let params: Record<string, string> = {};
+      if (options.limit) {
+        params.limit = options.limit.toString();
+      }
+      if (options.cursor) {
+        params.cursor = options.cursor.toString();
+      }
+      if (options.sort) {
+        params.sort = options.sort.toString();
+      }
+      const query = new URLSearchParams(params).toString();
+
       const response = await fetch(
-        `${SERVER_URL}/api/collections/boutique?cursor=${
-          options.cursor ? encodeURIComponent(options.cursor) : ""
-        }&limit=${options.limit ? options.limit : ""}&sort=${
-          options.sort !== undefined ? options.sort : ""
-        }`,
+        `${SERVER_URL}/api/collections/boutique?${query}`,
         {
           method: "GET",
           headers: {

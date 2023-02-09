@@ -73,7 +73,7 @@ const CreatorPage: NextPage = () => {
       return;
     }
 
-    const newNftsRes = await OneOfOneToolsClient.nftsCreatedBy(
+    const newNftsRes = await OneOfOneToolsClient.creatorNFTs(
       accountAddress,
       NFTS_PER_PAGE,
       eventsPaginationToken ?? undefined

@@ -17,10 +17,10 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
   },
 });
 
-apiRoute.post(async (req, res) => {
+apiRoute.get(async (req, res) => {
   try {
-    const walletAddress: string = req.body.walletAddress;
-    const page: number = req.body.page ?? 1;
+    const walletAddress = req.query.walletAddress as string;
+    const page = req.query.page ? parseInt(req.query.page.toString()) : 1;
 
     if (!walletAddress || walletAddress.length == 0) {
       res.status(400).json({ message: "Wallet address is required." });
