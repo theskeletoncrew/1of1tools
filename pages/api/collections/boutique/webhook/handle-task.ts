@@ -4,6 +4,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import { addBoutiqueCollectionEventIfMonitoredAndUpdateStats } from "db";
 
+const HELIUS_AUTHORIZATION_SECRET =
+  process.env.HELIUS_AUTHORIZATION_SECRET || "";
+
 const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
   onError(error, req, res) {
     res.status(500).json({
@@ -29,6 +32,18 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
 
 apiRoute.post(async (req, res) => {
   try {
+    if (
+      !req.headers["authorization"] ||
+      req.headers["authorization"] !== HELIUS_AUTHORIZATION_SECRET
+    ) {
+      console.warn(
+        "Received webhook with invalid/missing authorization header"
+      );
+      console.warn(JSON.stringify(req.body));
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+
     const transaction = req.body as EnrichedTransaction;
     const event = transaction.events.nft
       ? oneOfOneNFTEvent(transaction.events.nft)

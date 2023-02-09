@@ -44,7 +44,7 @@ apiRoute.post(async (req, res) => {
         "Received webhook with invalid/missing authorization header"
       );
       console.warn(JSON.stringify(req.body));
-      res.status(401).json({ success: false });
+      res.status(401).json({ success: false, message: "Unauthorized" });
       return;
     }
 
@@ -68,6 +68,7 @@ apiRoute.post(async (req, res) => {
             url: "https://1of1.tools/api/collections/boutique/webhook/handle-task",
             headers: {
               "Content-Type": "application/json",
+              Authorization: HELIUS_AUTHORIZATION_SECRET,
             },
             httpMethod: "POST",
             body: Buffer.from(JSON.stringify(transaction)).toString("base64"),
