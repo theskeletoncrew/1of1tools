@@ -220,9 +220,6 @@ const Home: NextPage = () => {
                         <h5
                           className={`bg-slate-600 bg-opacity-25 mx-auto my-2 w-3/4 h-[20px]`}
                         ></h5>
-                        <p
-                          className={`bg-slate-600 bg-opacity-25 mx-auto w-1/2 h-[16px]`}
-                        ></p>
                       </span>
                     </div>
                   </SwiperSlide>
