@@ -207,42 +207,65 @@ const Home: NextPage = () => {
                 slidesPerGroup: 6,
               },
             }}
+            className="h-full"
           >
-            {boutiqueCollections?.map((collection) => {
-              return (
-                <SwiperSlide key={`boutique-collection-${collection.slug}`}>
-                  <div className={styles.rowDrop}>
-                    <Link href={`/boutique/${collection.slug}`}>
-                      <a className={`${styles.rowDropImageWrapper} group`}>
-                        {collection.imageURL && (
-                          <div className={styles.dropImageWrapper}>
-                            <img
-                              className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
-                              src={
-                                collection.imageURL
-                                  ? `/api/assets/collection/${
-                                      collection.slug
-                                    }/640?originalURL=${encodeURIComponent(
-                                      collection.imageURL
-                                    )}`
-                                  : ""
-                              }
-                              alt={collection.name}
-                            />
-                          </div>
-                        )}
-                        <span className={styles.rowDropDescription}>
-                          <h5 className={styles.rowDropTitle}>
-                            {collection.name}
-                          </h5>
-                          <p> </p>
-                        </span>
-                      </a>
-                    </Link>
-                  </div>
-                </SwiperSlide>
-              );
-            })}
+            {isLoading ? (
+              <>
+                {[...Array(6).keys()].map((i) => (
+                  <SwiperSlide key={`boutique-collection-loading-${i}`}>
+                    <div className={`${styles.rowDrop} animate-pulse`}>
+                      <div className={`${styles.dropImageWrapper}`}></div>
+                      <span className={styles.rowDropDescription}>
+                        <h5
+                          className={`bg-slate-600 bg-opacity-25 mx-auto my-2 w-3/4 h-[20px]`}
+                        ></h5>
+                        <p
+                          className={`bg-slate-600 bg-opacity-25 mx-auto w-1/2 h-[16px]`}
+                        ></p>
+                      </span>
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </>
+            ) : (
+              <>
+                {boutiqueCollections?.map((collection) => {
+                  return (
+                    <SwiperSlide key={`boutique-collection-${collection.slug}`}>
+                      <div className={styles.rowDrop}>
+                        <Link href={`/boutique/${collection.slug}`}>
+                          <a className={`${styles.rowDropImageWrapper} group`}>
+                            {collection.imageURL && (
+                              <div className={styles.dropImageWrapper}>
+                                <img
+                                  className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
+                                  src={
+                                    collection.imageURL
+                                      ? `/api/assets/collection/${
+                                          collection.slug
+                                        }/640?originalURL=${encodeURIComponent(
+                                          collection.imageURL
+                                        )}`
+                                      : ""
+                                  }
+                                  alt={collection.name}
+                                />
+                              </div>
+                            )}
+                            <span className={styles.rowDropDescription}>
+                              <h5 className={styles.rowDropTitle}>
+                                {collection.name}
+                              </h5>
+                              <p> </p>
+                            </span>
+                          </a>
+                        </Link>
+                      </div>
+                    </SwiperSlide>
+                  );
+                })}
+              </>
+            )}
           </Swiper>
           <div
             onClick={() => swiperRefs.current[0]?.slidePrev()}
@@ -258,93 +281,114 @@ const Home: NextPage = () => {
           </div>
         </div>
 
-        {latestBoutiqueEvents && latestBoutiqueEventsMetadata && (
-          <div className={`mt-10 ${styles.homeRow}`}>
-            <h5 className={styles.rowTitle}>Latest Boutique Activity</h5>
-            <Swiper
-              slidesPerView={2}
-              slidesPerGroup={2}
-              spaceBetween={15}
-              onBeforeInit={(swiper) => {
-                swiperRefs.current = [
-                  ...swiperRefs.current.slice(0, 0),
-                  swiper,
-                  ...swiperRefs.current.slice(2),
-                ];
-              }}
-              modules={[Navigation]}
-              breakpoints={{
-                640: {
-                  slidesPerView: 3,
-                  slidesPerGroup: 3,
-                },
-                768: {
-                  slidesPerView: 4,
-                  slidesPerGroup: 4,
-                },
-                1024: {
-                  slidesPerView: 5,
-                  slidesPerGroup: 5,
-                },
-                1280: {
-                  slidesPerView: 6,
-                  slidesPerGroup: 6,
-                },
-              }}
-            >
-              {latestBoutiqueEvents?.map((event, i) => {
-                const metadata = latestBoutiqueEventsMetadata?.find(
-                  (m) => m.mint === event.mint
-                );
-                return (
-                  <SwiperSlide key={`activity-${event.signature}`}>
-                    <div className={styles.rowDrop}>
-                      <Link href={`/nft/${event.mint}`}>
-                        <a className={`${styles.rowDropImageWrapper} group`}>
-                          <div className={styles.dropImageWrapper}>
-                            {metadata?.offChainData?.image ? (
-                              <img
-                                className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
-                                src={`/api/assets/nft/${
-                                  event.mint
-                                }/640?originalURL=${encodeURIComponent(
-                                  metadata.offChainData.image
-                                )}`}
-                                alt={event.description}
-                              />
-                            ) : (
-                              <div className={`${styles.dropImage}`} />
-                            )}
-                          </div>
-                          <span className={styles.rowDropDescriptionLong}>
-                            <h5 className={styles.rowDropTitleLong}>
-                              {humanReadableEventShort(event)}
-                            </h5>
-                            <span>
-                              {dayjs(event.timestamp * 1000).toNow(true)} ago
-                            </span>
-                          </span>
-                        </a>
-                      </Link>
+        <div className={`mt-10 ${styles.homeRow}`}>
+          <h5 className={styles.rowTitle}>Latest Boutique Activity</h5>
+          <Swiper
+            slidesPerView={2}
+            slidesPerGroup={2}
+            spaceBetween={15}
+            onBeforeInit={(swiper) => {
+              swiperRefs.current = [
+                ...swiperRefs.current.slice(0, 0),
+                swiper,
+                ...swiperRefs.current.slice(2),
+              ];
+            }}
+            modules={[Navigation]}
+            breakpoints={{
+              640: {
+                slidesPerView: 3,
+                slidesPerGroup: 3,
+              },
+              768: {
+                slidesPerView: 4,
+                slidesPerGroup: 4,
+              },
+              1024: {
+                slidesPerView: 5,
+                slidesPerGroup: 5,
+              },
+              1280: {
+                slidesPerView: 6,
+                slidesPerGroup: 6,
+              },
+            }}
+            className="h-full"
+          >
+            {isLoading ? (
+              <>
+                {[...Array(6).keys()].map((i) => (
+                  <SwiperSlide key={`boutique-events-loading-${i}`}>
+                    <div className={`${styles.rowDrop} animate-pulse`}>
+                      <div className={`${styles.dropImageWrapper}`}></div>
+                      <span className={styles.rowDropDescription}>
+                        <h5
+                          className={`bg-slate-600 bg-opacity-25 mx-auto my-2 w-3/4 h-[20px]`}
+                        ></h5>
+                        <p
+                          className={`bg-slate-600 bg-opacity-25 mx-auto w-1/2 h-[16px]`}
+                        ></p>
+                      </span>
                     </div>
                   </SwiperSlide>
-                );
-              })}
-            </Swiper>
-            <div
-              onClick={() => swiperRefs.current[0]?.slidePrev()}
-              className={`${styles.rowDropNav} ${styles.rowDropNavPrev}`}
-            >
-              <ArrowLeftCircleIcon />
-            </div>
-            <div
-              onClick={() => swiperRefs.current[0]?.slideNext()}
-              className={`${styles.rowDropNav} ${styles.rowDropNavNext}`}
-            >
-              <ArrowRightCircleIcon />
-            </div>
+                ))}
+              </>
+            ) : (
+              <>
+                {latestBoutiqueEvents?.map((event, i) => {
+                  const metadata = latestBoutiqueEventsMetadata?.find(
+                    (m) => m.mint === event.mint
+                  );
+                  return (
+                    <SwiperSlide key={`activity-${event.signature}`}>
+                      <div className={styles.rowDrop}>
+                        <Link href={`/nft/${event.mint}`}>
+                          <a className={`${styles.rowDropImageWrapper} group`}>
+                            <div className={styles.dropImageWrapper}>
+                              {metadata?.offChainData?.image ? (
+                                <img
+                                  className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
+                                  src={`/api/assets/nft/${
+                                    event.mint
+                                  }/640?originalURL=${encodeURIComponent(
+                                    metadata.offChainData.image
+                                  )}`}
+                                  alt={event.description}
+                                />
+                              ) : (
+                                <div className={`${styles.dropImage}`} />
+                              )}
+                            </div>
+                            <span className={styles.rowDropDescriptionLong}>
+                              <h5 className={styles.rowDropTitleLong}>
+                                {humanReadableEventShort(event)}
+                              </h5>
+                              <span>
+                                {dayjs(event.timestamp * 1000).toNow(true)} ago
+                              </span>
+                            </span>
+                          </a>
+                        </Link>
+                      </div>
+                    </SwiperSlide>
+                  );
+                })}
+              </>
+            )}
+          </Swiper>
+          <div
+            onClick={() => swiperRefs.current[0]?.slidePrev()}
+            className={`${styles.rowDropNav} ${styles.rowDropNavPrev}`}
+          >
+            <ArrowLeftCircleIcon />
           </div>
-        )}
+          <div
+            onClick={() => swiperRefs.current[0]?.slideNext()}
+            className={`${styles.rowDropNav} ${styles.rowDropNavNext}`}
+          >
+            <ArrowRightCircleIcon />
+          </div>
+        </div>
       </div>
     </Layout>
   );

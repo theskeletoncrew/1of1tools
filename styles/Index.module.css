@@ -7,7 +7,7 @@
 }
 
 .rowDrop {
-  @apply rounded-lg overflow-hidden border-slate-500 border-[1px] border-opacity-30;
+  @apply h-full rounded-lg overflow-hidden border-slate-500 border-[1px] border-opacity-30;
 }
 
 .rowDropDescription {
@@ -34,14 +34,14 @@
 }
 
 .rowDropImageWrapper {
-  @apply w-full aspect-[4/3] order-1 md:order-2 md:flex-shrink-0 overflow-hidden;
+  @apply w-full order-1 md:order-2 md:flex-shrink-0 overflow-hidden;
 }
 
 .dropImageWrapper {
-  @apply w-full h-full overflow-hidden;
+  @apply w-full aspect-1 overflow-hidden bg-slate-600 bg-opacity-25;
 }
 .dropImage {
-  @apply w-full h-full object-cover overflow-hidden aspect-1 bg-slate-900;
+  @apply w-full object-cover overflow-hidden;
 }
 
 .dropButton {
