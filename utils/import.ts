@@ -33,7 +33,26 @@ export const importAllEventsForCollection = async (
   let paginationToken = null;
 
   let query: any = {
-    types: [TransactionType.NFT_SALE, TransactionType.NFT_MINT],
+    types: [
+      TransactionType.NFT_BID,
+      TransactionType.NFT_BID_CANCELLED,
+      TransactionType.NFT_LISTING,
+      TransactionType.NFT_CANCEL_LISTING,
+      TransactionType.NFT_SALE,
+      TransactionType.NFT_MINT,
+      TransactionType.NFT_AUCTION_CREATED,
+      TransactionType.NFT_AUCTION_UPDATED,
+      TransactionType.NFT_AUCTION_CANCELLED,
+      TransactionType.NFT_PARTICIPATION_REWARD,
+      TransactionType.NFT_MINT_REJECTED,
+      TransactionType.NFT_GLOBAL_BID,
+      TransactionType.NFT_GLOBAL_BID_CANCELLED,
+      TransactionType.BURN,
+      TransactionType.BURN_NFT,
+      TransactionType.TRANSFER,
+      TransactionType.STAKE_TOKEN,
+      TransactionType.UNSTAKE_TOKEN,
+    ],
     nftCollectionFilters: {},
   };
 
@@ -84,25 +103,31 @@ export const importAllEventsForCollection = async (
       .filter(notEmpty)
       .forEach(async (event) => {
         if (collection.mintAddresses.includes(event.mint)) {
-          const solAmount = event.amount / LAMPORTS_PER_SOL;
+          if (
+            [TransactionType.NFT_SALE, TransactionType.NFT_MINT].includes(
+              event.type as TransactionType
+            )
+          ) {
+            const solAmount = event.amount / LAMPORTS_PER_SOL;
 
-          totalVolume += solAmount;
+            totalVolume += solAmount;
 
-          if (event.timestamp > nowInSeconds - dayInSeconds) {
-            dayVolume += solAmount;
+            if (event.timestamp > nowInSeconds - dayInSeconds) {
+              dayVolume += solAmount;
+            }
+            if (event.timestamp > nowInSeconds - 30 * dayInSeconds) {
+              monthVolume += solAmount;
+            }
+            if (event.timestamp > nowInSeconds - 7 * dayInSeconds) {
+              weekVolume += solAmount;
+            }
+            if (!athSale || event.amount > athSale.amount) {
+              athSale = event;
+            }
           }
-          if (event.timestamp > nowInSeconds - 30 * dayInSeconds) {
-            monthVolume += solAmount;
-          }
-          if (event.timestamp > nowInSeconds - 7 * dayInSeconds) {
-            weekVolume += solAmount;
-          }
-          if (!athSale || event.amount > athSale.amount) {
-            athSale = event;
-          }
+
+          await addBoutiqueCollectionEvent(collection.slug, event);
         }
-
-        await addBoutiqueCollectionEvent(collection.slug, event);
       });
 
     paginationToken = responseJSON.paginationToken;
