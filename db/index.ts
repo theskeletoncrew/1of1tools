@@ -624,50 +624,11 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
     if (nftRef.exists) {
       nft = nftRef.data() as CollectionNFT;
     } else {
-      if (
-        event.type == TransactionType.NFT_MINT ||
-        event.type == TransactionType.NFT_AUCTION_CREATED
-      ) {
-        const endpoint = clusterApiUrl(network);
-        const connection = new Connection(endpoint);
-        const mx = Metaplex.make(connection);
-        const nftDetails = (await mx
-          .nfts()
-          .findByMint({ mintAddress: new PublicKey(event.mint) })) as Nft;
-        if (nftDetails.collection?.address) {
-          const collectionRef = await db
-            .collection("boutique-collections")
-            .where("collectionAddress", "==", nftDetails.collection.address)
-            .limit(1)
-            .get();
-          if (collectionRef.docs.length == 1) {
-            const collection = collectionRef.docs[0]!.data() as Collection;
-            const updatedMints = collection.mintAddresses.concat(event.mint);
-            // add mint address to collection
-            await db
-              .collection(`boutique-collection-events`)
-              .doc(collection.slug)
-              .set(
-                {
-                  mintAddresses: updatedMints,
-                },
-                { merge: true }
-              );
+      nft = await trackNewMintIfPartOfCollection(event);
+    }
 
-            // add all of the mint addresses to the list of tracked addresses
-            await addMintAsTracked(event.mint, collection.slug);
-
-            nft = {
-              address: event.mint,
-              collectionSlug: collection.slug,
-            } as CollectionNFT;
-          }
-        }
-      }
-
-      if (!nft) {
-        return err(new Error("NFT is not tracked"));
-      }
+    if (!nft) {
+      return err(new Error("NFT is not tracked"));
     }
 
     const slug = nft.collectionSlug;
@@ -821,4 +782,121 @@ export async function getAllEvents(): Promise<
   } catch (error) {
     return err(error as Error);
   }
+}
+
+export async function trackNewMintIfPartOfCollection(
+  event: OneOfOneNFTEvent
+): Promise<CollectionNFT | undefined> {
+  if (
+    event.type == TransactionType.NFT_MINT ||
+    event.type == TransactionType.NFT_AUCTION_CREATED
+  ) {
+    const endpoint = clusterApiUrl(network);
+    const connection = new Connection(endpoint);
+    const mx = Metaplex.make(connection);
+    const nftDetails = (await mx
+      .nfts()
+      .findByMint({ mintAddress: new PublicKey(event.mint) })) as Nft;
+    if (nftDetails.collection?.address) {
+      const collectionRef = await db
+        .collection("boutique-collections")
+        .where(
+          "collectionAddress",
+          "==",
+          nftDetails.collection.address.toString()
+        )
+        .limit(1)
+        .get();
+      if (collectionRef.docs.length == 1) {
+        const collection = collectionRef.docs[0]!.data() as Collection;
+        collection.slug = collectionRef.docs[0]!.id;
+        const updatedMints = collection.mintAddresses.concat(event.mint);
+        // add mint address to collection
+        await db.collection(`boutique-collections`).doc(collection.slug).set(
+          {
+            mintAddresses: updatedMints,
+          },
+          { merge: true }
+        );
+
+        // add all of the mint addresses to the list of tracked addresses
+        await addMintAsTracked(event.mint, collection.slug);
+
+        return {
+          address: event.mint,
+          collectionSlug: collection.slug,
+        } as CollectionNFT;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+export async function addNewTrackedMint(
+  mintAddress: string,
+  collectionSlug?: string
+): Promise<{ collection: Collection; nft: CollectionNFT } | undefined> {
+  let collection: Collection | null = null;
+
+  if (!collectionSlug) {
+    const endpoint = clusterApiUrl(network);
+    const connection = new Connection(endpoint);
+    const mx = Metaplex.make(connection);
+    const nftDetails = (await mx
+      .nfts()
+      .findByMint({ mintAddress: new PublicKey(mintAddress) })) as Nft;
+    if (nftDetails.collection?.address) {
+      console.log(
+        "getting collection for " + nftDetails.collection?.address.toString()
+      );
+      const collectionRef = await db
+        .collection("boutique-collections")
+        .where(
+          "collectionAddress",
+          "==",
+          nftDetails.collection.address.toString()
+        )
+        .limit(1)
+        .get();
+      if (collectionRef.docs.length == 1) {
+        console.log("found");
+        collection = collectionRef.docs[0]!.data() as Collection;
+        collection.slug = collectionRef.docs[0]!.id;
+      }
+    }
+  } else {
+    console.log("getting collection by predefined slug " + collectionSlug);
+    const res = await getBoutiqueCollection(collectionSlug);
+    if (res.isOk()) {
+      collection = res.value;
+    }
+  }
+
+  if (!collection) {
+    return undefined;
+  }
+
+  const updatedMints = collection.mintAddresses.concat(mintAddress);
+  // add mint address to collection
+  console.log(
+    "updating the mint addresses on the collection " + collection.slug
+  );
+  await db.collection(`boutique-collections`).doc(collection.slug).set(
+    {
+      mintAddresses: updatedMints,
+    },
+    { merge: true }
+  );
+
+  // add all of the mint addresses to the list of tracked addresses
+  console.log("adding as tracked");
+  await addMintAsTracked(mintAddress, collection.slug);
+
+  const nft = {
+    address: mintAddress,
+    collectionSlug: collection.slug,
+  } as CollectionNFT;
+
+  return { collection, nft };
 }
