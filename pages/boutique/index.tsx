@@ -88,6 +88,7 @@ const IndexPage: NextPage = () => {
   }, []);
 
   useEffect(() => {
+    setLoading(true);
     getMoreBoutiqueCollections(sort).then(() => {
       setLoading(false);
     });
@@ -299,7 +300,9 @@ const IndexPage: NextPage = () => {
         </div>
 
         <div className="mt-4">
-          {collections.length > 0 ? (
+          {isLoading ? (
+            <LoadingGrid className="mt-8 mx-1 gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-6" />
+          ) : collections.length > 0 ? (
             <InfiniteScroll
               dataLength={collections.length}
               next={() => getMoreBoutiqueCollections(sort, cursor)}
@@ -316,8 +319,6 @@ const IndexPage: NextPage = () => {
                 view={view}
               />
             </InfiniteScroll>
-          ) : isLoading ? (
-            <LoadingGrid className="mt-16 mx-1 gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-6" />
           ) : (
             <ErrorMessage title="No collections found" />
           )}

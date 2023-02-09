@@ -195,7 +195,9 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
               />
             </div>
           )}
-          {nftsMetadata.length > 0 ? (
+          {isLoading ? (
+            <LoadingGrid className="mt-10 mx-1 gap-10 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 2xl:grid-cols-6" />
+          ) : nftsMetadata.length > 0 ? (
             <InfiniteScroll
               dataLength={nftsMetadata.length}
               next={() => getMoreNfts(page + 1, filter)}
@@ -209,8 +211,6 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
                 isImported={true}
               />
             </InfiniteScroll>
-          ) : isLoading ? (
-            <LoadingGrid className="mt-10 mx-1 gap-10 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 2xl:grid-cols-6" />
           ) : (
             <ErrorMessage title={errorMessage ?? "No NFTs found"} />
           )}
