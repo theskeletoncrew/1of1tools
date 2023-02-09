@@ -61,7 +61,8 @@ const Home: NextPage = () => {
   const [latestBoutiqueEventsMetadata, setLatestBoutiqueEventsMetadata] =
     useState<NFTMetadata[]>();
 
-  const swiperRefs = useRef<SwiperCore[]>([]);
+  const boutiqueSwiperRef = useRef<SwiperCore>();
+  const boutiqueEventsSwiperRef = useRef<SwiperCore>();
 
   useEffect(() => {
     const loadBoutiqueCollections = async () => {
@@ -186,7 +187,7 @@ const Home: NextPage = () => {
             slidesPerGroup={2}
             spaceBetween={15}
             onBeforeInit={(swiper) => {
-              swiperRefs.current = [swiper, ...swiperRefs.current.slice(1)];
+              boutiqueSwiperRef.current = swiper;
             }}
             modules={[Navigation]}
             breakpoints={{
@@ -268,13 +269,13 @@ const Home: NextPage = () => {
             )}
           </Swiper>
           <div
-            onClick={() => swiperRefs.current[0]?.slidePrev()}
+            onClick={() => boutiqueSwiperRef.current?.slidePrev()}
             className={`${styles.rowDropNav} ${styles.rowDropNavPrev}`}
           >
             <ArrowLeftCircleIcon />
           </div>
           <div
-            onClick={() => swiperRefs.current[0]?.slideNext()}
+            onClick={() => boutiqueSwiperRef.current?.slideNext()}
             className={`${styles.rowDropNav} ${styles.rowDropNavNext}`}
           >
             <ArrowRightCircleIcon />
@@ -288,11 +289,7 @@ const Home: NextPage = () => {
             slidesPerGroup={2}
             spaceBetween={15}
             onBeforeInit={(swiper) => {
-              swiperRefs.current = [
-                ...swiperRefs.current.slice(0, 0),
-                swiper,
-                ...swiperRefs.current.slice(2),
-              ];
+              boutiqueEventsSwiperRef.current = swiper;
             }}
             modules={[Navigation]}
             breakpoints={{
@@ -377,13 +374,13 @@ const Home: NextPage = () => {
             )}
           </Swiper>
           <div
-            onClick={() => swiperRefs.current[0]?.slidePrev()}
+            onClick={() => boutiqueEventsSwiperRef.current?.slidePrev()}
             className={`${styles.rowDropNav} ${styles.rowDropNavPrev}`}
           >
             <ArrowLeftCircleIcon />
           </div>
           <div
-            onClick={() => swiperRefs.current[0]?.slideNext()}
+            onClick={() => boutiqueEventsSwiperRef.current?.slideNext()}
             className={`${styles.rowDropNav} ${styles.rowDropNavNext}`}
           >
             <ArrowRightCircleIcon />
