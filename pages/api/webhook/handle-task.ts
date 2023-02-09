@@ -58,7 +58,7 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
 
 apiRoute.post(async (req, res) => {
   try {
-    const transaction = JSON.parse(req.body) as EnrichedTransaction;
+    const transaction = req.body as EnrichedTransaction;
 
     const customDescription = humanReadableTransaction(transaction);
 
