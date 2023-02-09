@@ -1,7 +1,12 @@
 const NUM_LOADING_ITEMS = 24;
-const LoadingGrid: React.FC = () => {
+
+interface Props {
+  className?: string | undefined;
+}
+
+const LoadingGrid: React.FC<Props> = ({ className }) => {
   return (
-    <div className="mt-10 mx-1 grid gap-10 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 2xl:grid-cols-6">
+    <div className={`${className ?? ""} grid`}>
       {[...Array(NUM_LOADING_ITEMS)].map((_, i) => (
         <div key={i} className="text-center">
           <div className="w-full aspect-1 rounded-lg bg-indigo-500 bg-opacity-10 animate-pulse"></div>

@@ -2,12 +2,14 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import Header from "components/Header/Header";
 import Layout from "components/Layout/Layout";
-import CollectionIndexGrid from "components/CollectionIndexGrid/CollectionIndexGrid";
+import CollectionIndexGrid, {
+  ViewType,
+} from "components/CollectionIndexGrid/CollectionIndexGrid";
 import { Collection } from "models/collection";
 import { useEffect, useState } from "react";
 import { OneOfOneToolsClient } from "api-client";
 import { toast } from "react-hot-toast";
-import { tryPublicKey } from "utils";
+import { classNames, tryPublicKey } from "utils";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { clusterApiUrl, network } from "utils/network";
 import { Metaplex, Nft } from "@metaplex-foundation/js";
@@ -17,7 +19,10 @@ import LoadingGrid from "components/LoadingGrid/LoadingGrid";
 import ErrorMessage from "components/ErrorMessage/ErrorMessage";
 import LoadingIndicator from "components/LoadingIndicator/LoadingIndicator";
 import BoutiqueCollectionsModal from "components/BoutiqueCollectionModal/BoutiqueCollectionModal";
-import { CollectionSortType } from "components/CollectionSort/CollectionSort";
+import CollectionSort, {
+  CollectionSortType,
+} from "components/CollectionSort/CollectionSort";
+import { Bars3Icon, Squares2X2Icon } from "@heroicons/react/24/outline";
 
 const MAX_BOUTIQUE_COLLECTION_SIZE = 250;
 
@@ -31,6 +36,7 @@ const IndexPage: NextPage = () => {
   const [sort, setSort] = useState<CollectionSortType>(
     CollectionSortType.TOTAL_VOLUME_DESC
   );
+  const [view, setView] = useState<ViewType>(ViewType.Grid);
 
   const getMoreBoutiqueCollections = async (
     chosenSort: CollectionSortType | undefined,
@@ -255,6 +261,43 @@ const IndexPage: NextPage = () => {
           />
         </div>
 
+        <div className="mt-4 flex items-center justify-between">
+          <h3 className="hidden md:block pl-5 text-indigo-400 text-base">
+            Hyped collections of {MAX_BOUTIQUE_COLLECTION_SIZE} NFTs or less
+          </h3>
+          <div className="flex gap-3 items-center h-[40px] justify-between w-full md:w-auto md:justify-end">
+            <div className="h-full order-1 md:order-0">
+              <CollectionSort
+                sort={sort}
+                didChangeSort={(newSort) => {
+                  setSort(newSort);
+                }}
+              />
+            </div>
+            <div className="sm:mr-3 border border-1 text-indigo-600 border-indigo-600 h-full rounded-lg flex gap-0 items-center justify-center order-0 md:order-1">
+              <button className="px-4" onClick={() => setView(ViewType.Grid)}>
+                <Squares2X2Icon
+                  className={classNames(
+                    "w-5 h-5",
+                    view === ViewType.Grid ? "text-indigo-400" : ""
+                  )}
+                />
+              </button>
+              <button
+                className="py-2 px-4 border-l border-indigo-600"
+                onClick={() => setView(ViewType.List)}
+              >
+                <Bars3Icon
+                  className={classNames(
+                    "w-5 h-5",
+                    view === ViewType.List ? "text-indigo-400" : ""
+                  )}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="mt-4">
           {collections.length > 0 ? (
             <InfiniteScroll
@@ -266,15 +309,15 @@ const IndexPage: NextPage = () => {
             >
               <CollectionIndexGrid
                 items={collections}
-                subtitle={`Hyped collections of ${MAX_BOUTIQUE_COLLECTION_SIZE} NFTs or less`}
                 sort={sort}
                 updateSort={(newSort) => {
                   setSort(newSort);
                 }}
+                view={view}
               />
             </InfiniteScroll>
           ) : isLoading ? (
-            <LoadingGrid />
+            <LoadingGrid className="mt-16 mx-1 gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-6" />
           ) : (
             <ErrorMessage title="No collections found" />
           )}

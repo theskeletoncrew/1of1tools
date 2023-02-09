@@ -2,79 +2,35 @@ import Link from "next/link";
 import { classNames, shortenedAddress } from "utils";
 import { Collection } from "models/collection";
 import {
-  Bars3Icon,
   ChevronDownIcon,
   ChevronUpIcon,
   ExclamationCircleIcon,
-  Squares2X2Icon,
 } from "@heroicons/react/24/outline";
 import { LazyLoadingImage } from "components/LoadingImage/LoadingImage";
-import { useState } from "react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { humanReadableSource, urlForSource } from "utils/helius";
-import CollectionSort, {
-  CollectionSortType,
-} from "components/CollectionSort/CollectionSort";
-import SolanaIcon from "components/Icons/SolanaIcon";
+import { CollectionSortType } from "components/CollectionSort/CollectionSort";
 
 interface Props {
   items: Collection[];
-  subtitle: string;
+  view: ViewType;
   sort: CollectionSortType;
   updateSort: (newSort: CollectionSortType) => void;
 }
 
-enum ViewType {
+export enum ViewType {
   List,
   Grid,
 }
 
 const CollectionIndexGrid: React.FC<Props> = ({
   items,
-  subtitle,
+  view,
   sort,
   updateSort,
 }) => {
-  const [view, setView] = useState<ViewType>(ViewType.Grid);
-
   return (
     <div className="mx-1">
-      <div className="flex items-center justify-between">
-        <h3 className="hidden md:block pl-5 text-indigo-400 text-base">
-          {subtitle}
-        </h3>
-        <div className="flex gap-3 items-center h-[40px] justify-between w-full md:w-auto md:justify-end">
-          <div className="h-full order-1 md:order-0">
-            <CollectionSort
-              sort={sort}
-              didChangeSort={(newSort) => {
-                updateSort(newSort);
-              }}
-            />
-          </div>
-          <div className="sm:mr-3 border border-1 text-indigo-600 border-indigo-600 h-full rounded-lg flex gap-0 items-center justify-center order-0 md:order-1">
-            <button className="px-4" onClick={() => setView(ViewType.Grid)}>
-              <Squares2X2Icon
-                className={classNames(
-                  "w-5 h-5",
-                  view === ViewType.Grid ? "text-indigo-400" : ""
-                )}
-              />
-            </button>
-            <button
-              className="py-2 px-4 border-l border-indigo-600"
-              onClick={() => setView(ViewType.List)}
-            >
-              <Bars3Icon
-                className={classNames(
-                  "w-5 h-5",
-                  view === ViewType.List ? "text-indigo-400" : ""
-                )}
-              />
-            </button>
-          </div>
-        </div>
-      </div>
       <div
         className={classNames(
           "mt-4",
