@@ -1,4 +1,4 @@
-import { NFTEvent, OneOfOneNFTEvent } from "./nftEvent";
+import { OneOfOneNFTEvent } from "./nftEvent";
 import { NFTListing } from "./nftListings";
 
 export interface Collection {
