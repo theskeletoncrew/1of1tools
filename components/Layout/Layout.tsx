@@ -1,4 +1,5 @@
 import { OneOfOneToolsClient } from "api-client";
+import SolanaIcon from "components/Icons/SolanaIcon";
 import MainNavigation from "components/MainNavigation/MainNavigation";
 import SignupModal from "components/SignupModal/SignupModal";
 import { create } from "domain";
@@ -53,6 +54,7 @@ const Layout = ({ children, isHome = false }: Props) => {
         reverseOrder={false}
         toastOptions={{ style: { fontSize: "13px" } }}
       />
+      <SolanaIcon />
       <main>
         <div className="m-4 mt-3 sm:m-8 sm:mt-4">
           <MainNavigation />

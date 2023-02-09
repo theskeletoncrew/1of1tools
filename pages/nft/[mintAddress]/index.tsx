@@ -5,7 +5,12 @@ import { NFTMetadata } from "models/nftMetadata";
 import { NFTEvent } from "models/nftEvent";
 import { shortenedAddress, tryPublicKey } from "utils";
 import { clusterApiUrl, network } from "utils/network";
-import { Connection, ParsedAccountData, PublicKey } from "@solana/web3.js";
+import {
+  Connection,
+  LAMPORTS_PER_SOL,
+  ParsedAccountData,
+  PublicKey,
+} from "@solana/web3.js";
 import {
   isNft,
   Metaplex,
@@ -33,6 +38,9 @@ import { toast } from "react-hot-toast";
 import NotificationSubscriptionModal from "components/NotificationSubscriptionModal/NotificationSubscriptionModal";
 import { BellAlertIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/router";
+import { NFTListings } from "models/nftListings";
+import Link from "next/link";
+import { urlForSource } from "utils/helius";
 
 const EVENTS_PER_PAGE = 25;
 
@@ -109,6 +117,9 @@ const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
     PaginationToken | undefined
   >();
   const [hasMore, setHasMore] = useState(true);
+
+  const [isLoadingListing, setLoadingListing] = useState(true);
+  const [listing, setListing] = useState<NFTListings>();
 
   const [nft, setNft] = useState<Nft | Sft | SftWithToken | NftWithToken>();
   const [parentNft, setParentNft] = useState<Nft>();
@@ -210,6 +221,30 @@ const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
     setHasMore(more);
   };
 
+  const loadListings = async () => {
+    const firstVerifiedCreator = onChainData.data.creators
+      .find((c) => c.verified)
+      ?.address?.toString();
+    if (!firstVerifiedCreator) {
+      console.log("could not determine first verified creator");
+      return;
+    }
+
+    const listingsRes = await OneOfOneToolsClient.activeListingNFT(
+      nftMetadata.mint,
+      firstVerifiedCreator
+    );
+
+    if (listingsRes.isErr()) {
+      toast.error(listingsRes.error.message);
+      return;
+    }
+
+    const result = listingsRes.value;
+
+    setListing(result);
+  };
+
   const setupNotifications = async () => {
     if (!session) {
       toast.error("Your session expired. Please login and try again.");
@@ -281,6 +316,9 @@ const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
     setLoading(true);
     getMoreEvents(true).then(() => {
       setLoading(false);
+    });
+    loadListings().then(() => {
+      setLoadingListing(false);
     });
   }, []);
 
@@ -385,6 +423,53 @@ const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
                       />
                     )}
                   </div>
+
+                  {isLoadingListing ? (
+                    <div className="px-4 pt-3 pb-4 mb-4 sm:mb-3 rounded-lg bg-white bg-opacity-5 focus:outline-none">
+                      <div className="min-h-[100px]" />
+                    </div>
+                  ) : (
+                    listing && (
+                      <div className="px-4 pt-3 pb-4 mb-4 sm:mb-3 rounded-lg bg-white bg-opacity-5 focus:outline-none">
+                        <div className="flex gap-4 items-center justify-between">
+                          <div>
+                            <label className=" text-indigo-500 text-sm">
+                              LISTED
+                            </label>
+                            <div className="flex gap-2 items-center text-3xl">
+                              <span>
+                                {(listing.activeListings[0]?.amount ?? 0) /
+                                  LAMPORTS_PER_SOL}
+                              </span>
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 20 20"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <use href="#solana-icon"></use>
+                              </svg>
+                            </div>
+                          </div>
+                          <Link
+                            href={
+                              urlForSource(
+                                listing.activeListings[0]!.marketplace,
+                                listing.mint
+                              ) ?? "#"
+                            }
+                          >
+                            <a target="_blank" rel="noreferrer">
+                              <button className="button">
+                                View on Marketplace
+                              </button>
+                            </a>
+                          </Link>
+                        </div>
+                      </div>
+                    )
+                  )}
 
                   {session?.user?.id == owner && wallet && nft && (
                     <div className="px-4 pt-3 pb-4 mb-4 sm:mb-3 rounded-lg bg-white bg-opacity-5 focus:outline-none">

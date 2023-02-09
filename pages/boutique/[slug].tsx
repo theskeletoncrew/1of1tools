@@ -105,7 +105,7 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
     if (!collection.mintAddresses) {
       return;
     }
-    const listingsRes = await OneOfOneToolsClient.activeListings(
+    const listingsRes = await OneOfOneToolsClient.activeBoutiqueListings(
       collection.slug
     );
 

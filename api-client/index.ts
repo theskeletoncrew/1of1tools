@@ -670,12 +670,38 @@ export namespace OneOfOneToolsClient {
     }
   }
 
-  export async function activeListings(
+  export async function activeBoutiqueListings(
     slug: string
   ): Promise<Result<NFTListings[], Error>> {
     try {
       const response = await fetch(
         `${SERVER_URL}/api/collections/boutique/${slug}/listings`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const responseJSON = await response.json();
+
+      if (response.ok) {
+        return ok(responseJSON.listings);
+      }
+      return err(new OneofOneToolsAPIError(response, responseJSON));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function activeListingNFT(
+    mintAddress: string,
+    firstVerifiedCreator: string
+  ): Promise<Result<NFTListings, Error>> {
+    try {
+      const response = await fetch(
+        `${SERVER_URL}/api/nfts/${mintAddress}/listings?firstVerifiedCreator=${firstVerifiedCreator}`,
         {
           method: "GET",
           headers: {
