@@ -1,5 +1,7 @@
 import { EnrichedTransaction } from "models/enrichedTransaction";
 import { Source, TransactionType } from "helius-sdk";
+import { OneOfOneNFTEvent } from "models/nftEvent";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 export const humanReadableEventType = (eventType: string) => {
   switch (eventType) {
@@ -193,6 +195,20 @@ export const humanReadableTransaction = (
   const description = `${humanReadableEventPastTense(
     transaction.type
   )} on ${humanReadableSource(source)}${url ? ": " + url : ""}`;
+  return description;
+};
+
+export const humanReadableEventShort = (event: OneOfOneNFTEvent): string => {
+  const source = event.source;
+  const type = event.type;
+  const nft = event.mint;
+  const url = nft ? urlForSource(source, event.mint) : null;
+  const description = `${humanReadableEventPastTense(event.type)}${
+    isEventTypeAmountDisplayable(event.type as TransactionType) &&
+    event.amount > 0
+      ? `: ${event.amount / LAMPORTS_PER_SOL} SOL`
+      : ""
+  }`;
   return description;
 };
 

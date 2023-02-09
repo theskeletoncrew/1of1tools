@@ -1,7 +1,7 @@
 import { Result, ok, err } from "neverthrow";
 import { OneofOneToolsAPIError } from "models/apiError";
 import { NFTMetadata } from "models/nftMetadata";
-import { NFTEvent } from "models/nftEvent";
+import { NFTEvent, OneOfOneNFTEvent } from "models/nftEvent";
 import { PaginationToken } from "models/paginationToken";
 import {
   DialectNotificationSetting,
@@ -640,6 +640,39 @@ export namespace OneOfOneToolsClient {
 
       if (response.ok) {
         return ok(responseJSON.collections);
+      }
+      return err(new OneofOneToolsAPIError(response, responseJSON));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function latestBoutiqueEvents(options: {
+    limit?: number | null;
+  }): Promise<
+    Result<{ events: OneOfOneNFTEvent[]; nfts: NFTMetadata[] }, Error>
+  > {
+    try {
+      let params: Record<string, string> = {};
+      if (options.limit) {
+        params.limit = options.limit.toString();
+      }
+      const query = new URLSearchParams(params).toString();
+
+      const response = await fetch(
+        `${SERVER_URL}/api/collections/boutique/events?${query}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const responseJSON = await response.json();
+
+      if (response.ok) {
+        return ok({ events: responseJSON.events, nfts: responseJSON.nfts });
       }
       return err(new OneofOneToolsAPIError(response, responseJSON));
     } catch (e) {

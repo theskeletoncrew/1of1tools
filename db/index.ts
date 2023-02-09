@@ -589,6 +589,29 @@ export async function getBoutiqueCollectionEvents(
   }
 }
 
+export async function getLatestBoutiqueCollectionEvents(
+  limit: number = 8
+): Promise<Result<OneOfOneNFTEvent[], Error>> {
+  try {
+    let query = await db
+      .collection(`boutique-collection-events`)
+      .orderBy("timestamp", "desc")
+      .limit(limit);
+
+    const snapshot = await query.get();
+
+    const events = snapshot.docs.map((doc) => {
+      const event = doc.data() as OneOfOneNFTEvent;
+      event.signature = doc.id;
+      return event;
+    });
+
+    return ok(events);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
 export async function addBoutiqueCollectionEvent(
   slug: string,
   event: OneOfOneNFTEvent

@@ -6,7 +6,6 @@ import { NftsByCreatorForm } from "components/Forms/NftsByCreator";
 import { NftsByWalletOwnerForm } from "components/Forms/NftsByWalletOwner";
 import { NftsByCollectionForm } from "components/Forms/NftsByCollection";
 import Layout from "components/Layout/Layout";
-import AuthenticationRow from "components/AuthenticationRow/AuthenticationRow";
 import type SwiperCore from "swiper";
 import { Navigation } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -24,6 +23,19 @@ import {
 import { Collection } from "models/collection";
 import { OneOfOneToolsClient } from "api-client";
 import { classNames } from "utils";
+import { OneOfOneNFTEvent } from "models/nftEvent";
+import { humanReadableEventShort } from "utils/helius";
+import { NFTMetadata } from "models/nftMetadata";
+
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(relativeTime);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault(dayjs.tz.guess());
 
 enum SearchTab {
   creator,
@@ -44,6 +56,10 @@ const Home: NextPage = () => {
   const [isLoading, setLoading] = useState(false);
   const [boutiqueCollections, setBoutiqueCollections] =
     useState<Collection[]>();
+  const [latestBoutiqueEvents, setLatestBoutiqueEvents] =
+    useState<OneOfOneNFTEvent[]>();
+  const [latestBoutiqueEventsMetadata, setLatestBoutiqueEventsMetadata] =
+    useState<NFTMetadata[]>();
 
   const swiperRefs = useRef<SwiperCore[]>([]);
 
@@ -56,9 +72,18 @@ const Home: NextPage = () => {
         setBoutiqueCollections(collectionsRes.value);
       }
     };
+    const loadLatestEvents = async () => {
+      const eventsRes = await OneOfOneToolsClient.latestBoutiqueEvents({
+        limit: 8,
+      });
+      if (eventsRes.isOk()) {
+        setLatestBoutiqueEvents(eventsRes.value.events);
+        setLatestBoutiqueEventsMetadata(eventsRes.value.nfts);
+      }
+    };
     if (!isLoading) {
       setLoading(true);
-      loadBoutiqueCollections().then(() => {
+      Promise.all([loadBoutiqueCollections(), loadLatestEvents()]).then(() => {
         setLoading(false);
       });
     }
@@ -161,11 +186,7 @@ const Home: NextPage = () => {
             slidesPerGroup={2}
             spaceBetween={15}
             onBeforeInit={(swiper) => {
-              swiperRefs.current = [
-                ...swiperRefs.current.slice(0, 0),
-                swiper,
-                ...swiperRefs.current.slice(1),
-              ];
+              swiperRefs.current = [swiper, ...swiperRefs.current.slice(1)];
             }}
             modules={[Navigation]}
             breakpoints={{
@@ -187,9 +208,9 @@ const Home: NextPage = () => {
               },
             }}
           >
-            {boutiqueCollections?.map((collection, i) => {
+            {boutiqueCollections?.map((collection) => {
               return (
-                <SwiperSlide key={`row-fest-drop-${i}`}>
+                <SwiperSlide key={`boutique-collection-${collection.slug}`}>
                   <div className={styles.rowDrop}>
                     <Link href={`/boutique/${collection.slug}`}>
                       <a className={`${styles.rowDropImageWrapper} group`}>
@@ -236,6 +257,94 @@ const Home: NextPage = () => {
             <ArrowRightCircleIcon />
           </div>
         </div>
+
+        {latestBoutiqueEvents && latestBoutiqueEventsMetadata && (
+          <div className={`mt-10 ${styles.homeRow}`}>
+            <h5 className={styles.rowTitle}>Latest Boutique Activity</h5>
+            <Swiper
+              slidesPerView={2}
+              slidesPerGroup={2}
+              spaceBetween={15}
+              onBeforeInit={(swiper) => {
+                swiperRefs.current = [
+                  ...swiperRefs.current.slice(0, 0),
+                  swiper,
+                  ...swiperRefs.current.slice(2),
+                ];
+              }}
+              modules={[Navigation]}
+              breakpoints={{
+                640: {
+                  slidesPerView: 3,
+                  slidesPerGroup: 3,
+                },
+                768: {
+                  slidesPerView: 4,
+                  slidesPerGroup: 4,
+                },
+                1024: {
+                  slidesPerView: 5,
+                  slidesPerGroup: 5,
+                },
+                1280: {
+                  slidesPerView: 6,
+                  slidesPerGroup: 6,
+                },
+              }}
+            >
+              {latestBoutiqueEvents?.map((event, i) => {
+                const metadata = latestBoutiqueEventsMetadata?.find(
+                  (m) => m.mint === event.mint
+                );
+                return (
+                  <SwiperSlide key={`activity-${event.signature}`}>
+                    <div className={styles.rowDrop}>
+                      <Link href={`/nft/${event.mint}`}>
+                        <a className={`${styles.rowDropImageWrapper} group`}>
+                          <div className={styles.dropImageWrapper}>
+                            {metadata?.offChainData?.image ? (
+                              <img
+                                className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
+                                src={`/api/assets/nft/${
+                                  event.mint
+                                }/640?originalURL=${encodeURIComponent(
+                                  metadata.offChainData.image
+                                )}`}
+                                alt={event.description}
+                              />
+                            ) : (
+                              <div className={`${styles.dropImage}`} />
+                            )}
+                          </div>
+                          <span className={styles.rowDropDescriptionLong}>
+                            <h5 className={styles.rowDropTitleLong}>
+                              {humanReadableEventShort(event)}
+                            </h5>
+                            <span>
+                              {dayjs(event.timestamp * 1000).toNow(true)} ago
+                            </span>
+                          </span>
+                        </a>
+                      </Link>
+                    </div>
+                  </SwiperSlide>
+                );
+              })}
+            </Swiper>
+            <div
+              onClick={() => swiperRefs.current[0]?.slidePrev()}
+              className={`${styles.rowDropNav} ${styles.rowDropNavPrev}`}
+            >
+              <ArrowLeftCircleIcon />
+            </div>
+            <div
+              onClick={() => swiperRefs.current[0]?.slideNext()}
+              className={`${styles.rowDropNav} ${styles.rowDropNavNext}`}
+            >
+              <ArrowRightCircleIcon />
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
