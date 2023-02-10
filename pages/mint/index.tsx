@@ -86,7 +86,7 @@ const MintPage: NextPage = () => {
       ) {
         console.log(uploadResponse.message);
         console.log(uploadResponse.upload_errors);
-        throw new Error("Error uploading media file to GenesysGo");
+        throw new Error("Error uploading media file to Shadow Drive");
       }
 
       const remoteURL = uploadResponse.finalized_locations[0]!;
@@ -123,7 +123,7 @@ const MintPage: NextPage = () => {
       ) {
         console.log(uploadResponse.message);
         console.log(uploadResponse.upload_errors);
-        throw new Error("Error uploading media file to GenesysGo");
+        throw new Error("Error uploading media file to Shadow Drive");
       }
 
       const remoteURL = uploadResponse.finalized_locations[0]!;
@@ -154,7 +154,7 @@ const MintPage: NextPage = () => {
 
       if (storageProvider === StorageProvider.GenesysGo && !storageOptions) {
         throw new Error(
-          "GenesysGo storage requires that you create and choose a storage account."
+          "Shadow Drive storage requires that you create and choose a storage account."
         );
       }
 

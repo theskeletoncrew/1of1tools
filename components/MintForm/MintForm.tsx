@@ -56,13 +56,13 @@ export interface NFTFormData {
 
 export enum StorageProvider {
   NFTStorage = "NFTStorage",
-  GenesysGo = "GenesysGo",
+  GenesysGo = "Shadow Drive",
 }
 
 export const storageProviderName = (provider: StorageProvider): string => {
   switch (provider) {
     case StorageProvider.GenesysGo:
-      return "GenesysGo";
+      return "Shadow Drive";
     case StorageProvider.NFTStorage:
       return "NFT.Storage";
   }
@@ -213,10 +213,10 @@ const MintForm: React.FC<Props> = ({
       let storageOptions: GenesysGoStorageOptions | undefined;
       if (storageProvider === StorageProvider.GenesysGo) {
         if (!genesysGoDrive) {
-          throw "Could not initialize GenesysGo";
+          throw "Could not initialize Shadow Drive";
         }
         if (!genesysGoStorageAccount) {
-          throw "GenesysGo requires that you create and select a storage account.";
+          throw "Shadow Drive requires that you create and select a storage account.";
         }
         storageOptions = {
           shadowDrive: genesysGoDrive,
@@ -543,12 +543,9 @@ const MintForm: React.FC<Props> = ({
               }
             >
               <option value="">Select a Storage Type</option>
-              {Object.keys(StorageProvider).map((key) => (
-                <option
-                  key={StorageProvider[key as StorageProvider]}
-                  value={StorageProvider[key as StorageProvider]}
-                >
-                  {storageProviderName(StorageProvider[key as StorageProvider])}
+              {Object.values(StorageProvider).map((value) => (
+                <option key={value} value={value}>
+                  {storageProviderName(value)}
                 </option>
               ))}
             </select>

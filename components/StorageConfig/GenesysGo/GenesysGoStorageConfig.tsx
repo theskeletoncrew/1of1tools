@@ -160,7 +160,7 @@ const GenesysGoStorageConfig: React.FC<Props> = ({ didChangeOptions }) => {
 
   return (
     <div>
-      <label htmlFor="storageAccountName">GenesysGo Storage Account</label>
+      <label htmlFor="storageAccountName">Shadow Drive Storage Account</label>
       <div className="mb-4 flex gap-2 justify-start items-center">
         <div>
           <select
