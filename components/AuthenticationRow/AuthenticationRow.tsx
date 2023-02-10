@@ -37,12 +37,14 @@ const AuthenticationRow: React.FC = () => {
         "A simple interface to create NFTs to your wallet, or send by email.",
       href: "/mint",
       icon: PlusCircleIcon,
+      onClick: null,
     },
     {
       name: "Account Settings",
       description: "Mange your wallets, and notification subscriptions.",
       href: "/account/wallets",
       icon: BellAlertIcon,
+      onClick: null,
     },
     {
       name: "Logout",
@@ -113,29 +115,36 @@ const AuthenticationRow: React.FC = () => {
                           "absolute left-1/2 z-10 mt-3 w-screen max-w-[200px] px-2 sm:px-0 -translate-x-1/2 transform"
                         )}
                       >
-                        <div className="overflow-hidden rounded-lg shadow-lg">
-                          <div
-                            className={classNames(
-                              "relative grid gap-2 bg-white p-4",
-                              navigationItems.length > 3 ? "lg:grid-cols-2" : ""
-                            )}
-                          >
-                            {walletItems.map((item) => (
-                              <Link href={item.href} key={item.name}>
-                                <a
-                                  onClick={item.onClick}
-                                  className="text-center rounded-lg p-3 transition duration-150 ease-in-out hover:bg-gray-50"
-                                >
-                                  <div>
-                                    <p className="text-base font-medium text-gray-900">
-                                      {item.name}
-                                    </p>
-                                  </div>
-                                </a>
-                              </Link>
-                            ))}
+                        {({ close }) => (
+                          <div className="overflow-hidden rounded-lg shadow-lg">
+                            <div
+                              className={classNames(
+                                "relative grid gap-2 bg-white p-4",
+                                navigationItems.length > 3
+                                  ? "lg:grid-cols-2"
+                                  : ""
+                              )}
+                            >
+                              {walletItems.map((item) => (
+                                <Link href={item.href} key={item.name}>
+                                  <a
+                                    onClick={() => {
+                                      item.onClick && item.onClick();
+                                      close();
+                                    }}
+                                    className="text-center rounded-lg p-3 transition duration-150 ease-in-out hover:bg-slate-100"
+                                  >
+                                    <div>
+                                      <p className="text-base font-medium text-gray-900">
+                                        {item.name}
+                                      </p>
+                                    </div>
+                                  </a>
+                                </Link>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </Popover.Panel>
                     </Transition>
                   </>
@@ -204,38 +213,43 @@ const AuthenticationRow: React.FC = () => {
                       navigationItems.length > 3 ? "lg:max-w-3xl" : ""
                     )}
                   >
-                    <div className="overflow-hidden rounded-lg shadow-lg">
-                      <div
-                        className={classNames(
-                          "relative grid gap-6 bg-white px-5 py-6 sm:gap-8 sm:p-8",
-                          navigationItems.length > 3 ? "lg:grid-cols-2" : ""
-                        )}
-                      >
-                        {navigationItems.map((item) => (
-                          <Link href={item.href} key={item.name}>
-                            <a
-                              onClick={item.onClick}
-                              className="-m-3 flex items-start rounded-lg p-3 transition duration-150 ease-in-out hover:bg-gray-50"
-                            >
-                              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-indigo-500 text-white sm:h-12 sm:w-12">
-                                <item.icon
-                                  className="h-6 w-6"
-                                  aria-hidden="true"
-                                />
-                              </div>
-                              <div className="ml-4">
-                                <p className="text-base font-medium text-gray-900 -mt-[2px]">
-                                  {item.name}
-                                </p>
-                                <p className="mt-1 text-sm text-gray-500">
-                                  {item.description}
-                                </p>
-                              </div>
-                            </a>
-                          </Link>
-                        ))}
+                    {({ close }) => (
+                      <div className="overflow-hidden rounded-lg shadow-lg">
+                        <div
+                          className={classNames(
+                            "relative grid gap-6 bg-white px-5 py-6 sm:gap-8 sm:p-8",
+                            navigationItems.length > 3 ? "lg:grid-cols-2" : ""
+                          )}
+                        >
+                          {navigationItems.map((item) => (
+                            <Link href={item.href} key={item.name}>
+                              <a
+                                onClick={() => {
+                                  item.onClick && item.onClick();
+                                  close();
+                                }}
+                                className="-m-3 flex items-start rounded-lg p-3 transition duration-150 ease-in-out hover:bg-slate-100"
+                              >
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-indigo-500 text-white sm:h-12 sm:w-12">
+                                  <item.icon
+                                    className="h-6 w-6"
+                                    aria-hidden="true"
+                                  />
+                                </div>
+                                <div className="ml-4">
+                                  <p className="text-base font-medium text-gray-900 -mt-[2px]">
+                                    {item.name}
+                                  </p>
+                                  <p className="mt-1 text-sm text-gray-500">
+                                    {item.description}
+                                  </p>
+                                </div>
+                              </a>
+                            </Link>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </Popover.Panel>
                 </Transition>
               </>
