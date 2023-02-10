@@ -560,7 +560,8 @@ export namespace OneOfOneToolsClient {
     isCreator: boolean,
     username: string,
     email: string | undefined,
-    discordId: string | undefined
+    discordId: string | undefined,
+    twitterUsername: string | undefined
   ): Promise<Result<null, Error>> {
     try {
       const response = await fetch(`${SERVER_URL}/api/accounts`, {
@@ -574,6 +575,7 @@ export namespace OneOfOneToolsClient {
           username: username,
           email: email ?? null,
           discordId: discordId ?? null,
+          twitterUsername: twitterUsername ?? null,
         }),
       });
       const result = await response.json();

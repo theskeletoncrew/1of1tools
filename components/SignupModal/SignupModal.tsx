@@ -11,7 +11,8 @@ interface Props {
     isCreator: boolean,
     username: string,
     email: string | undefined,
-    discordId: string | undefined
+    discordId: string | undefined,
+    twitterUsername: string | undefined
   ) => Promise<boolean>;
 }
 
@@ -20,6 +21,7 @@ const SignupModal: React.FC<Props> = ({ isShowing, close, saveAccount }) => {
   const [username, setUsername] = useState<string>();
   const [email, setEmail] = useState<string>();
   const [discordId, setDiscordId] = useState<string>();
+  const [twitterUsername, setTwitterUsername] = useState<string>();
 
   const save = async () => {
     try {
@@ -49,7 +51,8 @@ const SignupModal: React.FC<Props> = ({ isShowing, close, saveAccount }) => {
         isCreatorType ?? false,
         username,
         email,
-        discordId
+        discordId,
+        twitterUsername
       );
       if (succeeded) {
         close();
@@ -166,6 +169,20 @@ const SignupModal: React.FC<Props> = ({ isShowing, close, saveAccount }) => {
                       setDiscordId(e.target.value);
                     }}
                     value={discordId}
+                  />
+                </div>
+                <div>
+                  <label>Twitter Username:</label>
+                  <input
+                    id="twitter"
+                    name="twitter"
+                    className="w-full mb-3"
+                    type="text"
+                    placeholder="cosimo_rip"
+                    onChange={(e) => {
+                      setTwitterUsername(e.target.value);
+                    }}
+                    value={twitterUsername}
                   />
                 </div>
               </div>

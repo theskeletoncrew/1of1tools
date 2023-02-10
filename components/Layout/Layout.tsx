@@ -20,13 +20,15 @@ const Layout = ({ children, isHome = false }: Props) => {
     isCreator: boolean,
     username: string,
     email: string | undefined,
-    discordId: string | undefined
+    discordId: string | undefined,
+    twitterUsername: string | undefined
   ): Promise<boolean> => {
     const createRes = await OneOfOneToolsClient.createAccount(
       isCreator,
       username,
       email,
-      discordId
+      discordId,
+      twitterUsername
     );
     if (createRes.isOk()) {
       toast.success("Account saved");
