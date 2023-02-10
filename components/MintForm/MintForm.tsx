@@ -2,12 +2,22 @@ import { tryPublicKey } from "utils";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import {
-  Creator,
+  // Creator,
+  // formatAmount,
+  // Metaplex,
   Nft,
   NftWithToken,
   Sft,
   SftWithToken,
 } from "@metaplex-foundation/js";
+import GenesysGoStorageConfig, {
+  GenesysGoStorageOptions,
+} from "components/StorageConfig/GenesysGo/GenesysGoStorageConfig";
+import { PublicKey } from "@solana/web3.js";
+import { ShdwDrive } from "@shadow-drive/sdk";
+// import { nftStorage } from "@metaplex-foundation/js-plugin-nft-storage";
+// import { Connection } from "@solana/web3.js";
+// import { useConnection } from "@solana/wallet-adapter-react";
 
 interface Props {
   isEdit?: boolean;
@@ -16,7 +26,9 @@ interface Props {
   onComplete: (
     metadata: NFTFormData,
     coverImage: File | undefined,
-    isCrossmint: boolean
+    isCrossmint: boolean,
+    storageProvider: StorageProvider,
+    storageOptions: GenesysGoStorageOptions | undefined
   ) => void;
 }
 
@@ -41,6 +53,20 @@ export interface NFTFormData {
   attributes: MetadataAttribute[];
   creators: MetadataCreator[];
 }
+
+export enum StorageProvider {
+  NFTStorage = "NFTStorage",
+  GenesysGo = "GenesysGo",
+}
+
+export const storageProviderName = (provider: StorageProvider): string => {
+  switch (provider) {
+    case StorageProvider.GenesysGo:
+      return "GenesysGo";
+    case StorageProvider.NFTStorage:
+      return "NFT.Storage";
+  }
+};
 
 const MintForm: React.FC<Props> = ({
   isEdit = false,
@@ -67,12 +93,53 @@ const MintForm: React.FC<Props> = ({
       { address: "", share: "" as any } as MetadataCreator,
     ]
   );
+  const [storageProvider, setStorageProvider] = useState<StorageProvider>(
+    StorageProvider.NFTStorage
+  );
+  const [genesysGoDrive, setGenesysGoDrive] = useState<ShdwDrive>();
+  const [genesysGoStorageAccount, setGenesysGoStorageAccount] =
+    useState<PublicKey>();
+  // const [totalBytes, setTotalBytes] = useState(0);
+  // const [storageCostEstimate, setStorageCostEstimate] = useState("");
+
+  // const { connection } = useConnection();
 
   const updatedCoverImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const file = e.target.files[0];
       setCoverImage(file);
+      // recalculateTotalBytes();
     }
+  };
+
+  // const recalculateTotalBytes = () {
+  //   const coverImageBytes = coverImage?.size ?? 0;
+  //   const bytes = coverImageBytes;
+  //   setTotalBytes(bytes);
+  // }
+
+  const updateStorageProvider = async (provider: StorageProvider) => {
+    setStorageProvider(provider);
+
+    // const mx = Metaplex.make(connection);
+
+    // if (provider == StorageProvider.NFTStorage) {
+    //   mx.use(
+    //     nftStorage({ token: process.env.NEXT_PUBLIC_NFT_STORAGE_API_KEY ?? "" })
+    //   );
+    //   console.log("provider: NFTStorage");
+    // } else {
+    //   setStorageCostEstimate("");
+    //   return;
+    // }
+
+    // const cost = await mx.storage().getUploadPriceForBytes(totalBytes);
+
+    // if (cost.basisPoints.eqn(0)) {
+    //   setStorageCostEstimate("FREE");
+    // } else {
+    //   setStorageCostEstimate(formatAmount(cost));
+    // }
   };
 
   const validateAndSaveNFTs = async (isCrossmint: boolean) => {
@@ -143,6 +210,20 @@ const MintForm: React.FC<Props> = ({
         throw "Creators must be unique";
       }
 
+      let storageOptions: GenesysGoStorageOptions | undefined;
+      if (storageProvider === StorageProvider.GenesysGo) {
+        if (!genesysGoDrive) {
+          throw "Could not initialize GenesysGo";
+        }
+        if (!genesysGoStorageAccount) {
+          throw "GenesysGo requires that you create and select a storage account.";
+        }
+        storageOptions = {
+          shadowDrive: genesysGoDrive,
+          storageAccount: genesysGoStorageAccount,
+        };
+      }
+
       onComplete(
         {
           name: name,
@@ -154,7 +235,9 @@ const MintForm: React.FC<Props> = ({
           creators: creators,
         },
         coverImage,
-        isCrossmint
+        isCrossmint,
+        storageProvider,
+        storageOptions
       );
     } catch (e) {
       toast.error("Error: " + e);
@@ -298,22 +381,24 @@ const MintForm: React.FC<Props> = ({
               <button
                 className="button"
                 type="button"
-                onClick={() =>
+                onClick={(e) => {
+                  e.preventDefault();
                   setAttributes([
                     ...attributes,
                     {
                       name: "",
                       value: "",
                     },
-                  ])
-                }
+                  ]);
+                }}
               >
                 Add
               </button>
               <button
                 className="button"
                 type="button"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   if (attributes.length == 1) {
                     setAttributes([
                       {
@@ -401,7 +486,8 @@ const MintForm: React.FC<Props> = ({
               <button
                 className="button"
                 type="button"
-                onClick={() =>
+                onClick={(e) => {
+                  e.preventDefault();
                   setCreators([
                     ...creators,
                     {
@@ -409,15 +495,16 @@ const MintForm: React.FC<Props> = ({
                       share: 0,
                       verified: false,
                     },
-                  ])
-                }
+                  ]);
+                }}
               >
                 Add
               </button>
               <button
                 className="button"
                 type="button"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   if (creators.length == 1) {
                     setCreators([
                       {
@@ -441,13 +528,56 @@ const MintForm: React.FC<Props> = ({
           </div>
         </div>
 
+        <div className="mb-6">
+          <fieldset className="w-full">
+            <label htmlFor="storageProvider" className="block">
+              Decentralized Storage Provider:
+            </label>
+            <select
+              id="storageProvider"
+              name="storageProvider"
+              value={storageProvider}
+              className="w-full mt-1 block"
+              onChange={(e) =>
+                updateStorageProvider(e.target.value as StorageProvider)
+              }
+            >
+              <option value="">Select a Storage Type</option>
+              {Object.keys(StorageProvider).map((key) => (
+                <option
+                  key={StorageProvider[key as StorageProvider]}
+                  value={StorageProvider[key as StorageProvider]}
+                >
+                  {storageProviderName(StorageProvider[key as StorageProvider])}
+                </option>
+              ))}
+            </select>
+          </fieldset>
+
+          {storageProvider == StorageProvider.GenesysGo ? (
+            <div className="mt-2">
+              <GenesysGoStorageConfig
+                didChangeOptions={(options) => {
+                  setGenesysGoDrive(options?.shadowDrive);
+                  setGenesysGoStorageAccount(options?.storageAccount);
+                }}
+              />
+            </div>
+          ) : (
+            ""
+          )}
+        </div>
+
         <div className="text-center mt-8 mx-auto flex gap-4 items-top justify-top">
           {isEdit ? (
             <div className="w-full">
               <button
                 className="button thinbutton w-full"
                 type="button"
-                onClick={async () => validateAndSaveNFTs(false)}
+                onClick={async (e) => {
+                  e.preventDefault();
+                  validateAndSaveNFTs(false);
+                }}
               >
                 Save
               </button>
@@ -458,7 +588,10 @@ const MintForm: React.FC<Props> = ({
                 <button
                   className="button thinbutton w-full"
                   type="button"
-                  onClick={async () => validateAndSaveNFTs(false)}
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    validateAndSaveNFTs(false);
+                  }}
                 >
                   Mint to
                   <br />
@@ -470,7 +603,10 @@ const MintForm: React.FC<Props> = ({
                 <button
                   className="button thinbutton w-full"
                   type="button"
-                  onClick={async () => validateAndSaveNFTs(true)}
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    validateAndSaveNFTs(true);
+                  }}
                 >
                   Mint & Email
                   <br />

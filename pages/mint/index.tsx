@@ -5,6 +5,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import {
   Metaplex,
+  MetaplexFile,
   toMetaplexFileFromBrowser,
   walletAdapterIdentity,
 } from "@metaplex-foundation/js";
@@ -13,7 +14,10 @@ import { network } from "utils/network";
 import { useState } from "react";
 import Header from "components/Header/Header";
 import Layout from "components/Layout/Layout";
-import MintForm, { NFTFormData } from "components/MintForm/MintForm";
+import MintForm, {
+  NFTFormData,
+  StorageProvider,
+} from "components/MintForm/MintForm";
 import {
   fileCategory,
   valid3DExtensions,
@@ -25,6 +29,8 @@ import dynamic from "next/dynamic";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { notEmpty, pubKeyUrl, shortenedAddress, tryPublicKey } from "utils";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { GenesysGoStorageOptions } from "components/StorageConfig/GenesysGo/GenesysGoStorageConfig";
+import { ShadowFile } from "@shadow-drive/sdk";
 
 function pause(ms: number) {
   return new Promise((resolve, reject) => {
@@ -33,6 +39,7 @@ function pause(ms: number) {
     }, ms);
   });
 }
+import { uuid } from "uuidv4";
 
 const Model = dynamic(() => import("components/Model"), { ssr: false });
 
@@ -56,10 +63,82 @@ const MintPage: NextPage = () => {
     }
   };
 
+  const uploadFile = async (
+    file: File,
+    metaplexFile: MetaplexFile,
+    mx: Metaplex,
+    storageProvider: StorageProvider,
+    storageOptions: GenesysGoStorageOptions | undefined
+  ): Promise<string> => {
+    if (storageProvider === StorageProvider.NFTStorage) {
+      const remoteURL = await mx.storage().upload(metaplexFile);
+      return remoteURL;
+    } else if (storageProvider === StorageProvider.GenesysGo) {
+      const options = storageOptions!;
+      const uploadResponse = await options.shadowDrive.uploadFile(
+        options.storageAccount,
+        file
+      );
+
+      if (
+        uploadResponse.upload_errors.length > 0 ||
+        uploadResponse.finalized_locations.length < 1
+      ) {
+        console.log(uploadResponse.message);
+        console.log(uploadResponse.upload_errors);
+        throw new Error("Error uploading media file to GenesysGo");
+      }
+
+      const remoteURL = uploadResponse.finalized_locations[0]!;
+      return remoteURL;
+    } else {
+      throw new Error("Unknown Storage Provider");
+    }
+  };
+
+  const uploadMetadata = async (
+    jsonMetadata: any,
+    mx: Metaplex,
+    storageProvider: StorageProvider,
+    storageOptions: GenesysGoStorageOptions | undefined
+  ): Promise<string> => {
+    if (storageProvider === StorageProvider.NFTStorage) {
+      const { uri } = await mx.nfts().uploadMetadata(jsonMetadata);
+      return uri;
+    } else if (storageProvider === StorageProvider.GenesysGo) {
+      const options = storageOptions!;
+      const jsonBuffer = Buffer.from(JSON.stringify(jsonMetadata));
+      const file = new File([jsonBuffer], uuid() + ".json");
+      // const shadowFile = {
+      //   name: ,
+      //   file: new Blob([jsonBuffer]),
+      // } as ShadowFile;
+      const uploadResponse = await options.shadowDrive.uploadFile(
+        options.storageAccount,
+        file
+      );
+      if (
+        uploadResponse.upload_errors.length > 0 ||
+        uploadResponse.finalized_locations.length < 1
+      ) {
+        console.log(uploadResponse.message);
+        console.log(uploadResponse.upload_errors);
+        throw new Error("Error uploading media file to GenesysGo");
+      }
+
+      const remoteURL = uploadResponse.finalized_locations[0]!;
+      return remoteURL;
+    } else {
+      throw new Error("Unknown Storage Provider");
+    }
+  };
+
   const mint = async (
     metadata: NFTFormData,
     coverImage: File | undefined,
-    isCrossmint: boolean
+    isCrossmint: boolean,
+    storageProvider: StorageProvider,
+    storageOptions: GenesysGoStorageOptions | undefined
   ) => {
     try {
       setMintingStatus("Minting...");
@@ -71,6 +150,12 @@ const MintPage: NextPage = () => {
 
       if (!file) {
         throw new Error("No media file provided.");
+      }
+
+      if (storageProvider === StorageProvider.GenesysGo && !storageOptions) {
+        throw new Error(
+          "GenesysGo storage requires that you create and choose a storage account."
+        );
       }
 
       let recipientEmail: string | null = null;
@@ -85,17 +170,28 @@ const MintPage: NextPage = () => {
 
       const mx = Metaplex.make(connection);
       mx.use(walletAdapterIdentity(wallet));
-      mx.use(
-        nftStorage({
-          token: process.env.NEXT_PUBLIC_NFT_STORAGE_API_KEY ?? "",
-        })!
-      );
+
+      if (storageProvider === StorageProvider.NFTStorage) {
+        mx.use(
+          nftStorage({
+            token: process.env.NEXT_PUBLIC_NFT_STORAGE_API_KEY ?? "",
+          })!
+        );
+      }
 
       const category = fileCategory(file);
 
       setMintingStatus(`Uploading media file...`);
+      console.log("Uploading media file...");
       const mediaFile = await toMetaplexFileFromBrowser(file);
-      const mediaFileLocation = await mx.storage().upload(mediaFile);
+      let mediaFileLocation = await uploadFile(
+        file,
+        mediaFile,
+        mx,
+        storageProvider,
+        storageOptions
+      );
+
       const fullMediaLocation = `${mediaFileLocation}?ext=${mediaFile.extension?.toLowerCase()}`;
 
       let fullCoverLocation: string | undefined;
@@ -105,8 +201,15 @@ const MintPage: NextPage = () => {
 
       if (coverImage) {
         setMintingStatus(`Uploading cover file...`);
+        console.log("Uploading cover file...");
         const coverMediaFile = await toMetaplexFileFromBrowser(coverImage);
-        const coverFileLocation = await mx.storage().upload(coverMediaFile);
+        let coverFileLocation = await uploadFile(
+          coverImage,
+          coverMediaFile,
+          mx,
+          storageProvider,
+          storageOptions
+        );
         fullCoverLocation = `${coverFileLocation}?ext=${coverMediaFile.extension?.toLowerCase()}`;
       }
 
@@ -140,6 +243,7 @@ const MintPage: NextPage = () => {
       };
 
       if (isCrossmint && recipientEmail) {
+        console.log("Uploading metadata and writing to blockchain...");
         setMintingStatus("Uploading metadata and writing to blockchain...");
         const mintRes = await OneOfOneToolsClient.mint(
           jsonMetadata,
@@ -175,9 +279,16 @@ const MintPage: NextPage = () => {
           throw new Error(mintRes.error.message);
         }
       } else {
+        console.log("Uploading metadata...");
         setMintingStatus("Uploading metadata...");
-        const { uri: newUri } = await mx.nfts().uploadMetadata(jsonMetadata);
+        const newUri = await uploadMetadata(
+          jsonMetadata,
+          mx,
+          storageProvider,
+          storageOptions
+        );
 
+        console.log("Writing to blockchain...");
         setMintingStatus("Writing to blockchain...");
         const result = await mx.nfts().create({
           /** The URI that points to the JSON metadata of the asset. */
