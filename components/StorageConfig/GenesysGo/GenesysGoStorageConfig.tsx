@@ -50,7 +50,7 @@ const GenesysGoStorageConfig: React.FC<Props> = ({ didChangeOptions }) => {
   const [accountResponses, setAccountResponses] = useState<
     Array<StorageAccountResponse>
   >([]);
-  const [isCreatingAccount, setCreatingAccount] = useState(true);
+  const [isCreatingAccount, setCreatingAccount] = useState(false);
   const [uploadLocs, setUploadLocs] = useState<any>();
   const [isNewStorageAccount, setIsNewStorageAccount] = useState(false);
   const [isRefreshingAccounts, setRefreshingAccounts] = useState(false);
