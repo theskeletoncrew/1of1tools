@@ -22,7 +22,14 @@ import BoutiqueCollectionsModal from "components/BoutiqueCollectionModal/Boutiqu
 import CollectionSort, {
   CollectionSortType,
 } from "components/CollectionSort/CollectionSort";
-import { Bars3Icon, Squares2X2Icon } from "@heroicons/react/24/outline";
+import {
+  Bars3Icon,
+  BellAlertIcon,
+  Squares2X2Icon,
+} from "@heroicons/react/24/outline";
+import { DiscordGuild, DiscordGuildChannelIdPair } from "models/account";
+import { useSession } from "next-auth/react";
+import NotificationSubscriptionModal from "components/NotificationSubscriptionModal/NotificationSubscriptionModal";
 
 const MAX_BOUTIQUE_COLLECTION_SIZE = 250;
 
@@ -37,6 +44,19 @@ const IndexPage: NextPage = () => {
     CollectionSortType.TOTAL_VOLUME_DESC
   );
   const [view, setView] = useState<ViewType>(ViewType.Grid);
+
+  const [isShowingNotificationsModal, setIsShowingNotificationsModal] =
+    useState(false);
+  const [didLoadNotificationSettings, setDidLoadNotificationSettings] =
+    useState(false);
+  const [dialectAddress, setDialectAddress] = useState<string>();
+  const [discordGuilds, setDiscordGuilds] = useState<
+    DiscordGuild[] | null | undefined
+  >();
+  const [discordSubscriptions, setDiscordSubscriptions] =
+    useState<DiscordGuildChannelIdPair[]>();
+
+  const { data: session } = useSession();
 
   const getMoreBoutiqueCollections = async (
     chosenSort: CollectionSortType | undefined,
@@ -216,6 +236,97 @@ const IndexPage: NextPage = () => {
     return true;
   };
 
+  const setupNotifications = async () => {
+    if (!session) {
+      toast.error("Your session expired. Please login and try again.");
+      return;
+    }
+
+    setIsShowingNotificationsModal(true);
+  };
+
+  const saveNotificationSettings = async (
+    dialectAddress: string | undefined,
+    discordSubscriptions: DiscordGuildChannelIdPair[] | undefined,
+    formfunctionNotifications: boolean | undefined,
+    exchangeArtNotifications: boolean | undefined
+  ) => {
+    if (!session?.user?.id) {
+      return;
+    }
+
+    setDialectAddress(dialectAddress);
+    setDiscordSubscriptions(discordSubscriptions);
+
+    setIsShowingNotificationsModal(false);
+
+    const result =
+      await OneOfOneToolsClient.setDialectBoutiqueNotificationSubscriptionSettings(
+        dialectAddress ?? session.user.id
+      );
+    if (!result.isOk()) {
+      toast.error(
+        "Notification preferences failed to save: " + result.error.message
+      );
+      return;
+    }
+
+    if (discordGuilds && discordGuilds.length > 0) {
+      const subscriptions = discordSubscriptions?.map((pair) => ({
+        subscriberAddress: session.user.id,
+        guildId: pair.guildId,
+        channelId: pair.channelId,
+      }));
+      const result2 =
+        await OneOfOneToolsClient.setDiscordBoutiqueNotificationSubscriptionSettings(
+          subscriptions ?? []
+        );
+      if (!result2.isOk()) {
+        console.log(result2.error.message);
+        toast.error(
+          "Notification preferences failed to save: " + result2.error.message
+        );
+        return;
+      }
+
+      toast.success("Notification preferences saved.");
+    }
+  };
+
+  useEffect(() => {
+    const loadNotificationSettings = async (subscriberAddress: string) => {
+      const result =
+        await OneOfOneToolsClient.dialectBoutiqueNotificationSubscriptionSettings();
+      if (!result.isOk()) {
+        toast.error(result.error.message);
+        return;
+      }
+      setDialectAddress(result.value?.deliveryAddress ?? subscriberAddress);
+
+      const result2 =
+        await OneOfOneToolsClient.discordBoutiqueNotificationSubscriptionSettings();
+      if (!result2.isOk()) {
+        toast.error(result2.error.message);
+        return;
+      }
+      setDiscordSubscriptions(result2.value);
+
+      const result3 = await OneOfOneToolsClient.getCurrentUserAccount();
+      if (!result3.isOk()) {
+        toast.error(result3.error.message);
+        return;
+      }
+      setDiscordGuilds(
+        result3.value.discordGuilds?.filter((g) => g.selectedChannelId != null)
+      );
+
+      setDidLoadNotificationSettings(true);
+    };
+    if (session?.user?.id) {
+      loadNotificationSettings(session.user.id);
+    }
+  }, [session]);
+
   const title = `1of1.tools | Boutique NFT Collection Listings`;
   const url = `https://1of1.tools/boutique`;
   const description = `View Boutique Collections and their aggregated nft listings, owner information, historical activity, and all-time high sales across all marketplaces.`;
@@ -275,8 +386,11 @@ const IndexPage: NextPage = () => {
                 }}
               />
             </div>
-            <div className="sm:mr-3 border border-1 text-indigo-600 border-indigo-600 h-full rounded-lg flex gap-0 items-center justify-center order-0 md:order-1">
-              <button className="px-4" onClick={() => setView(ViewType.Grid)}>
+            <div className="border border-1 text-indigo-600 border-indigo-600 h-full rounded-lg flex gap-0 items-center justify-center order-0 md:order-1 overflow-hidden">
+              <button
+                className="px-4 h-full hover:bg-indigo-900 hover:bg-opacity-50"
+                onClick={() => setView(ViewType.Grid)}
+              >
                 <Squares2X2Icon
                   className={classNames(
                     "w-5 h-5",
@@ -285,7 +399,7 @@ const IndexPage: NextPage = () => {
                 />
               </button>
               <button
-                className="py-2 px-4 border-l border-indigo-600"
+                className="px-4 h-full hover:bg-indigo-900 hover:bg-opacity-50 border-l border-indigo-600"
                 onClick={() => setView(ViewType.List)}
               >
                 <Bars3Icon
@@ -296,6 +410,25 @@ const IndexPage: NextPage = () => {
                 />
               </button>
             </div>
+
+            {(!session ||
+              !session.user ||
+              (session && session.user?.id && didLoadNotificationSettings)) && (
+              <div className="sm:mr-3 border border-1 border-sky-600 h-full rounded-lg flex gap-0 items-center justify-center order-1 md:order-2 overflow-hidden">
+                <a
+                  href="#"
+                  onClick={() => {
+                    session && session.user?.id
+                      ? setupNotifications()
+                      : alert("You must be signed in to track a collection.");
+                  }}
+                  className="h-full flex gap-1 items-center px-4 text-sky-500 hover:text-sky-500 hover:bg-sky-900 hover:bg-opacity-50"
+                >
+                  <BellAlertIcon className="w-5 h-5" />
+                </a>
+                <div className="clear-both" />
+              </div>
+            )}
           </div>
         </div>
 
@@ -348,6 +481,27 @@ const IndexPage: NextPage = () => {
             twitterURL,
             discordURL,
             webURL
+          );
+        }}
+      />
+      <NotificationSubscriptionModal
+        prompt={`Get notified for any new activity :`}
+        isShowing={isShowingNotificationsModal}
+        close={() => setIsShowingNotificationsModal(false)}
+        dialectAddress={dialectAddress}
+        discordGuilds={discordGuilds ?? undefined}
+        discordSubscriptions={discordSubscriptions}
+        saveNotificationSettings={(
+          dialectAddress,
+          discordSubscriptions,
+          formfunctionNotifications,
+          exchangeArtNotifications
+        ) => {
+          saveNotificationSettings(
+            dialectAddress,
+            discordSubscriptions,
+            formfunctionNotifications,
+            exchangeArtNotifications
           );
         }}
       />

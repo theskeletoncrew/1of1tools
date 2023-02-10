@@ -255,11 +255,16 @@ const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
   };
 
   const saveNotificationSettings = async (
-    formfunctionNotifications: boolean,
-    exchangeArtNotifications: boolean,
-    dialectAddress: string | undefined
+    dialectAddress: string | undefined,
+    formfunctionNotifications: boolean | undefined,
+    exchangeArtNotifications: boolean | undefined
   ) => {
-    if (!nftMetadata.mint || !session?.user?.id) {
+    if (
+      !nftMetadata.mint ||
+      !session?.user?.id ||
+      formfunctionNotifications === undefined ||
+      exchangeArtNotifications === undefined
+    ) {
       return;
     }
 
@@ -523,15 +528,15 @@ const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
           exchangeArtNotifications={exchangeArtNotifications}
           dialectAddress={dialectAddress}
           saveNotificationSettings={(
-            formfunctionNotifications,
-            exchangeArtNotifications,
             dialectAddress,
-            discordSubscriptions // note we are intentionally ignoring here - creator only for now
+            discordSubscriptions, // note we are intentionally ignoring here - creator only for now
+            formfunctionNotifications,
+            exchangeArtNotifications
           ) => {
             saveNotificationSettings(
+              dialectAddress,
               formfunctionNotifications,
-              exchangeArtNotifications,
-              dialectAddress
+              exchangeArtNotifications
             );
           }}
         />

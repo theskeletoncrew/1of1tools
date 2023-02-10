@@ -119,12 +119,17 @@ const CreatorPage: NextPage = () => {
   };
 
   const saveNotificationSettings = async (
-    formfunctionNotifications: boolean,
-    exchangeArtNotifications: boolean,
     dialectAddress: string | undefined,
-    discordSubscriptions: DiscordGuildChannelIdPair[] | undefined
+    discordSubscriptions: DiscordGuildChannelIdPair[] | undefined,
+    formfunctionNotifications: boolean | undefined,
+    exchangeArtNotifications: boolean | undefined
   ) => {
-    if (!accountAddress || !session?.user?.id) {
+    if (
+      !accountAddress ||
+      !session?.user?.id ||
+      formfunctionNotifications === undefined ||
+      exchangeArtNotifications === undefined
+    ) {
       return;
     }
 
@@ -325,16 +330,16 @@ const CreatorPage: NextPage = () => {
           discordGuilds={discordGuilds ?? undefined}
           discordSubscriptions={discordSubscriptions}
           saveNotificationSettings={(
-            formfunctionNotifications,
-            exchangeArtNotifications,
             dialectAddress,
-            discordSubscriptions
+            discordSubscriptions,
+            formfunctionNotifications,
+            exchangeArtNotifications
           ) => {
             saveNotificationSettings(
-              formfunctionNotifications,
-              exchangeArtNotifications,
               dialectAddress,
-              discordSubscriptions
+              discordSubscriptions,
+              formfunctionNotifications,
+              exchangeArtNotifications
             );
           }}
         />

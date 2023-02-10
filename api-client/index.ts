@@ -403,6 +403,104 @@ export namespace OneOfOneToolsClient {
     }
   }
 
+  export async function dialectBoutiqueNotificationSubscriptionSettings(): Promise<
+    Result<DialectNotificationSetting | null, Error>
+  > {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/notifications/boutique`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        return ok(result.settings);
+      }
+      return err(new OneofOneToolsAPIError(response, result));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function setDialectBoutiqueNotificationSubscriptionSettings(
+    deliveryAddress: string
+  ): Promise<Result<null, Error>> {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/notifications/boutique`, {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          deliveryAddress: deliveryAddress,
+        }),
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        return ok(null);
+      }
+      return err(new OneofOneToolsAPIError(response, result));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function discordBoutiqueNotificationSubscriptionSettings(): Promise<
+    Result<DiscordGuildNotificationSetting[], Error>
+  > {
+    try {
+      const response = await fetch(
+        `${SERVER_URL}/api/notifications/boutique?deliveryType=discord`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const result = await response.json();
+
+      if (response.ok) {
+        return ok(result.settings);
+      }
+      return err(new OneofOneToolsAPIError(response, result));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
+  export async function setDiscordBoutiqueNotificationSubscriptionSettings(
+    subscriptions: DiscordGuildNotificationSetting[]
+  ): Promise<Result<null, Error>> {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/notifications/boutique`, {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          guildSubscriptions: subscriptions,
+          deliveryType: "discord",
+        }),
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        return ok(null);
+      }
+      return err(new OneofOneToolsAPIError(response, result));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
   export async function mint(
     metadata: any,
     recipientEmail: string

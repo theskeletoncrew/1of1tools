@@ -1,6 +1,11 @@
-import { getBoutiqueCollections } from "db";
+import {
+  addNewTrackedMint,
+  getBoutiqueCollections,
+  trackNewMintIfPartOfCollection,
+} from "db";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
+import { importAllEventsForCollection } from "utils/import";
 
 const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
   onError(error, req, res) {
@@ -16,24 +21,50 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
 
 apiRoute.post(async (req, res) => {
   try {
-    const collectionsRes = await getBoutiqueCollections(null);
-    if (!collectionsRes.isOk()) {
+    // const collectionsRes = await getBoutiqueCollections(null);
+    // if (!collectionsRes.isOk()) {
+    //   res.status(500).json({
+    //     success: false,
+    //     message: collectionsRes.error,
+    //   });
+    //   return;
+    // }
+
+    // const collections = collectionsRes.value;
+
+    // for (let i = 0; i < collections.length; i++) {
+    //   const collection = collections[i]!;
+    //   // await updateVolumeForCollection(collection);
+    // }
+
+    console.log("Adding new tracked mint");
+
+    const result = await addNewTrackedMint(
+      "4f8Ny3U4nE51vMi8qujdugwzP7YaKHtXz3KxUyW481to",
+      "noomads"
+    );
+    if (!result) {
       res.status(500).json({
         success: false,
-        message: collectionsRes.error,
+        message: "failed to add new tracked mint",
       });
       return;
     }
 
-    const collections = collectionsRes.value;
+    console.log("Importing events");
 
-    for (let i = 0; i < collections.length; i++) {
-      const collection = collections[i]!;
-      // await updateVolumeForCollection(collection);
+    const updateRes = await importAllEventsForCollection(result.collection);
+    if (!updateRes.isOk()) {
+      res.status(500).json({
+        success: false,
+        message: updateRes.error.message,
+      });
+      return;
     }
 
     res.status(200).json({
       success: true,
+      nft: result.nft,
     });
   } catch (error) {
     res.status(500).json({

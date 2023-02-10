@@ -24,6 +24,6 @@ export interface DiscordGuildNotificationSetting {
   subscriberAddress: string;
   guildId: string;
   channelId: string;
-  formfunctionNotifications: boolean;
-  exchangeArtNotifications: boolean;
+  formfunctionNotifications?: boolean;
+  exchangeArtNotifications?: boolean;
 }

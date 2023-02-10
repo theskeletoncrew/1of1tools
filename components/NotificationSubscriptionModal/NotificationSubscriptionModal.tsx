@@ -8,16 +8,16 @@ interface Props {
   prompt: string;
   isShowing: boolean;
   close: () => void;
-  formfunctionNotifications: boolean;
-  exchangeArtNotifications: boolean;
+  formfunctionNotifications?: boolean;
+  exchangeArtNotifications?: boolean;
   dialectAddress: string | undefined;
   discordGuilds?: DiscordGuild[] | undefined;
   discordSubscriptions?: DiscordGuildChannelIdPair[];
   saveNotificationSettings: (
-    formfunctionNotifications: boolean,
-    exchangeArtNotifications: boolean,
     dialectAddress: string | undefined,
-    discordSubscriptions: DiscordGuildChannelIdPair[] | undefined
+    discordSubscriptions: DiscordGuildChannelIdPair[] | undefined,
+    formfunctionNotifications?: boolean,
+    exchangeArtNotifications?: boolean
   ) => void;
 }
 
@@ -83,7 +83,7 @@ const NotificationSubscriptionModal: React.FC<Props> = ({
       }}
     >
       <div className="relative">
-        <h2>Dialect App Notifications</h2>
+        <h2>Setup Notifications</h2>
         <button
           className="p-2 absolute right-[-15px] top-[-15px]"
           onClick={close}
@@ -94,30 +94,36 @@ const NotificationSubscriptionModal: React.FC<Props> = ({
         </button>
         <p>{prompt}</p>
         <form onSubmit={(e) => e.preventDefault()} className="mt-6">
-          <div className="flex gap-2">
-            <input
-              type="checkbox"
-              id="formfunction"
-              name="formfunction"
-              defaultChecked={formfunctionNotifications}
-              onChange={(e) => {
-                setFormfunctionNotifications(e.currentTarget.checked);
-              }}
-            />
-            <label htmlFor="formfunction">Formfunction</label>
-          </div>
-          <div className="flex gap-2 mt-1">
-            <input
-              type="checkbox"
-              id="exchangeart"
-              name="exchangeart"
-              defaultChecked={exchangeArtNotifications}
-              onChange={(e) => {
-                setExchangeArtNotifications(e.currentTarget.checked);
-              }}
-            />
-            <label htmlFor="exchangeart">Exchange Art</label>
-          </div>
+          {formfunctionNotifications !== undefined &&
+            exchangeArtNotifications !== undefined && (
+              <>
+                <div className="flex gap-2">
+                  <input
+                    type="checkbox"
+                    id="formfunction"
+                    name="formfunction"
+                    defaultChecked={formfunctionNotifications}
+                    onChange={(e) => {
+                      setFormfunctionNotifications(e.currentTarget.checked);
+                    }}
+                  />
+                  <label htmlFor="formfunction">Formfunction</label>
+                </div>
+                <div className="flex gap-2 mt-1">
+                  <input
+                    type="checkbox"
+                    id="exchangeart"
+                    name="exchangeart"
+                    defaultChecked={exchangeArtNotifications}
+                    onChange={(e) => {
+                      setExchangeArtNotifications(e.currentTarget.checked);
+                    }}
+                  />
+                  <label htmlFor="exchangeart">Exchange Art</label>
+                </div>
+              </>
+            )}
+
           <div className="flex flex-col gap-2 mt-5">
             <label htmlFor="exchangeart">
               Dialect Address (ex from the Dialect mobile app)
@@ -157,7 +163,7 @@ const NotificationSubscriptionModal: React.FC<Props> = ({
                   leaveFrom="transform opacity-100 scale-100"
                   leaveTo="transform opacity-0 scale-95"
                 >
-                  <Popover.Panel className="absolute right-0 z-10 mt-2 origin-top-right rounded-md bg-white p-4 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none max-w-[350px]">
+                  <Popover.Panel className="absolute left-0 z-10 mt-2 origin-top-right rounded-md bg-white p-4 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none max-w-[350px]">
                     <form className="space-y-4">
                       {discordGuilds.map((guild) => (
                         <div key={guild.id} className="flex items-center">
@@ -207,10 +213,10 @@ const NotificationSubscriptionModal: React.FC<Props> = ({
               className="button"
               onClick={async () => {
                 saveNotificationSettings(
-                  ffNotifications,
-                  eaNotifications,
                   chosenDialectAddress,
-                  chosenDiscordSubscriptions
+                  chosenDiscordSubscriptions,
+                  ffNotifications,
+                  eaNotifications
                 );
               }}
             >

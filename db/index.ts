@@ -10,6 +10,7 @@ import { OneOfOneNFTEvent } from "models/nftEvent";
 import {
   DialectCreatorNotificationSetting,
   DialectNftNotificationSetting,
+  DialectNotificationSetting,
   DiscordGuildCreatorNotificationSetting,
   DiscordGuildNotificationSetting,
 } from "models/notificationSetting";
@@ -75,6 +76,141 @@ export async function setDialectCreatorNotificationsByUser(
       });
 
     return ok(subscriberAddress);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function getDialectBoutiqueNotificationsByUser(
+  subscriberAddress: string
+): Promise<Result<DialectNotificationSetting | null, Error>> {
+  try {
+    const doc = await db
+      .collection(`boutique-notifications-dialect`)
+      .doc(subscriberAddress)
+      .get();
+
+    const setting = doc.data() as DialectNotificationSetting;
+    if (!setting) {
+      return ok(null);
+    }
+
+    setting.subscriberAddress = subscriberAddress;
+
+    return ok(setting);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function setDialectBoutiqueNotificationsByUser(
+  subscriberAddress: string,
+  deliveryAddress: string
+): Promise<Result<string, Error>> {
+  try {
+    await db
+      .collection(`boutique-notifications-dialect`)
+      .doc(subscriberAddress)
+      .set({
+        deliveryAddress: deliveryAddress,
+      });
+
+    return ok(subscriberAddress);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function getDiscordBoutiqueNotificationsByUser(
+  subscriberAddress: string
+): Promise<Result<DiscordGuildNotificationSetting[] | null, Error>> {
+  try {
+    const query = await db
+      .collection(
+        `boutique-notifications-discord/${subscriberAddress}/discords`
+      )
+      .get();
+
+    const subscriptions = query.docs.map((doc) => {
+      const subscription = doc.data() as DiscordGuildNotificationSetting;
+      subscription.subscriberAddress = subscriberAddress;
+      subscription.guildId = doc.id;
+      return subscription;
+    });
+
+    return ok(subscriptions);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function setDiscordBoutiqueNotificationsByUser(
+  subscriberAddress: string,
+  subscriptions: DiscordGuildNotificationSetting[]
+): Promise<Result<null, Error>> {
+  try {
+    let batch = db.batch();
+
+    const query = await db
+      .collection(
+        `boutique-notifications-discord/${subscriberAddress}/discords`
+      )
+      .get();
+
+    query.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    for (let i = 0; i < subscriptions.length; i++) {
+      const subscription = subscriptions[i]!;
+      const query = await db
+        .collection(
+          `boutique-notifications-discord/${subscriberAddress}/discords`
+        )
+        .doc(subscription.guildId);
+      batch.set(query, {
+        channelId: subscription.channelId,
+      });
+    }
+    await batch.commit();
+
+    return ok(null);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function getDiscordSubscribersToBoutiqueNotifications(): Promise<
+  Result<DiscordGuildNotificationSetting[], Error>
+> {
+  try {
+    const query = await db.collection(`boutique-notifications-discord`).get();
+
+    const subscribers = query.docs.map((doc) => {
+      const notification = doc.data() as DiscordGuildCreatorNotificationSetting;
+      notification.creatorAddress = doc.id;
+      return notification;
+    });
+
+    return ok(subscribers);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function getDialectSubscribersToBoutiqueNotifications(): Promise<
+  Result<DialectNotificationSetting[], Error>
+> {
+  try {
+    const query = await db.collection(`boutique-notifications-dialect`).get();
+
+    const subscribers = query.docs.map((doc) => {
+      const notification = doc.data() as DialectCreatorNotificationSetting;
+      notification.creatorAddress = doc.id;
+      return notification;
+    });
+
+    return ok(subscribers);
   } catch (error) {
     return err(error as Error);
   }
@@ -565,7 +701,6 @@ export async function getBoutiqueCollectionEvents(
       .limit(limit);
 
     if (cursor && cursor.length > 0) {
-      console.log(cursor);
       const docRef = await db
         .collection("boutique-collection-events")
         .doc(cursor)
@@ -795,9 +930,6 @@ export async function getAllEvents(): Promise<
     const events = snapshot.docs.map((doc) => {
       const event = doc.data() as OneOfOneNFTEvent;
       event.signature = doc.id;
-      if (!event.timestamp) {
-        console.log(event);
-      }
       return event;
     });
 
@@ -870,9 +1002,6 @@ export async function addNewTrackedMint(
       .nfts()
       .findByMint({ mintAddress: new PublicKey(mintAddress) })) as Nft;
     if (nftDetails.collection?.address) {
-      console.log(
-        "getting collection for " + nftDetails.collection?.address.toString()
-      );
       const collectionRef = await db
         .collection("boutique-collections")
         .where(
@@ -883,13 +1012,11 @@ export async function addNewTrackedMint(
         .limit(1)
         .get();
       if (collectionRef.docs.length == 1) {
-        console.log("found");
         collection = collectionRef.docs[0]!.data() as Collection;
         collection.slug = collectionRef.docs[0]!.id;
       }
     }
   } else {
-    console.log("getting collection by predefined slug " + collectionSlug);
     const res = await getBoutiqueCollection(collectionSlug);
     if (res.isOk()) {
       collection = res.value;

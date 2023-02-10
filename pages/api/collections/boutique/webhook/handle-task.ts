@@ -2,7 +2,43 @@ import { EnrichedTransaction } from "models/enrichedTransaction";
 import { oneOfOneNFTEvent } from "models/nftEvent";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
-import { addBoutiqueCollectionEventIfMonitoredAndUpdateStats } from "db";
+import {
+  addBoutiqueCollectionEventIfMonitoredAndUpdateStats,
+  getDialectSubscribersToBoutiqueNotifications,
+  getDialectSubscribersToNotificationsForCreator,
+  getDiscordSubscribersToBoutiqueNotifications,
+} from "db";
+import {
+  DialectNftNotificationSetting,
+  DialectNotificationSetting,
+  DiscordGuildCreatorNotificationSetting,
+  DiscordGuildNotificationSetting,
+} from "models/notificationSetting";
+import {
+  createDialectSdk,
+  findOrCreateSolanaThread,
+  sendMessage,
+} from "utils/dialect";
+import { humanReadableTransaction } from "utils/helius";
+import { discordEmbedForTransaction } from "utils/discord";
+import {
+  Client,
+  EmbedBuilder,
+  GatewayIntentBits,
+  TextChannel,
+} from "discord.js";
+import { Constants } from "models/constants";
+import { DialectSdk } from "@dialectlabs/sdk";
+import { Solana } from "@dialectlabs/blockchain-sdk-solana";
+
+function unique(array: any[], propertyName: string) {
+  return array.filter(
+    (e, i) => array.findIndex((a) => a[propertyName] === e[propertyName]) === i
+  );
+}
+
+let dialect: DialectSdk<Solana> | undefined;
+let discordClient: Client | undefined;
 
 const HELIUS_AUTHORIZATION_SECRET =
   process.env.HELIUS_AUTHORIZATION_SECRET || "";
@@ -72,6 +108,8 @@ apiRoute.post(async (req, res) => {
       return;
     }
 
+    await sendNotifications(transaction);
+
     res.status(201).json({
       success: true,
     });
@@ -82,5 +120,104 @@ apiRoute.post(async (req, res) => {
     });
   }
 });
+
+const sendNotifications = async (transaction: EnrichedTransaction) => {
+  try {
+    const customDescription = humanReadableTransaction(transaction);
+
+    let recipients: DialectNotificationSetting[] = [];
+
+    const recipientsSubscribedToDialect = await dialectSubscribers();
+    recipients = recipients.concat(recipientsSubscribedToDialect);
+
+    if (!dialect) {
+      dialect = createDialectSdk();
+    }
+
+    await sendDialectMessagesForRecipients(
+      dialect,
+      unique(recipients, "deliveryAddress"),
+      customDescription
+    );
+
+    const recipientsSubscribedToDiscord = await discordSubscribers();
+    const discordEmbed = discordEmbedForTransaction(transaction);
+
+    if (!discordClient) {
+      discordClient = new Client({
+        intents: [GatewayIntentBits.Guilds],
+      });
+      await discordClient.login(Constants.DISCORD_BOT_TOKEN);
+    }
+
+    await sendDiscordMessagesForRecipients(
+      discordClient,
+      recipientsSubscribedToDiscord,
+      discordEmbed
+    );
+
+    return null;
+  } catch (error) {
+    return error;
+  }
+};
+
+const sendDialectMessagesForRecipients = async (
+  dialect: DialectSdk<Solana>,
+  recipients: DialectNotificationSetting[],
+  message: string
+) => {
+  for (let j = 0; j < recipients.length; j++) {
+    const recipient = recipients[j]!;
+    const { thread, isNew } = await findOrCreateSolanaThread(
+      dialect,
+      recipient.deliveryAddress
+    );
+    if (!thread) {
+      console.log("Failed to send message - no thread");
+      continue;
+    }
+
+    await sendMessage(thread, message);
+  }
+};
+
+const sendDiscordMessagesForRecipients = async (
+  discordClient: Client,
+  recipients: DiscordGuildNotificationSetting[],
+  discordEmbed: EmbedBuilder
+) => {
+  for (let j = 0; j < recipients.length; j++) {
+    const recipient = recipients[j]!;
+
+    const guild = discordClient.guilds.cache.get(recipient.guildId);
+    if (!guild) {
+      continue;
+    }
+    const channel = guild.channels.cache.get(
+      recipient.channelId
+    ) as TextChannel;
+
+    await channel.send({ embeds: [discordEmbed] });
+  }
+};
+
+const dialectSubscribers = async (): Promise<DialectNotificationSetting[]> => {
+  const recipientsRes = await getDialectSubscribersToBoutiqueNotifications();
+  if (!recipientsRes.isOk()) {
+    return [];
+  }
+  return recipientsRes.value;
+};
+
+const discordSubscribers = async (): Promise<
+  DiscordGuildNotificationSetting[]
+> => {
+  const recipientsRes = await getDiscordSubscribersToBoutiqueNotifications();
+  if (!recipientsRes.isOk()) {
+    return [];
+  }
+  return recipientsRes.value;
+};
 
 export default apiRoute;
