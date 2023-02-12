@@ -2,6 +2,10 @@ import { tryPublicKey } from "utils";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import {
+  isNft,
+  isNftOriginalEdition,
+  isSft,
+  isSftWithToken,
   // Creator,
   // formatAmount,
   // Metaplex,
@@ -15,6 +19,7 @@ import GenesysGoStorageConfig, {
 } from "components/StorageConfig/GenesysGo/GenesysGoStorageConfig";
 import { PublicKey } from "@solana/web3.js";
 import { ShdwDrive } from "@shadow-drive/sdk";
+import CollectionPicker from "components/CollectionPicker/CollectionPicker";
 // import { nftStorage } from "@metaplex-foundation/js-plugin-nft-storage";
 // import { Connection } from "@solana/web3.js";
 // import { useConnection } from "@solana/wallet-adapter-react";
@@ -26,6 +31,7 @@ interface Props {
   onComplete: (
     metadata: NFTFormData,
     coverImage: File | undefined,
+    tokenType: TokenType,
     isCrossmint: boolean,
     storageProvider: StorageProvider,
     storageOptions: GenesysGoStorageOptions | undefined
@@ -52,20 +58,82 @@ export interface NFTFormData {
   coverImage: File | undefined;
   attributes: MetadataAttribute[];
   creators: MetadataCreator[];
+  collectionAddress: string | undefined;
+  supply: number | undefined;
+  decimals: number | undefined;
 }
 
 export enum StorageProvider {
-  NFTStorage = "NFTStorage",
+  NFTStorage = "NFT.Storage",
   GenesysGo = "Shadow Drive",
 }
 
-export const storageProviderName = (provider: StorageProvider): string => {
-  switch (provider) {
-    case StorageProvider.GenesysGo:
-      return "Shadow Drive";
-    case StorageProvider.NFTStorage:
-      return "NFT.Storage";
+export enum TokenType {
+  Unique = "1/1",
+  LimitedEdition = "Limited Edition",
+  OpenEdition = "Open Edition",
+  Sft = "Semifungible/Allowlist Tokens",
+  Collection = "Collection",
+  Print = "Print",
+}
+
+const tokenTypeForToken = (
+  nft: Nft | NftWithToken | Sft | SftWithToken
+): TokenType => {
+  if (nft.collectionDetails !== null) {
+    return TokenType.Collection;
   }
+  if (nft?.model === "sft") {
+    return TokenType.Sft;
+  }
+  if (isNftOriginalEdition(nft.edition)) {
+    if (nft.edition.maxSupply === null) {
+      return TokenType.OpenEdition;
+    }
+    if (nft.edition.maxSupply.eqn(0)) {
+      return TokenType.Unique;
+    }
+    return TokenType.LimitedEdition;
+  } else {
+    return TokenType.Print;
+  }
+};
+
+const tokenTypeNameForToken = (
+  nft: Nft | NftWithToken | Sft | SftWithToken
+): string => {
+  if (nft.collectionDetails !== null) {
+    return `Collection (size: ${nft?.collectionDetails.size.toString()})`;
+  }
+  if (nft?.model === "sft") {
+    if (isSftWithToken(nft)) {
+      return `Semi-fungible Token (supply ${nft.token.amount})`;
+    }
+    return `Semi-fungible Token`;
+  }
+  if (isNftOriginalEdition(nft.edition)) {
+    if (nft.edition.maxSupply === null) {
+      return "Open Edition";
+    }
+    if (nft.edition.maxSupply.eqn(0)) {
+      return "1/1";
+    }
+    return `Limited Edition (supply ${nft.edition.maxSupply})`;
+  } else {
+    return `Print #${nft.edition.number}`;
+  }
+};
+
+const supplyForToken = (
+  nft: Nft | NftWithToken | Sft | SftWithToken
+): number | undefined => {
+  if (isSft(nft)) {
+    return nft.mint.supply.basisPoints.toNumber();
+  }
+  if (isNft(nft) && isNftOriginalEdition(nft.edition)) {
+    return nft.edition.maxSupply?.toNumber();
+  }
+  return undefined;
 };
 
 const MintForm: React.FC<Props> = ({
@@ -74,14 +142,16 @@ const MintForm: React.FC<Props> = ({
   includeCoverImage,
   onComplete,
 }) => {
+  const [tokenType, setTokenType] = useState<TokenType>(
+    nft ? tokenTypeForToken(nft) : TokenType.Unique
+  );
+
   const [name, setName] = useState<string>(nft?.json?.name ?? "");
   const [description, setDescription] = useState<string>(
     nft?.json?.description ?? ""
   );
   const [royalties, setRoyalties] = useState<number | undefined>(
-    nft?.json?.seller_fee_basis_points
-      ? nft?.json?.seller_fee_basis_points / 100.0
-      : undefined
+    nft ? nft?.sellerFeeBasisPoints / 100.0 : undefined
   );
   const [symbol, setSymbol] = useState<string>(nft?.json?.symbol ?? "");
   const [coverImage, setCoverImage] = useState<File>();
@@ -93,6 +163,18 @@ const MintForm: React.FC<Props> = ({
       { address: "", share: "" as any } as MetadataCreator,
     ]
   );
+
+  const [collectionAddress, setCollectionAddress] = useState<
+    string | undefined
+  >(nft?.collection?.address?.toString() ?? undefined);
+
+  const [supply, setSupply] = useState<number | undefined>(
+    nft ? supplyForToken(nft) : undefined
+  );
+  const [decimals, setDecimals] = useState<number>(
+    isSftWithToken(nft) ? nft.token.amount.currency.decimals : 0
+  );
+
   const [storageProvider, setStorageProvider] = useState<StorageProvider>(
     StorageProvider.NFTStorage
   );
@@ -210,6 +292,18 @@ const MintForm: React.FC<Props> = ({
         throw "Creators must be unique";
       }
 
+      if (tokenType === TokenType.LimitedEdition && (!supply || supply < 1)) {
+        throw "Limited Edition NFTs require a supply to indicate how many prints are allowed.";
+      }
+
+      if (tokenType === TokenType.Sft && (!supply || supply < 1)) {
+        throw "Semifungible tokens require a supply to indicate how many prints are allowed.";
+      }
+
+      if (tokenType === TokenType.Sft && decimals === undefined) {
+        throw "Semifungible tokens require a number of decimals for the tokens to be created.";
+      }
+
       let storageOptions: GenesysGoStorageOptions | undefined;
       if (storageProvider === StorageProvider.GenesysGo) {
         if (!genesysGoDrive) {
@@ -233,8 +327,12 @@ const MintForm: React.FC<Props> = ({
           coverImage: coverImage,
           attributes: attributes,
           creators: creators,
+          collectionAddress: collectionAddress,
+          supply: supply,
+          decimals: decimals,
         },
         coverImage,
+        tokenType,
         isCrossmint,
         storageProvider,
         storageOptions
@@ -247,340 +345,428 @@ const MintForm: React.FC<Props> = ({
   return (
     <main className="flex flex-1 flex-col justify-center items-center mb-12">
       <form className="w-full max-w-xl">
-        <div>
-          <label>Name</label>
-          <input
-            id="name"
-            name="name"
-            className="w-full mb-3"
-            type="text"
-            placeholder=""
-            onChange={(e) => {
-              setName(e.target.value);
-            }}
-            value={name}
-          />
-        </div>
-
-        <div>
-          <label>Description</label>
-          <textarea
-            id="description"
-            name="description"
-            className="w-full mb-3"
-            rows={2}
-            placeholder=""
-            onChange={(e) => {
-              setDescription(e.target.value);
-            }}
-            value={description}
-          />
-        </div>
-
-        <div>
-          <label>Royalties (0-100%)</label>
-          <input
-            id="royalties"
-            name="royalties"
-            className="w-full mb-3"
-            type="number"
-            placeholder=""
-            onChange={(e) => {
-              const intval: any = isNaN(parseInt(e.target.value))
-                ? ""
-                : parseInt(e.target.value);
-              setRoyalties(intval);
-            }}
-            value={royalties ?? ""}
-          />
-        </div>
-
-        <div>
-          <label>Symbol</label>
-          <input
-            id="symbol"
-            name="symbol"
-            className="w-full mb-3"
-            type="text"
-            placeholder=""
-            onChange={(e) => {
-              setSymbol(e.target.value);
-            }}
-            value={symbol}
-          />
-        </div>
-
-        {includeCoverImage && (
-          <div className="mb-3">
-            <label>Cover Image</label>
-            <div className="flex items-center space-x-4">
-              <label className="button whitespace-nowrap">
-                <input
-                  type={"file"}
-                  accept=".jpg,.jpeg,.png,.gif"
-                  onChange={(e) => {
-                    updatedCoverImage(e);
-                  }}
-                  hidden
-                ></input>
-                Upload a Cover Image
-              </label>
-              <span className="min-w-0 truncate">{coverImage?.name ?? ""}</span>
-            </div>
+        <fieldset
+          disabled={nft && !nft.isMutable}
+          className={nft && !nft.isMutable ? "opacity-50" : ""}
+        >
+          <div className="mb-6">
+            <label htmlFor="">Token Type:</label>
+            {isEdit && nft ? (
+              <p>{tokenTypeNameForToken(nft)}</p>
+            ) : (
+              <select
+                id="tokenType"
+                name="tokenType"
+                value={tokenType}
+                className="w-full mt-1 block"
+                onChange={(e) => setTokenType(e.target.value as TokenType)}
+              >
+                {Object.values(TokenType).map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
-        )}
 
-        <div className="mt-6 mb-6">
-          <h2 className="text-left text-lg mb-2">Attributes</h2>
-          <div className="w-full flex flex-wrap">
-            <div className="w-3/5 pr-3 mb-6 md:mb-0">
-              <label>Name</label>
-              {attributes &&
-                attributes.map((attribute, i) => {
+          <div>
+            <label>Name</label>
+            <input
+              id="name"
+              name="name"
+              className="w-full mb-3"
+              type="text"
+              placeholder=""
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
+              value={name}
+            />
+          </div>
+
+          <div>
+            <label>Description</label>
+            <textarea
+              id="description"
+              name="description"
+              className="w-full mb-3"
+              rows={2}
+              placeholder=""
+              onChange={(e) => {
+                setDescription(e.target.value);
+              }}
+              value={description}
+            />
+          </div>
+
+          <div>
+            <label>Royalties (0-100%)</label>
+            <input
+              id="royalties"
+              name="royalties"
+              className="w-full mb-3"
+              type="number"
+              placeholder=""
+              onChange={(e) => {
+                const intval: any = isNaN(parseInt(e.target.value))
+                  ? ""
+                  : parseInt(e.target.value);
+                setRoyalties(intval);
+              }}
+              value={royalties ?? ""}
+            />
+          </div>
+
+          <div>
+            <label>Symbol</label>
+            <input
+              id="symbol"
+              name="symbol"
+              className="w-full mb-3"
+              type="text"
+              placeholder=""
+              onChange={(e) => {
+                setSymbol(e.target.value);
+              }}
+              value={symbol}
+            />
+          </div>
+
+          {includeCoverImage && (
+            <div className="mb-3">
+              <label>Cover Image</label>
+              <div className="flex items-center space-x-4">
+                <label className="button whitespace-nowrap">
+                  <input
+                    type={"file"}
+                    accept=".jpg,.jpeg,.png,.gif"
+                    onChange={(e) => {
+                      updatedCoverImage(e);
+                    }}
+                    hidden
+                  ></input>
+                  Upload a Cover Image
+                </label>
+                <span className="min-w-0 truncate">
+                  {coverImage?.name ?? ""}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 mb-6">
+            <h2 className="text-left text-lg mb-2">Attributes</h2>
+            <div className="w-full flex flex-wrap">
+              <div className="w-3/5 pr-3 mb-6 md:mb-0">
+                <label>Name</label>
+                {attributes &&
+                  attributes.map((attribute, i) => {
+                    return (
+                      <input
+                        key={`attribute-${i}-name`}
+                        id={`attribute-${i}-name`}
+                        name={`attribute-${i}-name`}
+                        className="w-full mb-3"
+                        type="text"
+                        placeholder=""
+                        onChange={(e) => {
+                          const updatedAttributes = attributes;
+                          updatedAttributes[i]!.trait_type = e.target.value;
+                          setAttributes([...updatedAttributes]);
+                        }}
+                        value={attribute.trait_type}
+                      />
+                    );
+                  })}
+              </div>
+              <div className="w-2/5">
+                <label>Value</label>
+                {attributes.map((attribute, i) => {
                   return (
                     <input
-                      key={`attribute-${i}-name`}
-                      id={`attribute-${i}-name`}
-                      name={`attribute-${i}-name`}
+                      key={`attribute-${i}-value`}
+                      id={`attribute-${i}-value`}
+                      name={`attribute-${i}-value`}
                       className="w-full mb-3"
                       type="text"
-                      placeholder=""
                       onChange={(e) => {
                         const updatedAttributes = attributes;
-                        updatedAttributes[i]!.trait_type = e.target.value;
+                        updatedAttributes[i]!.value = e.target.value;
                         setAttributes([...updatedAttributes]);
                       }}
-                      value={attribute.trait_type}
+                      value={attribute.value}
                     />
                   );
                 })}
+              </div>
             </div>
-            <div className="w-2/5">
-              <label>Value</label>
-              {attributes.map((attribute, i) => {
-                return (
-                  <input
-                    key={`attribute-${i}-value`}
-                    id={`attribute-${i}-value`}
-                    name={`attribute-${i}-value`}
-                    className="w-full mb-3"
-                    type="text"
-                    onChange={(e) => {
-                      const updatedAttributes = attributes;
-                      updatedAttributes[i]!.value = e.target.value;
-                      setAttributes([...updatedAttributes]);
-                    }}
-                    value={attribute.value}
-                  />
-                );
-              })}
-            </div>
-          </div>
-          <div className="flex justify-between">
-            <div className="flex space-x-2">
-              <button
-                className="button"
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setAttributes([
-                    ...attributes,
-                    {
-                      name: "",
-                      value: "",
-                    },
-                  ]);
-                }}
-              >
-                Add
-              </button>
-              <button
-                className="button"
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (attributes.length == 1) {
+            <div className="flex justify-between">
+              <div className="flex space-x-2">
+                <button
+                  className="button"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
                     setAttributes([
+                      ...attributes,
                       {
                         name: "",
                         value: "",
                       },
                     ]);
-                  } else {
-                    setAttributes(
-                      attributes.filter(
-                        (item, index) => index !== attributes.length - 1
-                      )
-                    );
-                  }
-                }}
-              >
-                Remove
-              </button>
+                  }}
+                >
+                  Add
+                </button>
+                <button
+                  className="button"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (attributes.length == 1) {
+                      setAttributes([
+                        {
+                          name: "",
+                          value: "",
+                        },
+                      ]);
+                    } else {
+                      setAttributes(
+                        attributes.filter(
+                          (item, index) => index !== attributes.length - 1
+                        )
+                      );
+                    }
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="mb-6">
-          <h2 className="text-left text-lg mb-2">Creator Royalties</h2>
-          <div className="w-full flex flex-wrap mb-2">
-            <div className="w-3/5 pr-3 mb-6 md:mb-0">
-              <label>Wallet Address</label>
-              {creators &&
-                creators.map((creator, i) => {
+          <div className="mb-6">
+            <h2 className="text-left text-lg mb-2">Creator Royalties</h2>
+            <div className="w-full flex flex-wrap mb-2">
+              <div className="w-3/5 pr-3 mb-6 md:mb-0">
+                <label>Wallet Address</label>
+                {creators &&
+                  creators.map((creator, i) => {
+                    return (
+                      <input
+                        key={`creator-${i}-address`}
+                        id={`creator-${i}-address`}
+                        name={`creator-${i}-address`}
+                        className="w-full mb-3"
+                        type="text"
+                        placeholder="Address"
+                        onChange={(e) => {
+                          const updatedCreators = creators;
+                          updatedCreators[i] = {
+                            address: e.target.value as any,
+                            share: creator.share,
+                            verified: creator.verified,
+                          };
+                          setCreators([...updatedCreators]);
+                        }}
+                        value={creator.address}
+                      />
+                    );
+                  })}
+              </div>
+              <div className="w-2/5">
+                <label>Percent (0-100)</label>
+                {creators.map((creator, i) => {
                   return (
-                    <input
-                      key={`creator-${i}-address`}
-                      id={`creator-${i}-address`}
-                      name={`creator-${i}-address`}
-                      className="w-full mb-3"
-                      type="text"
-                      placeholder="Address"
-                      onChange={(e) => {
-                        const updatedCreators = creators;
-                        updatedCreators[i] = {
-                          address: e.target.value as any,
-                          share: creator.share,
-                          verified: creator.verified,
-                        };
-                        setCreators([...updatedCreators]);
-                      }}
-                      value={creator.address}
-                    />
+                    <div className="flex" key={`creator-${i}-percent`}>
+                      <input
+                        id={`creator-${i}-percent`}
+                        name={`creator-${i}-percent`}
+                        type="number"
+                        placeholder="Share"
+                        min={0}
+                        step={1}
+                        className="w-full mb-3"
+                        onChange={(e) => {
+                          const updatedCreators = creators;
+                          updatedCreators[i] = {
+                            address: creator.address,
+                            share: isNaN(parseInt(e.target.value))
+                              ? ("" as any)
+                              : parseInt(e.target.value),
+                            verified: creator.verified,
+                          };
+                          setCreators([...updatedCreators]);
+                        }}
+                        value={creator.share ?? ""}
+                      />
+                    </div>
                   );
                 })}
+              </div>
             </div>
-            <div className="w-2/5">
-              <label>Percent (0-100)</label>
-              {creators.map((creator, i) => {
-                return (
-                  <div className="flex" key={`creator-${i}-percent`}>
-                    <input
-                      id={`creator-${i}-percent`}
-                      name={`creator-${i}-percent`}
-                      type="number"
-                      placeholder="Share"
-                      min={0}
-                      step={1}
-                      className="w-full mb-3"
-                      onChange={(e) => {
-                        const updatedCreators = creators;
-                        updatedCreators[i] = {
-                          address: creator.address,
-                          share: isNaN(parseInt(e.target.value))
-                            ? ("" as any)
-                            : parseInt(e.target.value),
-                          verified: creator.verified,
-                        };
-                        setCreators([...updatedCreators]);
-                      }}
-                      value={creator.share ?? ""}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <div className="flex justify-between">
-            <div className="flex space-x-2">
-              <button
-                className="button"
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setCreators([
-                    ...creators,
-                    {
-                      address: "",
-                      share: 0,
-                      verified: false,
-                    },
-                  ]);
-                }}
-              >
-                Add
-              </button>
-              <button
-                className="button"
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (creators.length == 1) {
+            <div className="flex justify-between">
+              <div className="flex space-x-2">
+                <button
+                  className="button"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
                     setCreators([
+                      ...creators,
                       {
                         address: "",
                         share: 0,
                         verified: false,
                       },
                     ]);
-                  } else {
-                    setCreators(
-                      creators.filter(
-                        (item, index) => index !== creators.length - 1
-                      )
-                    );
-                  }
-                }}
-              >
-                Remove
-              </button>
+                  }}
+                >
+                  Add
+                </button>
+                <button
+                  className="button"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (creators.length == 1) {
+                      setCreators([
+                        {
+                          address: "",
+                          share: 0,
+                          verified: false,
+                        },
+                      ]);
+                    } else {
+                      setCreators(
+                        creators.filter(
+                          (item, index) => index !== creators.length - 1
+                        )
+                      );
+                    }
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="mb-6">
-          <fieldset className="w-full">
-            <label htmlFor="storageProvider" className="block">
-              Decentralized Storage Provider:
-            </label>
-            <select
-              id="storageProvider"
-              name="storageProvider"
-              value={storageProvider}
-              className="w-full mt-1 block"
-              onChange={(e) =>
-                updateStorageProvider(e.target.value as StorageProvider)
-              }
-            >
-              <option value="">Select a Storage Type</option>
-              {Object.values(StorageProvider).map((value) => (
-                <option key={value} value={value}>
-                  {storageProviderName(value)}
-                </option>
-              ))}
-            </select>
-          </fieldset>
-
-          {storageProvider == StorageProvider.GenesysGo ? (
-            <div className="mt-2">
-              <GenesysGoStorageConfig
-                didChangeOptions={(options) => {
-                  setGenesysGoDrive(options?.shadowDrive);
-                  setGenesysGoStorageAccount(options?.storageAccount);
-                }}
-              />
+          {(tokenType === TokenType.LimitedEdition ||
+            tokenType === TokenType.Sft) && (
+            <div className="mb-6">
+              <label>Supply</label>
+              {nft ? (
+                <p>{supply}</p>
+              ) : (
+                <>
+                  <p className="text-xs text-sky-400 mb-2">
+                    The maximum number of tokens that can be created/printed
+                    from this NFT.
+                  </p>
+                  <input
+                    id="supply"
+                    name="supply"
+                    className="w-full mb-3"
+                    type="text"
+                    placeholder=""
+                    onChange={(e) => {
+                      const supplyInt = isNaN(parseInt(e.target.value))
+                        ? ("" as any)
+                        : parseInt(e.target.value);
+                      setSupply(supplyInt);
+                    }}
+                    value={supply}
+                  />
+                </>
+              )}
             </div>
-          ) : (
-            ""
           )}
-        </div>
 
-        <div className="text-center mt-8 mx-auto flex gap-4 items-top justify-top">
-          {isEdit ? (
-            <div className="w-full">
-              <button
-                className="button thinbutton w-full"
-                type="button"
-                onClick={async (e) => {
-                  e.preventDefault();
-                  validateAndSaveNFTs(false);
-                }}
-              >
-                Save
-              </button>
+          {tokenType === TokenType.Sft && (
+            <div className="mb-6">
+              <label>Token Decimals</label>
+              {nft && isEdit ? (
+                <p>{decimals}</p>
+              ) : (
+                <>
+                  <p className="text-xs text-sky-400 mb-2">
+                    Allowlist tokens typically use zero decimals (and will
+                    appear in your wallet NFT tab)
+                  </p>
+                  <input
+                    id="decimals"
+                    name="decimals"
+                    className="w-full mb-3"
+                    type="text"
+                    placeholder=""
+                    onChange={(e) => {
+                      const decimalsInt = isNaN(parseInt(e.target.value))
+                        ? ("" as any)
+                        : parseInt(e.target.value);
+                      setDecimals(decimalsInt);
+                    }}
+                    value={decimals}
+                  />
+                </>
+              )}
             </div>
-          ) : (
-            <>
+          )}
+
+          {tokenType !== TokenType.Collection &&
+            tokenType !== TokenType.Sft && (
+              <div className="mb-6">
+                <CollectionPicker
+                  collectionAddress={collectionAddress}
+                  didChangeCollection={(c) => setCollectionAddress(c)}
+                />
+              </div>
+            )}
+
+          <div className="mb-6">
+            <fieldset className="w-full">
+              <label htmlFor="storageProvider" className="block">
+                Decentralized Storage Provider:
+              </label>
+              <p className="text-xs text-sky-400 mb-2">
+                Note: This will only affect new files. To migrate existing media
+                files, upload them again.
+              </p>
+              <select
+                id="storageProvider"
+                name="storageProvider"
+                value={storageProvider}
+                className="w-full mt-1 block"
+                onChange={(e) =>
+                  updateStorageProvider(e.target.value as StorageProvider)
+                }
+              >
+                <option value="">Select a Storage Type</option>
+                {Object.values(StorageProvider).map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </fieldset>
+
+            {storageProvider == StorageProvider.GenesysGo ? (
+              <div className="mt-2">
+                <GenesysGoStorageConfig
+                  didChangeOptions={(options) => {
+                    setGenesysGoDrive(options?.shadowDrive);
+                    setGenesysGoStorageAccount(options?.storageAccount);
+                  }}
+                />
+              </div>
+            ) : (
+              ""
+            )}
+          </div>
+
+          <div className="text-center mt-8 mx-auto flex gap-4 items-top justify-top">
+            {isEdit ? (
               <div className="w-full">
                 <button
                   className="button thinbutton w-full"
@@ -590,29 +776,44 @@ const MintForm: React.FC<Props> = ({
                     validateAndSaveNFTs(false);
                   }}
                 >
-                  Mint to
-                  <br />
-                  Your Wallet
+                  Save
                 </button>
               </div>
-              <p className="pt-4"> or </p>
-              <div className="w-full">
-                <button
-                  className="button thinbutton w-full"
-                  type="button"
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    validateAndSaveNFTs(true);
-                  }}
-                >
-                  Mint & Email
-                  <br />
-                  w/Crossmint
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+            ) : (
+              <>
+                <div className="w-full">
+                  <button
+                    className="button thinbutton w-full"
+                    type="button"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      validateAndSaveNFTs(false);
+                    }}
+                  >
+                    Mint to
+                    <br />
+                    Your Wallet
+                  </button>
+                </div>
+                <p className="pt-4"> or </p>
+                <div className="w-full">
+                  <button
+                    className="button thinbutton w-full"
+                    type="button"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      validateAndSaveNFTs(true);
+                    }}
+                  >
+                    Mint & Email
+                    <br />
+                    w/Crossmint
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </fieldset>
       </form>
     </main>
   );

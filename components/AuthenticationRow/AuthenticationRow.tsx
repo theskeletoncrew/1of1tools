@@ -32,9 +32,9 @@ const AuthenticationRow: React.FC = () => {
 
   const navigationItems = [
     {
-      name: "Mint an NFT",
+      name: "Mint an NFT/SFT",
       description:
-        "A simple interface to create NFTs to your wallet, or send by email.",
+        "Create 1/1s, Limited Editions, Open Editions, Collections, and Allowlist Tokens. Save to your wallet or send via email.",
       href: "/mint",
       icon: PlusCircleIcon,
       onClick: null,

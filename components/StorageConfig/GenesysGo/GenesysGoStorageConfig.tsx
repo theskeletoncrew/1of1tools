@@ -3,7 +3,6 @@ import { ShdwDrive, StorageAccountResponse } from "@shadow-drive/sdk";
 import * as anchor from "@project-serum/anchor";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { LoaderIcon, toast } from "react-hot-toast";
-import LoadingIndicator from "components/LoadingIndicator/LoadingIndicator";
 import { PublicKey } from "@solana/web3.js";
 
 const bytesToHuman = (bytes: any, si = false, dp = 1) => {
@@ -51,9 +50,10 @@ const GenesysGoStorageConfig: React.FC<Props> = ({ didChangeOptions }) => {
     Array<StorageAccountResponse>
   >([]);
   const [isCreatingAccount, setCreatingAccount] = useState(false);
-  const [uploadLocs, setUploadLocs] = useState<any>();
   const [isNewStorageAccount, setIsNewStorageAccount] = useState(false);
   const [isRefreshingAccounts, setRefreshingAccounts] = useState(false);
+  const [selectedAccountPublicKey, setSelectedAccountPublicKey] =
+    useState<string>("");
 
   const displayInitDriveError = () => {
     toast.error(
@@ -70,15 +70,16 @@ const GenesysGoStorageConfig: React.FC<Props> = ({ didChangeOptions }) => {
     })();
   }, [wallet, wallet?.publicKey, connection]);
 
-  const refreshAccounts = async () => {
+  const refreshAccounts = async (): Promise<StorageAccountResponse[]> => {
     if (!drive) {
       displayInitDriveError();
-      return;
+      return [];
     }
     setRefreshingAccounts(true);
     const responses = await drive.getStorageAccounts("v2");
     setAccountResponses(responses);
     setRefreshingAccounts(false);
+    return responses;
   };
 
   useEffect(() => {
@@ -105,6 +106,16 @@ const GenesysGoStorageConfig: React.FC<Props> = ({ didChangeOptions }) => {
         accountSize,
         "v2"
       );
+      console.log(result.shdw_bucket);
+      const accounts = await refreshAccounts();
+      console.log(accounts);
+      const account = accounts.find(
+        (a) => a.account.identifier === accountName
+      );
+      console.log("account: " + account?.publicKey.toString());
+      if (account) {
+        setSelectedAccountPublicKey(account.publicKey.toString());
+      }
       toast.success(`Storage Account '${accountName}' Created`);
     } catch (e) {
       if (e instanceof Error) {
@@ -114,7 +125,6 @@ const GenesysGoStorageConfig: React.FC<Props> = ({ didChangeOptions }) => {
       }
       console.log(e);
     }
-    await refreshAccounts();
     setCreatingAccount(false);
   };
 
@@ -131,6 +141,7 @@ const GenesysGoStorageConfig: React.FC<Props> = ({ didChangeOptions }) => {
 
   const storageAccountDidChange = (val: string) => {
     let account = undefined;
+    setSelectedAccountPublicKey(val);
 
     if (val === createStorageValue) {
       setAccountResponse(undefined);
@@ -165,12 +176,12 @@ const GenesysGoStorageConfig: React.FC<Props> = ({ didChangeOptions }) => {
         <div>
           <select
             className="min-w-[200px]"
-            defaultValue=""
+            value={selectedAccountPublicKey ?? ""}
             onChange={(e) => {
               storageAccountDidChange(e.target.value);
             }}
           >
-            <option value="Select an Account"></option>
+            <option value="">Select an Account</option>
             {accountResponses.map((response, index) => {
               return (
                 <option key={index} value={response.publicKey.toString()}>

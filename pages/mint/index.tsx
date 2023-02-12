@@ -2,12 +2,14 @@ import type { NextPage } from "next";
 import { toast } from "react-hot-toast";
 import { OneOfOneToolsClient } from "api-client";
 import Head from "next/head";
-import { useRouter } from "next/router";
 import {
+  CreateNftInput,
+  CreateSftInput,
   Metaplex,
-  MetaplexFile,
+  toBigNumber,
   toMetaplexFileFromBrowser,
   walletAdapterIdentity,
+  token,
 } from "@metaplex-foundation/js";
 import { nftStorage } from "@metaplex-foundation/js-plugin-nft-storage";
 import { network } from "utils/network";
@@ -16,6 +18,7 @@ import Header from "components/Header/Header";
 import Layout from "components/Layout/Layout";
 import MintForm, {
   NFTFormData,
+  TokenType,
   StorageProvider,
 } from "components/MintForm/MintForm";
 import {
@@ -30,7 +33,10 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { notEmpty, pubKeyUrl, shortenedAddress, tryPublicKey } from "utils";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { GenesysGoStorageOptions } from "components/StorageConfig/GenesysGo/GenesysGoStorageConfig";
-import { ShadowFile } from "@shadow-drive/sdk";
+import { PublicKey } from "@solana/web3.js";
+import { uploadFile, uploadMetadata } from "utils/storage";
+
+const Model = dynamic(() => import("components/Model"), { ssr: false });
 
 function pause(ms: number) {
   return new Promise((resolve, reject) => {
@@ -39,9 +45,6 @@ function pause(ms: number) {
     }, ms);
   });
 }
-import { uuid } from "uuidv4";
-
-const Model = dynamic(() => import("components/Model"), { ssr: false });
 
 const MintPage: NextPage = () => {
   const [mintingStatus, setMintingStatus] = useState<string>();
@@ -49,8 +52,6 @@ const MintPage: NextPage = () => {
   const [mintedNFTAddress, setMintedNFTAddress] = useState<string>();
   const [mintedWithCrossMint, setMintedWithCrossMint] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState<string>();
-
-  const router = useRouter();
 
   const wallet = useWallet();
   const { connection } = useConnection();
@@ -63,85 +64,18 @@ const MintPage: NextPage = () => {
     }
   };
 
-  const uploadFile = async (
-    file: File,
-    metaplexFile: MetaplexFile,
-    mx: Metaplex,
-    storageProvider: StorageProvider,
-    storageOptions: GenesysGoStorageOptions | undefined
-  ): Promise<string> => {
-    if (storageProvider === StorageProvider.NFTStorage) {
-      const remoteURL = await mx.storage().upload(metaplexFile);
-      return remoteURL;
-    } else if (storageProvider === StorageProvider.GenesysGo) {
-      const options = storageOptions!;
-      const uploadResponse = await options.shadowDrive.uploadFile(
-        options.storageAccount,
-        file
-      );
-
-      if (
-        uploadResponse.upload_errors.length > 0 ||
-        uploadResponse.finalized_locations.length < 1
-      ) {
-        console.log(uploadResponse.message);
-        console.log(uploadResponse.upload_errors);
-        throw new Error("Error uploading media file to Shadow Drive");
-      }
-
-      const remoteURL = uploadResponse.finalized_locations[0]!;
-      return remoteURL;
-    } else {
-      throw new Error("Unknown Storage Provider");
-    }
-  };
-
-  const uploadMetadata = async (
-    jsonMetadata: any,
-    mx: Metaplex,
-    storageProvider: StorageProvider,
-    storageOptions: GenesysGoStorageOptions | undefined
-  ): Promise<string> => {
-    if (storageProvider === StorageProvider.NFTStorage) {
-      const { uri } = await mx.nfts().uploadMetadata(jsonMetadata);
-      return uri;
-    } else if (storageProvider === StorageProvider.GenesysGo) {
-      const options = storageOptions!;
-      const jsonBuffer = Buffer.from(JSON.stringify(jsonMetadata));
-      const file = new File([jsonBuffer], uuid() + ".json");
-      // const shadowFile = {
-      //   name: ,
-      //   file: new Blob([jsonBuffer]),
-      // } as ShadowFile;
-      const uploadResponse = await options.shadowDrive.uploadFile(
-        options.storageAccount,
-        file
-      );
-      if (
-        uploadResponse.upload_errors.length > 0 ||
-        uploadResponse.finalized_locations.length < 1
-      ) {
-        console.log(uploadResponse.message);
-        console.log(uploadResponse.upload_errors);
-        throw new Error("Error uploading media file to Shadow Drive");
-      }
-
-      const remoteURL = uploadResponse.finalized_locations[0]!;
-      return remoteURL;
-    } else {
-      throw new Error("Unknown Storage Provider");
-    }
-  };
-
   const mint = async (
     metadata: NFTFormData,
     coverImage: File | undefined,
+    tokenType: TokenType,
     isCrossmint: boolean,
     storageProvider: StorageProvider,
     storageOptions: GenesysGoStorageOptions | undefined
   ) => {
     try {
+      console.log("Minting...");
       setMintingStatus("Minting...");
+
       setMintedWithCrossMint(isCrossmint);
 
       if (!wallet || !wallet.connected || !wallet.publicKey) {
@@ -168,6 +102,14 @@ const MintPage: NextPage = () => {
         setRecipientEmail(recipientEmail);
       }
 
+      let collectionPublicKey: PublicKey | null | undefined;
+      if (metadata.collectionAddress) {
+        collectionPublicKey = tryPublicKey(metadata.collectionAddress);
+        if (!collectionPublicKey) {
+          throw new Error("Collection address was not valid");
+        }
+      }
+
       const mx = Metaplex.make(connection);
       mx.use(walletAdapterIdentity(wallet));
 
@@ -181,10 +123,10 @@ const MintPage: NextPage = () => {
 
       const category = fileCategory(file);
 
-      setMintingStatus(`Uploading media file...`);
       console.log("Uploading media file...");
+      setMintingStatus(`Uploading media file...`);
       const mediaFile = await toMetaplexFileFromBrowser(file);
-      let mediaFileLocation = await uploadFile(
+      const mediaFileLocation = await uploadFile(
         file,
         mediaFile,
         mx,
@@ -200,10 +142,10 @@ const MintPage: NextPage = () => {
       ];
 
       if (coverImage) {
-        setMintingStatus(`Uploading cover file...`);
         console.log("Uploading cover file...");
+        setMintingStatus(`Uploading cover file...`);
         const coverMediaFile = await toMetaplexFileFromBrowser(coverImage);
-        let coverFileLocation = await uploadFile(
+        const coverFileLocation = await uploadFile(
           coverImage,
           coverMediaFile,
           mx,
@@ -290,26 +232,76 @@ const MintPage: NextPage = () => {
 
         console.log("Writing to blockchain...");
         setMintingStatus("Writing to blockchain...");
-        const result = await mx.nfts().create({
-          /** The URI that points to the JSON metadata of the asset. */
-          uri: newUri,
-          name: metadata.name,
-          sellerFeeBasisPoints: metadata.royalties * 100,
-          symbol: metadata.symbol,
-          creators: metadata.creators
-            .map((c) => {
-              const publicKey = tryPublicKey(c.address ?? "");
-              return publicKey && c.share
-                ? {
-                    address: publicKey,
-                    share: c.share,
-                  }
-                : null;
-            })
-            .filter(notEmpty),
-        });
 
-        setMintedNFTAddress(result.mintAddress.toString());
+        if (tokenType === TokenType.Sft) {
+          const sftOnChainMetadata: CreateSftInput = {
+            uri: newUri,
+            name: metadata.name,
+            sellerFeeBasisPoints: metadata.royalties * 100,
+            symbol: metadata.symbol,
+            creators: metadata.creators
+              .map((c) => {
+                const publicKey = tryPublicKey(c.address ?? "");
+                return publicKey && c.share
+                  ? {
+                      address: publicKey,
+                      share: c.share,
+                    }
+                  : null;
+              })
+              .filter(notEmpty),
+            decimals: metadata.decimals,
+            tokenAmount: metadata.supply
+              ? token(toBigNumber(metadata.supply), metadata.decimals)
+              : undefined,
+            tokenOwner: metadata.supply ? mx.identity().publicKey : undefined,
+          };
+          if (collectionPublicKey) {
+            sftOnChainMetadata.collection = collectionPublicKey;
+            sftOnChainMetadata.collectionAuthority = mx.identity();
+          }
+          const result = await mx
+            .nfts()
+            .createSft(sftOnChainMetadata, { commitment: "finalized" });
+          setMintedNFTAddress(result.mintAddress.toString());
+        } else {
+          const nftOnChainMetadata: CreateNftInput = {
+            uri: newUri,
+            name: metadata.name,
+            sellerFeeBasisPoints: metadata.royalties * 100,
+            symbol: metadata.symbol,
+            creators: metadata.creators
+              .map((c) => {
+                const publicKey = tryPublicKey(c.address ?? "");
+                return publicKey && c.share
+                  ? {
+                      address: publicKey,
+                      share: c.share,
+                    }
+                  : null;
+              })
+              .filter(notEmpty),
+          };
+          if (collectionPublicKey && tokenType !== TokenType.Collection) {
+            nftOnChainMetadata.collection = collectionPublicKey;
+            nftOnChainMetadata.collectionAuthority = mx.identity();
+          }
+          if (tokenType === TokenType.Collection) {
+            nftOnChainMetadata.isCollection = true;
+          }
+          if (tokenType === TokenType.LimitedEdition) {
+            nftOnChainMetadata.maxSupply = toBigNumber(metadata.supply ?? 0);
+          } else if (tokenType === TokenType.OpenEdition) {
+            nftOnChainMetadata.maxSupply = null;
+          } else {
+            nftOnChainMetadata.maxSupply = toBigNumber(0);
+          }
+
+          const result = await mx
+            .nfts()
+            .create(nftOnChainMetadata, { commitment: "finalized" });
+          setMintedNFTAddress(result.mintAddress.toString());
+        }
       }
 
       toast.success("Mint complete!");
@@ -323,6 +315,15 @@ const MintPage: NextPage = () => {
       setMintedNFTAddress(undefined);
     }
     setMintingStatus(undefined);
+  };
+
+  const reset = () => {
+    setMintingStatus(undefined);
+    setEditingNFT(false);
+    setMintedNFTAddress(undefined);
+    setMintedWithCrossMint(false);
+    setRecipientEmail(undefined);
+    setFile(undefined);
   };
 
   return (
@@ -373,12 +374,20 @@ const MintPage: NextPage = () => {
           <div className="w-full h-[80vh] flex flex-col gap-4 items-center justify-center text-center text-3xl">
             <span>Mint Successful! 🎉</span>
             <a
+              href={`/nft/${mintedNFTAddress}`}
+              rel="noreferrer"
+              target="_blank"
+            >
+              1of1.tools/nft/{shortenedAddress(mintedNFTAddress)}
+            </a>
+            <a
               href={pubKeyUrl(
                 mintedNFTAddress,
                 mintedWithCrossMint ? WalletAdapterNetwork.Devnet : network
               )}
               rel="noreferrer"
               target="_blank"
+              className="text-sm"
             >
               View on Solana Explorer ({shortenedAddress(mintedNFTAddress)})
             </a>
@@ -393,6 +402,11 @@ const MintPage: NextPage = () => {
                 how to access their NFT.
               </span>
             )}
+            <div className="mt-8">
+              <button className="button largebutton" onClick={reset}>
+                Mint {isEditingNFT ? "a New NFT" : "Another NFT"}
+              </button>
+            </div>
           </div>
         ) : (
           <>

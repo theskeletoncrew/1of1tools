@@ -92,6 +92,10 @@ select {
   @apply py-[0.4rem] text-sm;
 }
 
+.largebutton {
+  @apply text-xl;
+}
+
 button:disabled,
 .disabledButton {
   @apply opacity-50 cursor-not-allowed;
