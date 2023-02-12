@@ -37,7 +37,6 @@ import LoadingIndicator from "components/LoadingIndicator/LoadingIndicator";
 import { toast } from "react-hot-toast";
 import NotificationSubscriptionModal from "components/NotificationSubscriptionModal/NotificationSubscriptionModal";
 import { BellAlertIcon } from "@heroicons/react/24/outline";
-import { useRouter } from "next/router";
 import { NFTListings } from "models/nftListings";
 import Link from "next/link";
 import { urlForSource } from "utils/helius";
@@ -105,8 +104,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 };
 
 const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
-  const router = useRouter();
-
   const onChainData = nftMetadata.onChainData!;
   const offChainData = nftMetadata.offChainData!;
 
@@ -476,7 +473,7 @@ const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
                     )
                   )}
 
-                  {session?.user?.id == owner && wallet && nft && (
+                  {wallet && wallet.publicKey?.toString() == owner && nft && (
                     <div className="px-4 pt-3 pb-4 mb-4 sm:mb-3 rounded-lg bg-white bg-opacity-5 focus:outline-none">
                       <NFTOwnerControls
                         nft={nft}
@@ -487,8 +484,9 @@ const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
                   )}
 
                   {onChainData &&
-                    session?.user?.id == onChainData.updateAuthority &&
                     wallet &&
+                    wallet.publicKey?.toString() ==
+                      onChainData.updateAuthority &&
                     nft && (
                       <div className="px-4 pt-3 pb-4 mb-4 sm:mb-3 rounded-lg bg-white bg-opacity-5 focus:outline-none">
                         <NFTCreatorControls

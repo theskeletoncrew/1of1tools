@@ -9,12 +9,12 @@ import {
 import { NFTMetadataOffChain, NFTMetadataOnChain } from "models/nftMetadata";
 import { pubKeyUrl, shortenedAddress, shortPubKey } from "utils";
 import { network } from "utils/network";
-import { useSession } from "next-auth/react";
 import { CheckBadgeIcon, Square2StackIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { loadBonfidaName, loadTwitterName } from "utils/addressResolution";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 interface Props {
   onChainData: NFTMetadataOnChain;
@@ -33,7 +33,7 @@ const NFTDetailsTable: React.FC<Props> = ({
   parentNft,
   owner,
 }) => {
-  const { data: session } = useSession();
+  const wallet = useWallet();
   const [bonfidaName, setBonfidaName] = useState<string>();
   const [twitterName, setTwitterName] = useState<string>();
 
@@ -139,7 +139,11 @@ const NFTDetailsTable: React.FC<Props> = ({
                     ? `https://twitter.com/${twitterName}`
                     : `/wallet/${owner}`
                 }
-                title={session?.user?.id == owner ? "You! 😎" : owner}
+                title={
+                  wallet && wallet.publicKey?.toString() == owner
+                    ? "You! 😎"
+                    : owner
+                }
                 target="_blank"
                 rel="noreferrer"
               >
@@ -176,7 +180,8 @@ const NFTDetailsTable: React.FC<Props> = ({
             <a href={`/creator/${onChainData.updateAuthority.toString()}`}>
               {shortenedAddress(onChainData.updateAuthority)}
             </a>
-            {session?.user?.id == onChainData.updateAuthority
+            {wallet &&
+            wallet.publicKey?.toString() == onChainData.updateAuthority
               ? " - You! 😎"
               : ""}
             <Square2StackIcon
