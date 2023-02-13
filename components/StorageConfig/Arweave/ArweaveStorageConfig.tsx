@@ -169,6 +169,10 @@ const ArweaveStorageConfig: React.FC<Props> = ({ didChangeOptions }) => {
             </button>
           )}
       </div>
+      <p className="text-sky-400 text-xs">
+        1of1.tools uses Bundlr for Arweave uploads. Fund your account before
+        minting. Any unused funds can be withdrawn after.
+      </p>
     </div>
   );
 };

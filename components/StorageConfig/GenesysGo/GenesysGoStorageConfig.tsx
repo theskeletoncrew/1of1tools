@@ -268,6 +268,12 @@ const GenesysGoStorageConfig: React.FC<Props> = ({ didChangeOptions }) => {
           </div>
         </div>
       )}
+
+      <p className="text-sky-400 text-xs mt-2">
+        Shadow Drive uses storage accounts that you create in advance. Choose an
+        existing account, or create a new storage account at any size you
+        desire.
+      </p>
     </div>
   );
 };
