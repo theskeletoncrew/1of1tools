@@ -19,7 +19,11 @@ import GenesysGoStorageConfig, {
 } from "components/StorageConfig/GenesysGo/GenesysGoStorageConfig";
 import { PublicKey } from "@solana/web3.js";
 import { ShdwDrive } from "@shadow-drive/sdk";
+import { WebBundlr } from "@bundlr-network/client";
 import CollectionPicker from "components/CollectionPicker/CollectionPicker";
+import ArweaveStorageConfig, {
+  ArweaveStorageOptions,
+} from "components/StorageConfig/Arweave/ArweaveStorageConfig";
 // import { nftStorage } from "@metaplex-foundation/js-plugin-nft-storage";
 // import { Connection } from "@solana/web3.js";
 // import { useConnection } from "@solana/wallet-adapter-react";
@@ -34,7 +38,7 @@ interface Props {
     tokenType: TokenType,
     isCrossmint: boolean,
     storageProvider: StorageProvider,
-    storageOptions: GenesysGoStorageOptions | undefined
+    storageOptions: GenesysGoStorageOptions | ArweaveStorageOptions | undefined
   ) => void;
 }
 
@@ -66,6 +70,7 @@ export interface NFTFormData {
 export enum StorageProvider {
   NFTStorage = "NFT.Storage",
   GenesysGo = "Shadow Drive",
+  Arweave = "Arweave",
 }
 
 export enum TokenType {
@@ -181,6 +186,8 @@ const MintForm: React.FC<Props> = ({
   const [genesysGoDrive, setGenesysGoDrive] = useState<ShdwDrive>();
   const [genesysGoStorageAccount, setGenesysGoStorageAccount] =
     useState<PublicKey>();
+  const [bundlr, setBundlr] = useState<WebBundlr>();
+
   // const [totalBytes, setTotalBytes] = useState(0);
   // const [storageCostEstimate, setStorageCostEstimate] = useState("");
 
@@ -304,7 +311,10 @@ const MintForm: React.FC<Props> = ({
         throw "Semifungible tokens require a number of decimals for the tokens to be created.";
       }
 
-      let storageOptions: GenesysGoStorageOptions | undefined;
+      let storageOptions:
+        | GenesysGoStorageOptions
+        | ArweaveStorageOptions
+        | undefined;
       if (storageProvider === StorageProvider.GenesysGo) {
         if (!genesysGoDrive) {
           throw "Could not initialize Shadow Drive";
@@ -315,6 +325,13 @@ const MintForm: React.FC<Props> = ({
         storageOptions = {
           shadowDrive: genesysGoDrive,
           storageAccount: genesysGoStorageAccount,
+        };
+      } else if (storageProvider === StorageProvider.Arweave) {
+        if (!bundlr) {
+          throw "Could not initialize Bundlr for Arweave";
+        }
+        storageOptions = {
+          bundlr: bundlr,
         };
       }
 
@@ -729,10 +746,12 @@ const MintForm: React.FC<Props> = ({
               <label htmlFor="storageProvider" className="block">
                 Decentralized Storage Provider:
               </label>
-              <p className="text-xs text-sky-400 mb-2">
-                Note: This will only affect new files. To migrate existing media
-                files, upload them again.
-              </p>
+              {isEdit && (
+                <p className="text-xs text-sky-400 mb-2">
+                  Note: This will only affect new files. To migrate existing
+                  media files, upload them again.
+                </p>
+              )}
               <select
                 id="storageProvider"
                 name="storageProvider"
@@ -757,6 +776,14 @@ const MintForm: React.FC<Props> = ({
                   didChangeOptions={(options) => {
                     setGenesysGoDrive(options?.shadowDrive);
                     setGenesysGoStorageAccount(options?.storageAccount);
+                  }}
+                />
+              </div>
+            ) : storageProvider == StorageProvider.Arweave ? (
+              <div className="mt-2">
+                <ArweaveStorageConfig
+                  didChangeOptions={(options) => {
+                    setBundlr(options?.bundlr);
                   }}
                 />
               </div>

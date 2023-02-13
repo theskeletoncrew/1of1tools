@@ -40,6 +40,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { nftStorage } from "@metaplex-foundation/js-plugin-nft-storage";
 import { GenesysGoStorageOptions } from "components/StorageConfig/GenesysGo/GenesysGoStorageConfig";
 import { uploadFile, uploadMetadata } from "utils/storage";
+import { ArweaveStorageOptions } from "components/StorageConfig/Arweave/ArweaveStorageConfig";
 
 const Model = dynamic(() => import("components/Model"), { ssr: false });
 
@@ -97,7 +98,7 @@ const EditPage: NextPage = () => {
     tokenType: TokenType,
     isCrossmint: boolean, // ignored
     storageProvider: StorageProvider,
-    storageOptions: GenesysGoStorageOptions | undefined
+    storageOptions: GenesysGoStorageOptions | ArweaveStorageOptions | undefined
   ) => {
     try {
       if (!nft) {
@@ -122,6 +123,12 @@ const EditPage: NextPage = () => {
       if (storageProvider === StorageProvider.GenesysGo && !storageOptions) {
         throw new Error(
           "Shadow Drive storage requires that you create and choose a storage account."
+        );
+      }
+
+      if (storageProvider === StorageProvider.Arweave && !storageOptions) {
+        throw new Error(
+          "Arweave storage was chosen, but we were unable to initialize a connection via Bundlr."
         );
       }
 

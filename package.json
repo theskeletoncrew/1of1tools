@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@bonfida/spl-name-service": "^0.1.62",
+    "@bundlr-network/client": "^0.10.3",
     "@dialectlabs/blockchain-sdk-solana": "^1.0.1",
     "@dialectlabs/sdk": "^1.5.2",
     "@google-cloud/tasks": "^3.1.0",
@@ -31,6 +32,7 @@
     "@tailwindcss/forms": "^0.5.2",
     "dayjs": "^1.11.7",
     "discord.js": "^14.7.1",
+    "filereader-stream": "^2.0.0",
     "firebase-admin": "^11.4.1",
     "helius-sdk": "^0.2.5",
     "imagekit": "^4.1.2",

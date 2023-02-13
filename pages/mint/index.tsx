@@ -32,6 +32,7 @@ import dynamic from "next/dynamic";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { notEmpty, pubKeyUrl, shortenedAddress, tryPublicKey } from "utils";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { ArweaveStorageOptions } from "components/StorageConfig/Arweave/ArweaveStorageConfig";
 import { GenesysGoStorageOptions } from "components/StorageConfig/GenesysGo/GenesysGoStorageConfig";
 import { PublicKey } from "@solana/web3.js";
 import { uploadFile, uploadMetadata } from "utils/storage";
@@ -70,7 +71,7 @@ const MintPage: NextPage = () => {
     tokenType: TokenType,
     isCrossmint: boolean,
     storageProvider: StorageProvider,
-    storageOptions: GenesysGoStorageOptions | undefined
+    storageOptions: GenesysGoStorageOptions | ArweaveStorageOptions | undefined
   ) => {
     try {
       console.log("Minting...");
@@ -89,6 +90,12 @@ const MintPage: NextPage = () => {
       if (storageProvider === StorageProvider.GenesysGo && !storageOptions) {
         throw new Error(
           "Shadow Drive storage requires that you create and choose a storage account."
+        );
+      }
+
+      if (storageProvider === StorageProvider.Arweave && !storageOptions) {
+        throw new Error(
+          "Arweave storage was chosen, but we were unable to initialize a connection via Bundlr."
         );
       }
 
@@ -338,7 +345,11 @@ const MintPage: NextPage = () => {
           <Header title="Mint NFT" />
         </div>
 
-        {!isEditingNFT || !file ? (
+        {!wallet || !wallet.publicKey ? (
+          <div className="w-full h-[80vh] flex flex-col gap-10 items-center justify-center text-center text-3xl">
+            <p>Connect your wallet to get started</p>
+          </div>
+        ) : !isEditingNFT || !file ? (
           <div className="w-full h-[80vh] flex flex-col gap-10 items-center justify-center text-center">
             <form>
               <label className="button">
