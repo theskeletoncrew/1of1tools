@@ -47,7 +47,7 @@ apiRoute.post(async (req, res) => {
         nftEvent.nfts[0]?.mint
       }-${
         transaction.signature.slice(0, 5) +
-        "..." +
+        "_" +
         transaction.signature.slice(-5)
       }`;
 
