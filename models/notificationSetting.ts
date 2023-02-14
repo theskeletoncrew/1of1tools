@@ -11,8 +11,14 @@ export interface DialectNftNotificationSetting
 export interface DialectNotificationSetting {
   subscriberAddress: string;
   deliveryAddress: string;
-  formfunctionNotifications: boolean;
-  exchangeArtNotifications: boolean;
+  formfunctionNotifications?: boolean;
+  exchangeArtNotifications?: boolean;
+}
+
+export interface DiscordSubscriptionsContainer<
+  T extends DiscordGuildNotificationSetting
+> {
+  discords: T[];
 }
 
 export interface DiscordGuildCreatorNotificationSetting

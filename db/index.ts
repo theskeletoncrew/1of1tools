@@ -13,6 +13,7 @@ import {
   DialectNotificationSetting,
   DiscordGuildCreatorNotificationSetting,
   DiscordGuildNotificationSetting,
+  DiscordSubscriptionsContainer,
 } from "models/notificationSetting";
 import { PaginationToken } from "models/paginationToken";
 import { err, ok, Result } from "neverthrow";
@@ -125,20 +126,20 @@ export async function getDiscordBoutiqueNotificationsByUser(
   subscriberAddress: string
 ): Promise<Result<DiscordGuildNotificationSetting[] | null, Error>> {
   try {
-    const query = await db
-      .collection(
-        `boutique-notifications-discord/${subscriberAddress}/discords`
-      )
+    const doc = await db
+      .collection(`boutique-notifications-discord`)
+      .doc(subscriberAddress)
       .get();
 
-    const subscriptions = query.docs.map((doc) => {
-      const subscription = doc.data() as DiscordGuildNotificationSetting;
-      subscription.subscriberAddress = subscriberAddress;
-      subscription.guildId = doc.id;
-      return subscription;
+    const subscriptions =
+      doc.data() as DiscordSubscriptionsContainer<DiscordGuildNotificationSetting>;
+
+    const discords = subscriptions.discords.map((discord) => {
+      discord.subscriberAddress = subscriberAddress;
+      return discord;
     });
 
-    return ok(subscriptions);
+    return ok(discords);
   } catch (error) {
     return err(error as Error);
   }
@@ -149,30 +150,15 @@ export async function setDiscordBoutiqueNotificationsByUser(
   subscriptions: DiscordGuildNotificationSetting[]
 ): Promise<Result<null, Error>> {
   try {
-    let batch = db.batch();
-
-    const query = await db
-      .collection(
-        `boutique-notifications-discord/${subscriberAddress}/discords`
-      )
-      .get();
-
-    query.docs.forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-
-    for (let i = 0; i < subscriptions.length; i++) {
-      const subscription = subscriptions[i]!;
-      const query = await db
-        .collection(
-          `boutique-notifications-discord/${subscriberAddress}/discords`
-        )
-        .doc(subscription.guildId);
-      batch.set(query, {
-        channelId: subscription.channelId,
+    const docRef = await db
+      .collection(`boutique-notifications-discord`)
+      .doc(subscriberAddress)
+      .set({
+        discords: subscriptions.map((subscription) => {
+          const { subscriberAddress, ...data } = subscription;
+          return data;
+        }),
       });
-    }
-    await batch.commit();
 
     return ok(null);
   } catch (error) {
@@ -187,8 +173,8 @@ export async function getDiscordSubscribersToBoutiqueNotifications(): Promise<
     const query = await db.collection(`boutique-notifications-discord`).get();
 
     const subscribers = query.docs.map((doc) => {
-      const notification = doc.data() as DiscordGuildCreatorNotificationSetting;
-      notification.creatorAddress = doc.id;
+      const notification = doc.data() as DiscordGuildNotificationSetting;
+      notification.subscriberAddress = doc.id;
       return notification;
     });
 
@@ -205,8 +191,8 @@ export async function getDialectSubscribersToBoutiqueNotifications(): Promise<
     const query = await db.collection(`boutique-notifications-dialect`).get();
 
     const subscribers = query.docs.map((doc) => {
-      const notification = doc.data() as DialectCreatorNotificationSetting;
-      notification.creatorAddress = doc.id;
+      const notification = doc.data() as DialectNotificationSetting;
+      notification.subscriberAddress = doc.id;
       return notification;
     });
 
@@ -315,21 +301,22 @@ export async function getDiscordCreatorNotificationsByUser(
   environment: string = "mainnet"
 ): Promise<Result<DiscordGuildCreatorNotificationSetting[] | null, Error>> {
   try {
-    const query = await db
+    const doc = await db
       .collection(
-        `${environment}/creator-notifications-discord/${creatorAddress}/${subscriberAddress}/discords`
+        `${environment}/creator-notifications-discord/${creatorAddress}`
       )
+      .doc(subscriberAddress)
       .get();
 
-    const subscriptions = query.docs.map((doc) => {
-      const subscription = doc.data() as DiscordGuildCreatorNotificationSetting;
-      subscription.creatorAddress = creatorAddress;
-      subscription.subscriberAddress = subscriberAddress;
-      subscription.guildId = doc.id;
-      return subscription;
+    const subscriptions =
+      doc.data() as DiscordSubscriptionsContainer<DiscordGuildCreatorNotificationSetting>;
+
+    const discords = subscriptions.discords.map((discord) => {
+      discord.subscriberAddress = doc.id;
+      return discord;
     });
 
-    return ok(subscriptions);
+    return ok(discords);
   } catch (error) {
     return err(error as Error);
   }
@@ -342,32 +329,17 @@ export async function setDiscordCreatorNotificationsByUser(
   environment: string = "mainnet"
 ): Promise<Result<null, Error>> {
   try {
-    let batch = db.batch();
-
-    const query = await db
+    await db
       .collection(
-        `${environment}/creator-notifications-discord/${creatorAddress}/${subscriberAddress}/discords`
+        `${environment}/creator-notifications-discord/${creatorAddress}`
       )
-      .get();
-
-    query.docs.forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-
-    for (let i = 0; i < subscriptions.length; i++) {
-      const subscription = subscriptions[i]!;
-      const query = await db
-        .collection(
-          `${environment}/creator-notifications-discord/${creatorAddress}/${subscriberAddress}/discords`
-        )
-        .doc(subscription.guildId);
-      batch.set(query, {
-        channelId: subscription.channelId,
-        formfunctionNotifications: subscription.formfunctionNotifications,
-        exchangeArtNotifications: subscription.exchangeArtNotifications,
+      .doc(subscriberAddress)
+      .set({
+        discords: subscriptions.map((subscription) => {
+          const { subscriberAddress, ...data } = subscription;
+          return data;
+        }),
       });
-    }
-    await batch.commit();
 
     return ok(null);
   } catch (error) {
@@ -909,7 +881,7 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
             { floor: floor }
           );
           console.log(
-            `Saved floor of collection: ${collection.name} as ${floor}`
+            `Saved floor of collection: ${collection.name} as ${floor?.listing.amount}`
           );
         }
       }

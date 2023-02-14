@@ -5,13 +5,10 @@ import nextConnect from "next-connect";
 import {
   addBoutiqueCollectionEventIfMonitoredAndUpdateStats,
   getDialectSubscribersToBoutiqueNotifications,
-  getDialectSubscribersToNotificationsForCreator,
   getDiscordSubscribersToBoutiqueNotifications,
 } from "db";
 import {
-  DialectNftNotificationSetting,
   DialectNotificationSetting,
-  DiscordGuildCreatorNotificationSetting,
   DiscordGuildNotificationSetting,
 } from "models/notificationSetting";
 import {
@@ -121,7 +118,11 @@ apiRoute.post(async (req, res) => {
   }
 });
 
-const sendNotifications = async (transaction: EnrichedTransaction) => {
+const sendNotifications = async (
+  transaction: EnrichedTransaction
+): Promise<null | Error> => {
+  let lastError: Error | null = null;
+
   try {
     const customDescription = humanReadableTransaction(transaction);
 
@@ -139,7 +140,16 @@ const sendNotifications = async (transaction: EnrichedTransaction) => {
       unique(recipients, "deliveryAddress"),
       customDescription
     );
+  } catch (error) {
+    if (error instanceof Error) {
+      lastError = error;
+      console.error("Error sending dialect messages: " + error.message);
+    } else {
+      console.error("Error sending dialect messages: " + error);
+    }
+  }
 
+  try {
     const recipientsSubscribedToDiscord = await discordSubscribers();
     const discordEmbed = discordEmbedForTransaction(transaction);
 
@@ -155,11 +165,16 @@ const sendNotifications = async (transaction: EnrichedTransaction) => {
       recipientsSubscribedToDiscord,
       discordEmbed
     );
-
-    return null;
   } catch (error) {
-    return error;
+    if (error instanceof Error) {
+      lastError = error;
+      console.error("Error sending discord messages: " + error.message);
+    } else {
+      console.error("Error sending discord messages: " + error);
+    }
   }
+
+  return lastError;
 };
 
 const sendDialectMessagesForRecipients = async (
