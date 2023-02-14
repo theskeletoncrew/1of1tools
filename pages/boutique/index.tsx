@@ -74,44 +74,41 @@ const IndexPage: NextPage = () => {
       limit: COLLECTIONS_PER_PAGE,
     });
 
-    if (collectionsRes.isErr()) {
-      return;
+    if (collectionsRes.isOk()) {
+      const retCollections = collectionsRes.value;
+
+      if (!providedCursor) {
+        setCollections(retCollections);
+      } else {
+        setCollections((prevCollections) => [
+          ...prevCollections,
+          ...retCollections.filter(
+            (c) =>
+              prevCollections.find((c2) => c2.slug === c.slug) === undefined
+          ),
+        ]);
+      }
+
+      setHasMore(retCollections.length >= COLLECTIONS_PER_PAGE);
+
+      const lastCollection = retCollections.pop();
+      if (lastCollection) {
+        setCursor(lastCollection.slug);
+      }
     }
 
-    const retCollections = collectionsRes.value;
-
-    if (!providedCursor) {
-      setCollections(retCollections);
-    } else {
-      setCollections((prevCollections) => [
-        ...prevCollections,
-        ...retCollections.filter(
-          (c) => prevCollections.find((c2) => c2.slug === c.slug) === undefined
-        ),
-      ]);
-    }
-
-    setHasMore(retCollections.length >= COLLECTIONS_PER_PAGE);
-
-    const lastCollection = retCollections.pop();
-    if (lastCollection) {
-      setCursor(lastCollection.slug);
-    }
+    setLoading(false);
   };
 
   useEffect(() => {
     if (!isLoading) {
-      getMoreBoutiqueCollections(sort).then(() => {
-        setLoading(false);
-      });
+      getMoreBoutiqueCollections(sort);
     }
   }, []);
 
   useEffect(() => {
     setLoading(true);
-    getMoreBoutiqueCollections(sort).then(() => {
-      setLoading(false);
-    });
+    getMoreBoutiqueCollections(sort);
   }, [sort]);
 
   const loadNft = async (publicKey: PublicKey): Promise<Nft | null> => {
