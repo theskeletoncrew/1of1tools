@@ -219,7 +219,7 @@ const CreatorPage: NextPage = () => {
 
       const result3 = await OneOfOneToolsClient.getCurrentUserAccount();
       if (!result3.isOk()) {
-        toast.error(result3.error.message);
+        console.log(result3.error.message);
         return;
       }
       setDiscordGuilds(
