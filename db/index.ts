@@ -703,15 +703,21 @@ export async function getLatestBoutiqueCollectionEvents(
     let query = await db
       .collection(`boutique-collection-events`)
       .orderBy("timestamp", "desc")
-      .limit(limit);
+      .limit(limit * 4);
 
     const snapshot = await query.get();
 
-    const events = snapshot.docs.map((doc) => {
+    let uniqueEvents: { [nftAddress: string]: OneOfOneNFTEvent } = {};
+
+    snapshot.docs.reverse().forEach((doc) => {
       const event = doc.data() as OneOfOneNFTEvent;
       event.signature = doc.id;
-      return event;
+      uniqueEvents[event.mint] = event;
     });
+
+    const events = Object.values(uniqueEvents)
+      .sort((e1, e2) => e2.timestamp - e1.timestamp)
+      .slice(0, limit);
 
     return ok(events);
   } catch (error) {
