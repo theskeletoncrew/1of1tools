@@ -15,21 +15,19 @@ export interface DialectNotificationSetting {
   exchangeArtNotifications?: boolean;
 }
 
-export interface DiscordSubscriptionsContainer<
-  T extends DiscordGuildNotificationSetting
-> {
-  discords: T[];
-}
-
-export interface DiscordGuildCreatorNotificationSetting
-  extends DiscordGuildNotificationSetting {
-  creatorAddress: string;
+export interface DiscordSubscriptionsContainer {
+  subscriberAddress: string;
+  discords: DiscordGuildNotificationSetting[];
 }
 
 export interface DiscordGuildNotificationSetting {
-  subscriberAddress: string;
   guildId: string;
   channelId: string;
   formfunctionNotifications?: boolean;
   exchangeArtNotifications?: boolean;
+}
+
+export interface DiscordCreatorSubscriptionsContainer
+  extends DiscordSubscriptionsContainer {
+  creatorAddress: string;
 }

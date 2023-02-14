@@ -11,12 +11,13 @@ import {
   DialectCreatorNotificationSetting,
   DialectNftNotificationSetting,
   DialectNotificationSetting,
-  DiscordGuildCreatorNotificationSetting,
+  DiscordCreatorSubscriptionsContainer,
   DiscordGuildNotificationSetting,
   DiscordSubscriptionsContainer,
 } from "models/notificationSetting";
 import { PaginationToken } from "models/paginationToken";
 import { err, ok, Result } from "neverthrow";
+import { notEmpty } from "utils";
 import { COLLECTIONS_PER_PAGE } from "utils/config";
 import { recalculateFloorPrice } from "utils/floorPrice";
 import { clusterApiUrl, network } from "utils/network";
@@ -124,22 +125,22 @@ export async function setDialectBoutiqueNotificationsByUser(
 
 export async function getDiscordBoutiqueNotificationsByUser(
   subscriberAddress: string
-): Promise<Result<DiscordGuildNotificationSetting[] | null, Error>> {
+): Promise<Result<DiscordSubscriptionsContainer | null, Error>> {
   try {
     const doc = await db
       .collection(`boutique-notifications-discord`)
       .doc(subscriberAddress)
       .get();
 
-    const subscriptions =
-      doc.data() as DiscordSubscriptionsContainer<DiscordGuildNotificationSetting>;
+    const subscriptions = doc.data() as DiscordSubscriptionsContainer;
 
-    const discords = subscriptions.discords.map((discord) => {
-      discord.subscriberAddress = subscriberAddress;
-      return discord;
-    });
+    if (!subscriptions) {
+      return ok(null);
+    }
 
-    return ok(discords);
+    subscriptions.subscriberAddress = subscriberAddress;
+
+    return ok(subscriptions);
   } catch (error) {
     return err(error as Error);
   }
@@ -154,10 +155,7 @@ export async function setDiscordBoutiqueNotificationsByUser(
       .collection(`boutique-notifications-discord`)
       .doc(subscriberAddress)
       .set({
-        discords: subscriptions.map((subscription) => {
-          const { subscriberAddress, ...data } = subscription;
-          return data;
-        }),
+        discords: subscriptions,
       });
 
     return ok(null);
@@ -167,16 +165,18 @@ export async function setDiscordBoutiqueNotificationsByUser(
 }
 
 export async function getDiscordSubscribersToBoutiqueNotifications(): Promise<
-  Result<DiscordGuildNotificationSetting[], Error>
+  Result<DiscordSubscriptionsContainer[], Error>
 > {
   try {
     const query = await db.collection(`boutique-notifications-discord`).get();
 
-    const subscribers = query.docs.map((doc) => {
-      const notification = doc.data() as DiscordGuildNotificationSetting;
-      notification.subscriberAddress = doc.id;
-      return notification;
-    });
+    const subscribers = query.docs
+      .map((doc) => {
+        const subscriptions = doc.data() as DiscordSubscriptionsContainer;
+        subscriptions.subscriberAddress = doc.id;
+        return subscriptions;
+      })
+      .filter(notEmpty);
 
     return ok(subscribers);
   } catch (error) {
@@ -299,7 +299,7 @@ export async function getDiscordCreatorNotificationsByUser(
   creatorAddress: string,
   subscriberAddress: string,
   environment: string = "mainnet"
-): Promise<Result<DiscordGuildCreatorNotificationSetting[] | null, Error>> {
+): Promise<Result<DiscordCreatorSubscriptionsContainer | null, Error>> {
   try {
     const doc = await db
       .collection(
@@ -308,15 +308,16 @@ export async function getDiscordCreatorNotificationsByUser(
       .doc(subscriberAddress)
       .get();
 
-    const subscriptions =
-      doc.data() as DiscordSubscriptionsContainer<DiscordGuildCreatorNotificationSetting>;
+    const subscriptions = doc.data() as DiscordCreatorSubscriptionsContainer;
 
-    const discords = subscriptions.discords.map((discord) => {
-      discord.subscriberAddress = doc.id;
-      return discord;
-    });
+    if (!subscriptions) {
+      return ok(null);
+    }
 
-    return ok(discords);
+    subscriptions.subscriberAddress = doc.id;
+    subscriptions.creatorAddress = creatorAddress;
+
+    return ok(subscriptions);
   } catch (error) {
     return err(error as Error);
   }
@@ -335,10 +336,7 @@ export async function setDiscordCreatorNotificationsByUser(
       )
       .doc(subscriberAddress)
       .set({
-        discords: subscriptions.map((subscription) => {
-          const { subscriberAddress, ...data } = subscription;
-          return data;
-        }),
+        discords: subscriptions,
       });
 
     return ok(null);
@@ -350,7 +348,7 @@ export async function setDiscordCreatorNotificationsByUser(
 export async function getDiscordSubscribersToNotificationsForCreator(
   creatorAddress: string,
   environment: string = "mainnet"
-): Promise<Result<DiscordGuildCreatorNotificationSetting[], Error>> {
+): Promise<Result<DiscordCreatorSubscriptionsContainer[], Error>> {
   try {
     const query = await db
       .collection(
@@ -359,7 +357,7 @@ export async function getDiscordSubscribersToNotificationsForCreator(
       .get();
 
     const subscribers = query.docs.map((doc) => {
-      const notification = doc.data() as DiscordGuildCreatorNotificationSetting;
+      const notification = doc.data() as DiscordCreatorSubscriptionsContainer;
       notification.creatorAddress = doc.id;
       return notification;
     });

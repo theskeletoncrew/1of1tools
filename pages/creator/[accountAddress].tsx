@@ -23,10 +23,6 @@ import {
   resolveWalletAddress,
 } from "utils/addressResolution";
 import NotificationSubscriptionModal from "components/NotificationSubscriptionModal/NotificationSubscriptionModal";
-import {
-  DiscordGuildCreatorNotificationSetting,
-  DiscordGuildNotificationSetting,
-} from "models/notificationSetting";
 import { DiscordGuild, DiscordGuildChannelIdPair } from "models/account";
 
 const CreatorPage: NextPage = () => {

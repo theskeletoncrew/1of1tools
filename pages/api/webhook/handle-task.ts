@@ -17,7 +17,7 @@ import {
   DialectCreatorNotificationSetting,
   DialectNftNotificationSetting,
   DialectNotificationSetting,
-  DiscordGuildCreatorNotificationSetting,
+  DiscordCreatorSubscriptionsContainer,
   DiscordGuildNotificationSetting,
 } from "models/notificationSetting";
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -177,18 +177,18 @@ const sendDialectMessagesForRecipients = async (
 
 const sendDiscordMessagesForRecipients = async (
   discordClient: Client,
-  recipients: DiscordGuildCreatorNotificationSetting[],
+  recipientDiscords: DiscordGuildNotificationSetting[],
   discordEmbed: EmbedBuilder
 ) => {
-  for (let j = 0; j < recipients.length; j++) {
-    const recipient = recipients[j]!;
+  for (let j = 0; j < recipientDiscords.length; j++) {
+    const recipientDiscord = recipientDiscords[j]!;
 
-    const guild = discordClient.guilds.cache.get(recipient.guildId);
+    const guild = discordClient.guilds.cache.get(recipientDiscord.guildId);
     if (!guild) {
       continue;
     }
     const channel = guild.channels.cache.get(
-      recipient.channelId
+      recipientDiscord.channelId
     ) as TextChannel;
 
     await channel.send({ embeds: [discordEmbed] });
@@ -228,16 +228,22 @@ const creatorSubscribers = async (
 const discordCreatorSubscribers = async (
   creatorAddress: string,
   source: string
-): Promise<DiscordGuildCreatorNotificationSetting[]> => {
+): Promise<DiscordGuildNotificationSetting[]> => {
   const recipientsRes = await getDiscordSubscribersToNotificationsForCreator(
     creatorAddress
   );
   if (!recipientsRes.isOk()) {
     return [];
   }
-  return recipientsRes.value.filter((r) =>
-    recipientIsValidForSource(r, source)
-  );
+  let discords: DiscordGuildNotificationSetting[] = [];
+  recipientsRes.value.forEach((recipient) => {
+    recipient.discords.forEach((discord) => {
+      if (recipientIsValidForSource(discord, source)) {
+        discords.push(discord);
+      }
+    });
+  });
+  return discords;
 };
 
 const recipientIsValidForSource = (

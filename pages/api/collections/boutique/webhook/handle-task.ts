@@ -9,7 +9,7 @@ import {
 } from "db";
 import {
   DialectNotificationSetting,
-  DiscordGuildNotificationSetting,
+  DiscordSubscriptionsContainer,
 } from "models/notificationSetting";
 import {
   createDialectSdk,
@@ -199,21 +199,24 @@ const sendDialectMessagesForRecipients = async (
 
 const sendDiscordMessagesForRecipients = async (
   discordClient: Client,
-  recipients: DiscordGuildNotificationSetting[],
+  recipients: DiscordSubscriptionsContainer[],
   discordEmbed: EmbedBuilder
 ) => {
   for (let j = 0; j < recipients.length; j++) {
     const recipient = recipients[j]!;
 
-    const guild = discordClient.guilds.cache.get(recipient.guildId);
-    if (!guild) {
-      continue;
-    }
-    const channel = guild.channels.cache.get(
-      recipient.channelId
-    ) as TextChannel;
+    for (let k = 0; k < recipient.discords.length; k++) {
+      const discord = recipient.discords[k]!;
+      const guild = discordClient.guilds.cache.get(discord.guildId);
+      if (!guild) {
+        continue;
+      }
+      const channel = guild.channels.cache.get(
+        discord.channelId
+      ) as TextChannel;
 
-    await channel.send({ embeds: [discordEmbed] });
+      await channel.send({ embeds: [discordEmbed] });
+    }
   }
 };
 
@@ -226,7 +229,7 @@ const dialectSubscribers = async (): Promise<DialectNotificationSetting[]> => {
 };
 
 const discordSubscribers = async (): Promise<
-  DiscordGuildNotificationSetting[]
+  DiscordSubscriptionsContainer[]
 > => {
   const recipientsRes = await getDiscordSubscribersToBoutiqueNotifications();
   if (!recipientsRes.isOk()) {
