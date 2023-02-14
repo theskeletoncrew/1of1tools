@@ -80,25 +80,26 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
 
     if (nftsRes.isErr()) {
       toast.error("Failed to load more nfts: " + nftsRes.error.message);
-      return;
-    }
-
-    const newNFTMetadata =
-      currentPage === 0
-        ? nftsRes.value
-        : nftsRes.value.filter(
-            (n) => nftsMetadata.find((n2) => n2.mint === n.mint) === undefined
-          );
-
-    if (currentPage > 0) {
-      setNFTsMetadata((nftsMetadata) => [...nftsMetadata, ...newNFTMetadata]);
     } else {
-      setNFTsMetadata(newNFTMetadata);
+      const newNFTMetadata =
+        currentPage === 0
+          ? nftsRes.value
+          : nftsRes.value.filter(
+              (n) => nftsMetadata.find((n2) => n2.mint === n.mint) === undefined
+            );
+
+      if (currentPage > 0) {
+        setNFTsMetadata((nftsMetadata) => [...nftsMetadata, ...newNFTMetadata]);
+      } else {
+        setNFTsMetadata(newNFTMetadata);
+      }
+      setHasMore(
+        (currentPage + 1) * NFTS_PER_PAGE < collection.mintAddresses.length
+      );
+      setPage(currentPage + 1);
     }
-    setHasMore(
-      (currentPage + 1) * NFTS_PER_PAGE < collection.mintAddresses.length
-    );
-    setPage(currentPage + 1);
+
+    setLoading(false);
   };
 
   const loadListings = async () => {
@@ -122,14 +123,11 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
   useEffect(() => {
     getMoreNfts(0, NFTFilterType.ALL_ITEMS).then(() => {
       loadListings();
-      setLoading(false);
     });
   }, []);
 
   useEffect(() => {
-    getMoreNfts(0, filter).then(() => {
-      setLoading(false);
-    });
+    getMoreNfts(0, filter);
   }, [filter]);
 
   const title = `1of1.tools | ${collection.name} NFT Listings`;
@@ -200,7 +198,7 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
           ) : nftsMetadata.length > 0 ? (
             <InfiniteScroll
               dataLength={nftsMetadata.length}
-              next={() => getMoreNfts(page + 1, filter)}
+              next={() => getMoreNfts(page, filter)}
               hasMore={hasMore}
               loader={<LoadingIndicator />}
               endMessage={""}
