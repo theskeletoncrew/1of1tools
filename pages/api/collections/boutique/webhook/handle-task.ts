@@ -207,13 +207,31 @@ const sendDiscordMessagesForRecipients = async (
 
     for (let k = 0; k < recipient.discords.length; k++) {
       const discord = recipient.discords[k]!;
-      const guild = discordClient.guilds.cache.get(discord.guildId);
+      const guild = await discordClient.guilds.fetch(discord.guildId);
       if (!guild) {
+        console.error(
+          "Failed to get discord " +
+            discord.guildId +
+            " for recipient " +
+            recipient.subscriberAddress
+        );
         continue;
       }
-      const channel = guild.channels.cache.get(
+
+      const channel = (await discordClient.channels.fetch(
         discord.channelId
-      ) as TextChannel;
+      )) as TextChannel;
+      if (!channel) {
+        console.error(
+          "Failed to get channel " +
+            discord.channelId +
+            " for discord " +
+            discord.guildId +
+            " and recipient " +
+            recipient.subscriberAddress
+        );
+        continue;
+      }
 
       await channel.send({ embeds: [discordEmbed] });
     }

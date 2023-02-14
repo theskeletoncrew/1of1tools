@@ -1,6 +1,6 @@
 import { APIEmbedField, EmbedBuilder, RestOrArray } from "discord.js";
 import { EnrichedTransaction } from "models/enrichedTransaction";
-import { shortPubKey } from "utils";
+import { shortenedAddress, shortPubKey } from "utils";
 import {
   humanReadableEventPastTense,
   humanReadableSource,
@@ -15,7 +15,11 @@ export const discordEmbedForTransaction = (
   const nftEvent = transaction.events.nft;
   const nft = nftEvent?.nfts?.length > 0 ? nftEvent?.nfts[0] : null;
   const url = nft ? urlForSource(source, nft.mint) : null;
-  const title = nft ? nft.name : "Unknown";
+  const title = !nft
+    ? "Unknown"
+    : nft.name
+    ? nft.name
+    : shortenedAddress(nft.mint);
   const description = `${humanReadableEventPastTense(
     transaction.type
   )} on ${humanReadableSource(source)}${url ? ": " + url : ""}`;
@@ -60,7 +64,7 @@ export const discordEmbedForTransaction = (
     // .setThumbnail("")
     .addFields(fields)
     // .setImage()
-    .setTimestamp(transaction.timestamp)
+    .setTimestamp(transaction.timestamp * 1000)
     .setFooter({
       text: "Powered by 1of1.tools",
     });
