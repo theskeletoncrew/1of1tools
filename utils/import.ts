@@ -1,10 +1,11 @@
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { addBoutiqueCollectionEvent, setBoutiqueCollectionStats } from "db";
 import { TransactionType } from "helius-sdk";
-import { Collection } from "models/collection";
+import { Collection, CollectionFloor } from "models/collection";
 import { NFTEvent, OneOfOneNFTEvent, oneOfOneNFTEvent } from "models/nftEvent";
 import { err, ok, Result } from "neverthrow";
 import { notEmpty } from "utils";
+import { recalculateFloorPrice } from "./floorPrice";
 
 const HELIUS_API_KEY = process.env.HELIUS_API_KEY || "";
 
@@ -18,6 +19,7 @@ export const importAllEventsForCollection = async (
       weekVolume: number;
       dayVolume: number;
       athSale: OneOfOneNFTEvent | undefined;
+      floor: CollectionFloor | null;
     },
     Error
   >
@@ -133,13 +135,26 @@ export const importAllEventsForCollection = async (
     paginationToken = responseJSON.paginationToken;
   } while (paginationToken);
 
+  // determine floor price
+  const floorRes = await recalculateFloorPrice(collection);
+  if (!floorRes.isOk()) {
+    console.error("Failed to get floor: " + floorRes.error.message);
+  }
+
+  const floor = floorRes.isOk() ? floorRes.value : null;
+  console.log(
+    `Saving floor of collection: ${collection.name} as ${floor?.listing.amount}`
+  );
+
+  // save all data
   const setTotalVolumeRes = await setBoutiqueCollectionStats(
     collection.slug,
     totalVolume,
     monthVolume,
     weekVolume,
     dayVolume,
-    athSale ?? null
+    athSale ?? null,
+    floor
   );
   if (!setTotalVolumeRes.isOk()) {
     return err(new Error("Failed to set collection total volume."));
@@ -151,5 +166,6 @@ export const importAllEventsForCollection = async (
     weekVolume: weekVolume,
     dayVolume: dayVolume,
     athSale: athSale,
+    floor: floor,
   });
 };

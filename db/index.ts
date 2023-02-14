@@ -5,7 +5,7 @@ import { CollectionSortType } from "components/CollectionSort/CollectionSort";
 import { randomUUID } from "crypto";
 import { TransactionType } from "helius-sdk";
 import { Account, DiscordAccount, DiscordGuild } from "models/account";
-import { Collection, CollectionNFT } from "models/collection";
+import { Collection, CollectionFloor, CollectionNFT } from "models/collection";
 import { OneOfOneNFTEvent } from "models/nftEvent";
 import {
   DialectCreatorNotificationSetting,
@@ -641,7 +641,8 @@ export async function setBoutiqueCollectionStats(
   monthVolume: number,
   weekVolume: number,
   dayVolume: number,
-  athSale: OneOfOneNFTEvent | null
+  athSale: OneOfOneNFTEvent | null,
+  floor: CollectionFloor | null
 ): Promise<Result<null, Error>> {
   try {
     await db.collection("boutique-collections").doc(slug).update({
@@ -650,6 +651,7 @@ export async function setBoutiqueCollectionStats(
       weekVolume: weekVolume,
       dayVolume: dayVolume,
       athSale: athSale,
+      floor: floor,
     });
     return ok(null);
   } catch (error) {

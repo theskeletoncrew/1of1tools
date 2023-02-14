@@ -133,6 +133,7 @@ apiRoute.post(async (req, res) => {
       weekVolume: updateRes.value.weekVolume,
       dayVolume: updateRes.value.dayVolume,
       athSale: updateRes.value.athSale ?? null,
+      floor: updateRes.value.floor,
     });
   } catch (error) {
     res.status(500).json({
