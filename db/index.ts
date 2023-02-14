@@ -762,7 +762,6 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
     } else {
       nft = await trackNewMintIfPartOfCollection(event);
     }
-
     if (!nft) {
       return err(new Error("NFT is not tracked"));
     }
@@ -772,6 +771,23 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
     const { signature, ...eventDetails } = event;
 
     await db.runTransaction(async (transaction) => {
+      let collection: Collection | null = null;
+
+      // NOTE: ALL READS MUST COME BEFORE WRITES IN FIRESTORE TRANSACTION
+      if (
+        [
+          TransactionType.NFT_LISTING ||
+            TransactionType.NFT_CANCEL_LISTING ||
+            TransactionType.NFT_SALE ||
+            TransactionType.NFT_MINT ||
+            TransactionType.BURN ||
+            TransactionType.BURN_NFT,
+        ].includes(event.type as TransactionType)
+      ) {
+        const collectionRes = await getBoutiqueCollection(slug);
+        collection = collectionRes.isOk() ? collectionRes.value : null;
+      }
+
       // add the event
       const eventRef = db
         .collection(`boutique-collection-events`)
@@ -781,20 +797,13 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
         ...{ collectionSlug: slug },
       });
 
-      let collection: Collection | null = null;
-
       // for mints and sales, update stats as part of the same transaction
       if (
+        collection &&
         [TransactionType.NFT_MINT, TransactionType.NFT_SALE].includes(
           event.type as TransactionType
         )
       ) {
-        const collectionRes = await getBoutiqueCollection(slug);
-        if (!collectionRes.isOk() || !collectionRes.value) {
-          return err(new Error("Collection does not exist"));
-        }
-        collection = collectionRes.value;
-
         // get all events in the collection for the last 30 days
         const nowInSeconds = new Date().getTime() / 1000.0;
         const dayInSeconds = 60 * 60 * 24;
@@ -859,6 +868,7 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
 
       // for events that could effect floor price, recalculate floor price
       if (
+        collection &&
         [
           TransactionType.NFT_LISTING ||
             TransactionType.NFT_CANCEL_LISTING ||
@@ -868,17 +878,6 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
             TransactionType.BURN_NFT,
         ].includes(event.type as TransactionType)
       ) {
-        if (!collection) {
-          const collectionRes = await getBoutiqueCollection(slug);
-          if (!collectionRes.isOk() || !collectionRes.value) {
-            return err(new Error("Collection does not exist"));
-          }
-          collection = collectionRes.value;
-        }
-        if (!collection) {
-          return err(new Error("Collection does not exist"));
-        }
-
         const floorRes = await recalculateFloorPrice(collection);
         if (floorRes.isOk()) {
           const floor = floorRes.value;
@@ -895,6 +894,7 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
 
     return ok(null);
   } catch (error) {
+    console.error(error);
     return err(error as Error);
   }
 }
