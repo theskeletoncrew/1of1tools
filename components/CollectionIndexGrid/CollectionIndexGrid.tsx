@@ -19,8 +19,8 @@ interface Props {
 }
 
 export enum ViewType {
-  List,
-  Grid,
+  LIST = "LIST",
+  GRID = "GRID",
 }
 
 const CollectionIndexGrid: React.FC<Props> = ({
@@ -34,14 +34,14 @@ const CollectionIndexGrid: React.FC<Props> = ({
       <div
         className={classNames(
           "mt-4",
-          view === ViewType.Grid
+          view === ViewType.GRID
             ? "grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-6"
             : "flex flex-col"
         )}
       >
         <div
           className={
-            view === ViewType.Grid
+            view === ViewType.GRID
               ? "hidden"
               : "flex mx-2 sm:mx-4 my-4 text-indigo-400 border-b border-indigo-300 pb-4"
           }
@@ -169,7 +169,7 @@ const CollectionIndexGrid: React.FC<Props> = ({
               key={item.slug}
               className={classNames(
                 "text-center flex items-center justify-center group relative",
-                view == ViewType.Grid
+                view == ViewType.GRID
                   ? "flex-col"
                   : "gap-y-4 hover:bg-indigo-300 hover:bg-opacity-5 p-1 sm:p-4 rounded-2xl"
               )}
@@ -177,7 +177,7 @@ const CollectionIndexGrid: React.FC<Props> = ({
               <div
                 className={classNames(
                   "aspect-1 rounded-lg overflow-hidden bg-indigo-500 bg-opacity-5 relative",
-                  view === ViewType.Grid
+                  view === ViewType.GRID
                     ? "w-full"
                     : "w-[80px] flex justify-center items-center"
                 )}
@@ -203,7 +203,7 @@ const CollectionIndexGrid: React.FC<Props> = ({
                       data-orig-url={item.imageURL ?? ""}
                       className={classNames(
                         "mx-auto w-full sm:w-auto",
-                        view === ViewType.Grid
+                        view === ViewType.GRID
                           ? "absolute group-hover:scale-125 transition-transform duration-300"
                           : ""
                       )}
@@ -214,7 +214,7 @@ const CollectionIndexGrid: React.FC<Props> = ({
               <span
                 className={classNames(
                   "block truncate",
-                  view === ViewType.Grid
+                  view === ViewType.GRID
                     ? "w-full text-center text-xl mt-2"
                     : "flex-[3] text-left text-sm sm:text-base"
                 )}
@@ -223,7 +223,7 @@ const CollectionIndexGrid: React.FC<Props> = ({
                   <a
                     className={classNames(
                       "w-full block truncate text-white group-hover:text-indigo-300",
-                      view === ViewType.List ? "px-3 py-3" : ""
+                      view === ViewType.LIST ? "px-3 py-3" : ""
                     )}
                   >
                     {item.name}
@@ -233,7 +233,7 @@ const CollectionIndexGrid: React.FC<Props> = ({
               <span
                 className={classNames(
                   "font-light text-sm",
-                  view === ViewType.Grid
+                  view === ViewType.GRID
                     ? "w-full"
                     : "hidden lg:block flex-1 text-right"
                 )}
@@ -242,11 +242,11 @@ const CollectionIndexGrid: React.FC<Props> = ({
                   <a
                     className={classNames(
                       "w-full block text-indigo-400",
-                      view === ViewType.List ? "px-3 py-4" : ""
+                      view === ViewType.LIST ? "px-3 py-4" : ""
                     )}
                   >
                     {item.mintAddresses.length}{" "}
-                    <span className={view == ViewType.List ? "hidden" : ""}>
+                    <span className={view == ViewType.LIST ? "hidden" : ""}>
                       NFTs
                     </span>
                   </a>
@@ -255,7 +255,7 @@ const CollectionIndexGrid: React.FC<Props> = ({
               <span
                 className={classNames(
                   "font-light text-sm",
-                  view === ViewType.Grid ? "w-full" : "flex-1 text-right"
+                  view === ViewType.GRID ? "w-full" : "flex-1 text-right"
                 )}
               >
                 <Link href={floorUrl ?? "#"}>
@@ -265,10 +265,10 @@ const CollectionIndexGrid: React.FC<Props> = ({
                     rel="noreferrer"
                     className={classNames(
                       "z-2 text-indigo-400",
-                      view === ViewType.List
+                      view === ViewType.LIST
                         ? "px-3 py-4 w-full h-full block"
                         : "text-xs text-indigo-400 absolute top-2 right-2 bg-black px-2 py-1 rounded-lg bg-opacity-75",
-                      view === ViewType.Grid &&
+                      view === ViewType.GRID &&
                         (!item.floor || !item.floor.listing)
                         ? "hidden"
                         : ""
@@ -303,7 +303,7 @@ const CollectionIndexGrid: React.FC<Props> = ({
               <span
                 className={classNames(
                   "font-light text-sm hidden",
-                  view === ViewType.Grid ? "" : "flex-1 text-right lg:block"
+                  view === ViewType.GRID ? "" : "flex-1 text-right lg:block"
                 )}
               >
                 <Link
@@ -316,7 +316,7 @@ const CollectionIndexGrid: React.FC<Props> = ({
                   <a
                     className={classNames(
                       "w-full text-indigo-400 block",
-                      view === ViewType.List ? "px-3 py-4" : ""
+                      view === ViewType.LIST ? "px-3 py-4" : ""
                     )}
                     title={
                       item.athSale
@@ -364,14 +364,14 @@ const CollectionIndexGrid: React.FC<Props> = ({
               <span
                 className={classNames(
                   "font-light text-sm hidden",
-                  view === ViewType.Grid ? "" : "flex-1 text-right lg:block"
+                  view === ViewType.GRID ? "" : "flex-1 text-right lg:block"
                 )}
               >
                 <Link href={`/boutique/${item.slug}`}>
                   <a
                     className={classNames(
                       "w-full block text-indigo-400",
-                      view === ViewType.List ? "px-3 py-4" : ""
+                      view === ViewType.LIST ? "px-3 py-4" : ""
                     )}
                     title="1 Day Volume"
                   >
@@ -398,14 +398,14 @@ const CollectionIndexGrid: React.FC<Props> = ({
               <span
                 className={classNames(
                   "font-light text-sm hidden",
-                  view === ViewType.Grid ? "" : "flex-1 text-right sm:block"
+                  view === ViewType.GRID ? "" : "flex-1 text-right sm:block"
                 )}
               >
                 <Link href={`/boutique/${item.slug}`}>
                   <a
                     className={classNames(
                       "w-full block text-indigo-400",
-                      view === ViewType.List ? "px-3 py-4" : ""
+                      view === ViewType.LIST ? "px-3 py-4" : ""
                     )}
                     title="1 Week Volume"
                   >
@@ -430,14 +430,14 @@ const CollectionIndexGrid: React.FC<Props> = ({
               <span
                 className={classNames(
                   "font-light text-sm",
-                  view === ViewType.Grid ? "hidden" : "flex-1 text-right"
+                  view === ViewType.GRID ? "hidden" : "flex-1 text-right"
                 )}
               >
                 <Link href={`/boutique/${item.slug}`}>
                   <a
                     className={classNames(
                       "w-full block text-indigo-400",
-                      view === ViewType.List ? "px-3 py-4" : ""
+                      view === ViewType.LIST ? "px-3 py-4" : ""
                     )}
                     title="Total Volume"
                   >

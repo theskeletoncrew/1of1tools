@@ -21,7 +21,7 @@ apiRoute.get(async (req, res) => {
     const { cursor, limit: limitStr, sort: sortStr } = req.query;
     const limit = limitStr ? parseInt(limitStr.toString()) : 0;
     const sort = sortStr
-      ? parseInt(sortStr.toString())
+      ? (sortStr.toString() as CollectionSortType)
       : CollectionSortType.TOTAL_VOLUME_DESC;
 
     const collectionsRes = await getBoutiqueCollections(

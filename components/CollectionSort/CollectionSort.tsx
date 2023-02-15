@@ -4,13 +4,13 @@ import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { classNames } from "utils";
 
 export enum CollectionSortType {
-  FLOOR_DESC,
-  ATH_SALE_DESC,
-  DAILY_VOLUME_DESC,
-  WEEKLY_VOLUME_DESC,
-  TOTAL_VOLUME_DESC,
-  SIZE_ASC,
-  NAME_ASC,
+  FLOOR_DESC = "FLOOR_DESC",
+  ATH_SALE_DESC = "ATH_SALE_DESC",
+  DAILY_VOLUME_DESC = "DAILY_VOLUME_DESC",
+  WEEKLY_VOLUME_DESC = "WEEKLY_VOLUME_DESC",
+  TOTAL_VOLUME_DESC = "TOTAL_VOLUME_DESC",
+  SIZE_ASC = "SIZE_ASC",
+  NAME_ASC = "NAME_ASC",
 }
 
 interface Props {

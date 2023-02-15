@@ -20,6 +20,7 @@ import { NFTListings } from "models/nftListings";
 import NFTCollectionFilter, {
   NFTFilterType,
 } from "components/NFTCollectionFilter/NFTCollectionFilter";
+import { parseCookies, setCookie } from "nookies";
 
 interface Props {
   collection: Collection;
@@ -45,13 +46,18 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 };
 
 const CollectionPage: NextPage<Props> = ({ collection }) => {
+  const cookies = parseCookies();
+  const filterPref = cookies["oo_filter"];
+
   const [isLoading, setLoading] = useState(true);
   const [nftsMetadata, setNFTsMetadata] = useState<NFTMetadata[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string>();
   const [listings, setListings] = useState<NFTListings[]>([]);
-  const [filter, setFilter] = useState<NFTFilterType>(NFTFilterType.ALL_ITEMS);
+  const [filter, setFilter] = useState<NFTFilterType>(
+    filterPref ? (filterPref as NFTFilterType) : NFTFilterType.ALL_ITEMS
+  );
 
   const getMoreNfts = async (
     currentPage: number,
@@ -125,14 +131,12 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
   };
 
   useEffect(() => {
-    getMoreNfts(0, NFTFilterType.ALL_ITEMS).then(() => {
-      loadListings();
-    });
-  }, []);
+    getMoreNfts(0, filter);
+  }, [filter, listings]);
 
   useEffect(() => {
-    getMoreNfts(0, filter);
-  }, [filter]);
+    loadListings();
+  }, []);
 
   const title = `1of1.tools | ${collection.name} NFT Listings`;
   const url = `https://1of1.tools/boutique/${collection.slug}`;
@@ -193,7 +197,14 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
             <div className="mx-1 flex items-end justify-end h-[40px]">
               <NFTCollectionFilter
                 filter={filter}
-                didChangeFilter={(newFilter) => setFilter(newFilter)}
+                didChangeFilter={(newFilter) => {
+                  setFilter(newFilter);
+
+                  setCookie(null, "oo_filter", newFilter, {
+                    maxAge: 30 * 24 * 60 * 60,
+                    path: "/",
+                  });
+                }}
               />
             </div>
           )}

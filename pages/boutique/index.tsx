@@ -30,10 +30,15 @@ import {
 import { DiscordGuild, DiscordGuildChannelIdPair } from "models/account";
 import { useSession } from "next-auth/react";
 import NotificationSubscriptionModal from "components/NotificationSubscriptionModal/NotificationSubscriptionModal";
+import { parseCookies, setCookie } from "nookies";
 
 const MAX_BOUTIQUE_COLLECTION_SIZE = 250;
 
 const IndexPage: NextPage = () => {
+  const cookies = parseCookies();
+  const sortPref = cookies["oo_sort"];
+  const viewPref = cookies["oo_view"];
+
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setLoading] = useState(false);
   const [cursor, setCursor] = useState<string>();
@@ -41,9 +46,13 @@ const IndexPage: NextPage = () => {
   const [submitCollectionModalShown, setSubmitCollectionModalShown] =
     useState(false);
   const [sort, setSort] = useState<CollectionSortType>(
-    CollectionSortType.TOTAL_VOLUME_DESC
+    sortPref
+      ? (sortPref as CollectionSortType)
+      : CollectionSortType.TOTAL_VOLUME_DESC
   );
-  const [view, setView] = useState<ViewType>(ViewType.Grid);
+  const [view, setView] = useState<ViewType>(
+    viewPref ? (viewPref as ViewType) : ViewType.GRID
+  );
 
   const [isShowingNotificationsModal, setIsShowingNotificationsModal] =
     useState(false);
@@ -380,29 +389,48 @@ const IndexPage: NextPage = () => {
                 sort={sort}
                 didChangeSort={(newSort) => {
                   setSort(newSort);
+
+                  setCookie(null, "oo_sort", newSort, {
+                    maxAge: 30 * 24 * 60 * 60,
+                    path: "/",
+                  });
                 }}
               />
             </div>
             <div className="border border-1 text-indigo-600 border-indigo-600 h-full rounded-lg flex gap-0 items-center justify-center order-0 md:order-1 overflow-hidden">
               <button
                 className="px-4 h-full hover:bg-indigo-900 hover:bg-opacity-50"
-                onClick={() => setView(ViewType.Grid)}
+                onClick={() => {
+                  setView(ViewType.GRID);
+
+                  setCookie(null, "oo_view", ViewType.GRID, {
+                    maxAge: 30 * 24 * 60 * 60,
+                    path: "/",
+                  });
+                }}
               >
                 <Squares2X2Icon
                   className={classNames(
                     "w-5 h-5",
-                    view === ViewType.Grid ? "text-indigo-400" : ""
+                    view === ViewType.GRID ? "text-indigo-400" : ""
                   )}
                 />
               </button>
               <button
                 className="px-4 h-full hover:bg-indigo-900 hover:bg-opacity-50 border-l border-indigo-600"
-                onClick={() => setView(ViewType.List)}
+                onClick={() => {
+                  setView(ViewType.LIST);
+
+                  setCookie(null, "oo_view", ViewType.LIST, {
+                    maxAge: 30 * 24 * 60 * 60,
+                    path: "/",
+                  });
+                }}
               >
                 <Bars3Icon
                   className={classNames(
                     "w-5 h-5",
-                    view === ViewType.List ? "text-indigo-400" : ""
+                    view === ViewType.LIST ? "text-indigo-400" : ""
                   )}
                 />
               </button>
@@ -417,7 +445,9 @@ const IndexPage: NextPage = () => {
                   onClick={() => {
                     session && session.user?.id
                       ? setupNotifications()
-                      : alert("You must be signed in to track a collection.");
+                      : toast.error(
+                          "You must be signed in to track a collection."
+                        );
                   }}
                   className="h-full flex gap-1 items-center px-4 text-sky-500 hover:text-sky-500 hover:bg-sky-900 hover:bg-opacity-50"
                 >
@@ -445,6 +475,11 @@ const IndexPage: NextPage = () => {
                 sort={sort}
                 updateSort={(newSort) => {
                   setSort(newSort);
+
+                  setCookie(null, "oo_sort", newSort, {
+                    maxAge: 30 * 24 * 60 * 60,
+                    path: "/",
+                  });
                 }}
                 view={view}
               />

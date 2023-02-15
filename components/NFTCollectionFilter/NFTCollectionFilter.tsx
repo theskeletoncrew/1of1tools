@@ -4,8 +4,8 @@ import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { classNames } from "utils";
 
 export enum NFTFilterType {
-  ALL_ITEMS,
-  LISTED_ITEMS,
+  ALL_ITEMS = "ALL_ITEMS",
+  LISTED_ITEMS = "LISTED_ITEMS",
 }
 
 interface Props {
