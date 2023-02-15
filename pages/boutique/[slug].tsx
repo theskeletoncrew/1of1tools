@@ -76,7 +76,11 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
       (currentPage + 1) * NFTS_PER_PAGE
     );
 
-    const nftsRes = await OneOfOneToolsClient.nfts(pageOfMintAddresses);
+    const nftsRes = await OneOfOneToolsClient.nfts(
+      pageOfMintAddresses,
+      true,
+      false
+    );
 
     if (nftsRes.isErr()) {
       toast.error("Failed to load more nfts: " + nftsRes.error.message);

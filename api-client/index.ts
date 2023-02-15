@@ -20,7 +20,8 @@ export const SERVER_URL =
 export namespace OneOfOneToolsClient {
   export async function nfts(
     mintAccounts: string[],
-    retry: boolean = true
+    retry: boolean = true,
+    filterOutFailures: boolean = true
   ): Promise<Result<NFTMetadata[], Error>> {
     if (mintAccounts.length == 0) {
       return ok([]);
@@ -66,9 +67,11 @@ export namespace OneOfOneToolsClient {
         }
 
         // finally anything we couldnt populate in the retry, we should just filter out
-        nfts = nfts.filter(
-          (n) => n.onChainData != null && n.offChainData != null
-        );
+        if (filterOutFailures) {
+          nfts = nfts.filter(
+            (n) => n.onChainData != null && n.offChainData != null
+          );
+        }
         return ok(nfts);
       }
       return err(new OneofOneToolsAPIError(response, responseJSON));
