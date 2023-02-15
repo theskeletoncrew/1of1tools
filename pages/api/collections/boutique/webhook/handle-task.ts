@@ -93,17 +93,22 @@ apiRoute.post(async (req, res) => {
       return;
     }
 
-    console.log(event);
     const addRes = await addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
       event
     );
     if (!addRes.isOk()) {
+      console.log("Unmonitored Event");
+      console.log(event);
+
       // not a monitored NFT for creator or collection address
       res.status(200).json({
         success: true,
       });
       return;
     }
+
+    console.log("Monitored Event");
+    console.log(event);
 
     await sendNotifications(transaction);
 

@@ -55,6 +55,8 @@ apiRoute.post(async (req, res) => {
 
       const nftEvent = transaction.events.nft ? transaction.events.nft : null;
       if (!nftEvent || !nftEvent.nfts || nftEvent.nfts.length == 0) {
+        console.log("NON NFT Transaction");
+        console.log(transaction);
         continue;
       }
 
