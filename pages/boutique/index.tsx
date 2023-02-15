@@ -218,7 +218,6 @@ const IndexPage: NextPage = () => {
 
     const collection = {
       name: collectionName,
-      nameLowercase: collectionName?.toLowerCase(),
       slug: slug,
       collectionAddress: collectionAddress,
       imageURL: imageURL,

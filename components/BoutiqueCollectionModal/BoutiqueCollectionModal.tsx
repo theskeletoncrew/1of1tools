@@ -90,13 +90,11 @@ const BoutiqueCollectionsModal: React.FC<Props> = ({
                 name="slug"
                 defaultValue={slug}
                 placeholder="ex. skeleton-crew-skulls"
-                onBlur={(e) => {
+                onChange={(e) => {
                   e.currentTarget.value = e.currentTarget.value
                     .toLowerCase()
                     .replace(/[\s]+/g, "-")
                     .replace(/[^a-z0-9\-]/g, "");
-                }}
-                onChange={(e) => {
                   setSlug(e.currentTarget.value);
                 }}
               />

@@ -137,6 +137,10 @@ const SignupModal: React.FC<Props> = ({ isShowing, close, saveAccount }) => {
                   type="text"
                   placeholder="cosimo"
                   onChange={(e) => {
+                    e.currentTarget.value = e.currentTarget.value
+                      .toLowerCase()
+                      .replace(/[\s]+/g, "-")
+                      .replace(/[^a-z0-9\-]/g, "");
                     setUsername(e.target.value);
                   }}
                   value={username}

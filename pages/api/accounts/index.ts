@@ -63,7 +63,11 @@ apiRoute.post(async (req, res) => {
       return;
     }
 
-    const username: string = req.body.username;
+    const username: string = req.body.username
+      ?.toString()
+      .toLowerCase()
+      .replace(/[\s]+/g, "-")
+      .replace(/[^a-z0-9\-]/g, "");
     if (username === undefined || username.length < 3) {
       res
         .status(400)

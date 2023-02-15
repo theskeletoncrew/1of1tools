@@ -58,6 +58,12 @@ apiRoute.post(async (req, res) => {
 
     collection.approved = false;
 
+    collection.slug = collection.slug
+      .toLowerCase()
+      .replace(/[\s]+/g, "-")
+      .replace(/[^a-z0-9\-]/g, "");
+    collection.nameLowercase = collection.name.toLowerCase();
+
     const collectionsRes = await addBoutiqueCollection(collection);
     if (!collectionsRes.isOk()) {
       res
