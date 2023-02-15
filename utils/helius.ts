@@ -138,9 +138,9 @@ export const humanReadableEventPastTense = (eventType: string) => {
     case TransactionType.NFT_AUCTION_CANCELLED:
       return "Cancelled auction";
     case TransactionType.BURN:
-      return "NFT Burned";
+      return "NFT burned";
     case TransactionType.BURN_NFT:
-      return "NFT Burned";
+      return "NFT burned";
     case TransactionType.TRANSFER:
       return "NFT transferred";
     case TransactionType.STAKE_TOKEN:
