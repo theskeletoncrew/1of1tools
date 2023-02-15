@@ -260,7 +260,7 @@ const Home: NextPage = () => {
                                       className={`${styles.dropImage} flex flex-col gap-2 justify-center items-center w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs`}
                                     >
                                       <ExclamationCircleIcon className="w-8 h-8" />
-                                      <span>Image Unavailable</span>
+                                      <span>Too Large for Preview</span>
                                     </div>
                                   }
                                   alt={collection.name}
@@ -377,9 +377,10 @@ const Home: NextPage = () => {
                                 unloader={
                                   <div
                                     className={`${styles.dropImage} flex flex-col gap-2 justify-center items-center w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs`}
+                                    data-url={imgURL}
                                   >
                                     <ExclamationCircleIcon className="w-8 h-8" />
-                                    <span>Image Unavailable</span>
+                                    <span>Too Large for Preview</span>
                                   </div>
                                 }
                                 alt={event.description}
