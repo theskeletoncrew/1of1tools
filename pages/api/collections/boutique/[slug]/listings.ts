@@ -96,7 +96,11 @@ apiRoute.get(async (req, res) => {
 
     res.status(200).json({
       success: true,
-      listings: listings.filter((item) => item.activeListings.length > 0),
+      listings: listings.filter(
+        (item) =>
+          item.activeListings.length > 0 &&
+          collection.mintAddresses.includes(item.mint)
+      ),
     });
   } catch (error) {
     res.status(500).json({
