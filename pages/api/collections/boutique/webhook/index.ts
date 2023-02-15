@@ -59,12 +59,10 @@ apiRoute.post(async (req, res) => {
       }
 
       const taskName = `projects/${project}/locations/${location}/queues/${queue}/tasks/${
-        nftEvent.nfts[0]?.mint
-      }-${
-        transaction.signature.slice(0, 5) +
+        nftEvent.nfts[0]?.mint.slice(0, 4) +
         "_" +
-        transaction.signature.slice(-5)
-      }`;
+        nftEvent.nfts[0]?.mint.slice(-4)
+      }-${transaction.signature}`;
 
       const [response] = await cloudTasksClient.createTask({
         parent: tasksParent,
