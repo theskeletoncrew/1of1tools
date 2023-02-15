@@ -19,6 +19,7 @@ import Link from "next/link";
 import {
   ArrowLeftCircleIcon,
   ArrowRightCircleIcon,
+  ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Collection } from "models/collection";
 import { OneOfOneToolsClient } from "api-client";
@@ -31,6 +32,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { LazyLoadingImage } from "components/LoadingImage/LoadingImage";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -231,6 +233,13 @@ const Home: NextPage = () => {
             ) : (
               <>
                 {boutiqueCollections?.map((collection) => {
+                  const imgURL = collection.imageURL
+                    ? `/api/assets/collection/${
+                        collection.slug
+                      }/640?originalURL=${encodeURIComponent(
+                        collection.imageURL
+                      )}`
+                    : "";
                   return (
                     <SwiperSlide key={`boutique-collection-${collection.slug}`}>
                       <div className={styles.rowDrop}>
@@ -238,18 +247,25 @@ const Home: NextPage = () => {
                           <a className={`${styles.rowDropImageWrapper} group`}>
                             {collection.imageURL && (
                               <div className={styles.dropImageWrapper}>
-                                <img
-                                  className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
-                                  src={
-                                    collection.imageURL
-                                      ? `/api/assets/collection/${
-                                          collection.slug
-                                        }/640?originalURL=${encodeURIComponent(
-                                          collection.imageURL
-                                        )}`
-                                      : ""
+                                <LazyLoadingImage
+                                  src={imgURL}
+                                  loader={
+                                    <div
+                                      className={`${styles.dropImage} w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs animate-pulse`}
+                                      data-url={imgURL}
+                                    ></div>
+                                  }
+                                  unloader={
+                                    <div
+                                      className={`${styles.dropImage} flex flex-col gap-2 justify-center items-center w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs`}
+                                    >
+                                      <ExclamationCircleIcon className="w-8 h-8" />
+                                      <span>Image Unavailable</span>
+                                    </div>
                                   }
                                   alt={collection.name}
+                                  data-orig-url={collection.imageURL}
+                                  className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
                                 />
                               </div>
                             )}
@@ -336,25 +352,42 @@ const Home: NextPage = () => {
                   const metadata = latestBoutiqueEventsMetadata?.find(
                     (m) => m.mint === event.mint
                   );
+                  const imgURL = metadata?.offChainData?.image
+                    ? `/api/assets/nft/${
+                        event.mint
+                      }/640?originalURL=${encodeURIComponent(
+                        metadata.offChainData.image
+                      )}`
+                    : "";
+
                   return (
                     <SwiperSlide key={`activity-${event.signature}`}>
                       <div className={styles.rowDrop}>
                         <Link href={`/nft/${event.mint}`}>
                           <a className={`${styles.rowDropImageWrapper} group`}>
                             <div className={styles.dropImageWrapper}>
-                              {metadata?.offChainData?.image ? (
-                                <img
-                                  className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
-                                  src={`/api/assets/nft/${
-                                    event.mint
-                                  }/640?originalURL=${encodeURIComponent(
-                                    metadata.offChainData.image
-                                  )}`}
-                                  alt={event.description}
-                                />
-                              ) : (
-                                <div className={`${styles.dropImage}`} />
-                              )}
+                              <LazyLoadingImage
+                                src={imgURL}
+                                loader={
+                                  <div
+                                    className={`${styles.dropImage} w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs animate-pulse`}
+                                    data-url={imgURL}
+                                  ></div>
+                                }
+                                unloader={
+                                  <div
+                                    className={`${styles.dropImage} flex flex-col gap-2 justify-center items-center w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs`}
+                                  >
+                                    <ExclamationCircleIcon className="w-8 h-8" />
+                                    <span>Image Unavailable</span>
+                                  </div>
+                                }
+                                alt={event.description}
+                                data-orig-url={
+                                  metadata?.offChainData?.image ?? ""
+                                }
+                                className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
+                              />
                             </div>
                             <span className={styles.rowDropDescriptionLong}>
                               <h5 className={styles.rowDropTitleLong}>
