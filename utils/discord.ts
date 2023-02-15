@@ -27,14 +27,15 @@ export const discordEmbedForTransaction = (
   const sellerURL = `https://1of1.tools/wallet/${nftEvent.seller}`;
   const buyerURL = `https://1of1.tools/wallet/${nftEvent.buyer}`;
   const sellerText = nftEvent?.seller
-    ? ` by [${nftEvent.seller}](${sellerURL})`
+    ? ` by [${shortenedAddress(nftEvent.seller)}](${sellerURL})`
     : "";
+  const buyerRelationship = nftEvent.seller ? "to" : "by";
   const buyerText = nftEvent?.buyer
-    ? ` to [${nftEvent.buyer}](${buyerURL})`
+    ? ` ${buyerRelationship} [${shortenedAddress(nftEvent.buyer)}](${buyerURL})`
     : "";
   const sourceText = url
-    ? `on [${humanReadableSource(source)}](url)`
-    : `on ${humanReadableSource(source)}`;
+    ? ` on [${humanReadableSource(source)}](${url})`
+    : ` on ${humanReadableSource(source)}`;
 
   const description = `${typeText}${sellerText}${buyerText}${sourceText}`;
 
@@ -44,8 +45,8 @@ export const discordEmbedForTransaction = (
   let fields: APIEmbedField[] = [];
 
   const nftAttributes: { [key: string]: string } = {
-    "ATTRIBUTE 1": "COMING SOON",
-    "ATTRIBUTE 2": "COMING SOON",
+    "ATTRIB 1": "Coming Soon",
+    "ATTRIB 2": "Coming Soon",
   };
 
   Object.keys(nftAttributes).forEach((key) => {
