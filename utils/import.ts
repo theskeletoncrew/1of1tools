@@ -134,7 +134,13 @@ export const importAllEventsForCollection = async (
             }
           }
 
-          await addBoutiqueCollectionEvent(collection.slug, event);
+          const result = await addBoutiqueCollectionEvent(
+            collection.slug,
+            event
+          );
+          if (result.isErr()) {
+            console.error(result.error.message);
+          }
         }
       });
 
