@@ -38,21 +38,32 @@ export const discordEmbedForTransaction = (
 
   const description = `${typeText}${sellerText}${buyerText}${sourceText}`;
 
-  let fields: RestOrArray<APIEmbedField> = [];
+  const nftName = "NFT Name Coming Soon";
+  const nftDescription = "NFT Description Coming Soon";
 
-  // Change this to NFT description
-  // if (nft?.mint) {
-  // fields.push({ name: "Mint", value: nft.mint });
-  // }
+  let fields: APIEmbedField[] = [];
+
+  const nftAttributes: { [key: string]: string } = {
+    "ATTRIBUTE 1": "COMING SOON",
+    "ATTRIBUTE 2": "COMING SOON",
+  };
+
+  Object.keys(nftAttributes).forEach((key) => {
+    fields.push({
+      name: key,
+      value: nftAttributes[key]!,
+      inline: true,
+    });
+  });
 
   fields.push({
-    name: "NFT Description",
-    value: "Coming Soon",
+    name: "Description",
+    value: nftDescription,
   });
 
   const embed = new EmbedBuilder()
     .setColor(0x3730a3)
-    .setTitle(title)
+    .setTitle(nftName)
     .setURL(url)
     .setAuthor({
       name: shortPubKey(transaction.signature),
