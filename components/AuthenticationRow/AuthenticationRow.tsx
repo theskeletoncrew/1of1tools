@@ -184,7 +184,7 @@ const AuthenticationRow: React.FC = () => {
                   )}
                 >
                   <span>
-                    welcome back{" "}
+                    <span className="hidden md:inline">welcome back </span>
                     {session.user?.account
                       ? `@${session.user.account.username}`
                       : shortPubKey(session.user?.id)}

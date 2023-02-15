@@ -62,15 +62,15 @@
 }
 
 .rowDropNav {
-  @apply absolute top-1/2 w-10 h-10 z-10 text-white text-opacity-75 hover:text-opacity-100 cursor-pointer;
+  @apply absolute top-1/2 w-8 h-8 sm:w-10 sm:h-10 z-10 text-white text-opacity-75 hover:text-opacity-100 cursor-pointer;
 }
 
 .rowDropNavPrev {
-  @apply -left-14;
+  @apply -left-10 sm:-left-14;
 }
 
 .rowDropNavNext {
-  @apply -right-14;
+  @apply -right-10 sm:-right-14;
 }
 
 .rowDropMetaDetail {

@@ -177,7 +177,10 @@ const Home: NextPage = () => {
         </div>
         <div className={`mt-10 ${styles.homeRow}`}>
           <div className="flex justify-between items-center">
-            <h5 className={styles.rowTitle}>Popular Boutique Collections</h5>
+            <h5 className={styles.rowTitle}>
+              <span className="hidden sm:inline">Popular </span>Boutique
+              Collections
+            </h5>
             <Link href="/boutique">
               <a>See All</a>
             </Link>
