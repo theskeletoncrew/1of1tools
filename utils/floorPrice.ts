@@ -21,13 +21,13 @@ export const recalculateFloorPrice = async (
 
     let searchFilter = {};
 
-    if (collection.collectionAddress) {
-      searchFilter = {
-        verifiedCollectionAddresses: [collection.collectionAddress],
-      };
-    } else if (collection.firstVerifiedCreator) {
+    if (collection.firstVerifiedCreator) {
       searchFilter = {
         firstVerifiedCreators: [collection.firstVerifiedCreator],
+      };
+    } else if (collection.collectionAddress) {
+      searchFilter = {
+        verifiedCollectionAddresses: [collection.collectionAddress],
       };
     } else {
       console.error(

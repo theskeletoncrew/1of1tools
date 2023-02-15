@@ -58,15 +58,21 @@ export const importAllEventsForCollection = async (
     nftCollectionFilters: {},
   };
 
-  if (collection.collectionAddress) {
+  if (collection.firstVerifiedCreator) {
+    query.nftCollectionFilters.firstVerifiedCreator = [
+      collection.firstVerifiedCreator,
+    ];
+  } else if (collection.collectionAddress) {
     query.nftCollectionFilters.verifiedCollectionAddress = [
       collection.collectionAddress,
     ];
   } else {
-    query.nftCollectionFilters.firstVerifiedCreator = [
-      collection.firstVerifiedCreator,
-    ];
+    console.log(
+      `Collection ${collection.name} has neither a verified collection address or verified creator address`
+    );
+    return err(new Error("Failed to load listings"));
   }
+
   let options: { [key: string]: any } = {
     limit: 1000,
   };
