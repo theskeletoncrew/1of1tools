@@ -31,7 +31,7 @@ export const discordEmbedForTransaction = async (
       ? `https://1of1.tools/wallet/${nftEvent.seller}`
       : null;
     let sellerName = shortenedAddress(nftEvent.seller);
-    let sellerPt2: string | null = null;
+    let sellerPt2: string = "";
 
     const sellerTwitter = await loadTwitterName(nftEvent.seller);
     if (sellerTwitter) {
@@ -53,7 +53,7 @@ export const discordEmbedForTransaction = async (
       ? `https://1of1.tools/wallet/${nftEvent.buyer}`
       : null;
     let buyerName = shortenedAddress(nftEvent.buyer);
-    let buyerPt2: string | null = null;
+    let buyerPt2: string = "";
 
     const buyerTwitter = await loadTwitterName(nftEvent.buyer);
     if (buyerTwitter) {
