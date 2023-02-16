@@ -15,26 +15,26 @@
 }
 
 .rowDropTitle {
-  @apply text-sm text-white truncate px-4 h-[20px];
+  @apply text-sm text-white truncate h-[20px];
 }
 
 .rowDropDescriptionLong {
-  @apply text-center text-indigo-400 py-2 h-[80px] text-xs flex flex-col items-center justify-center gap-1;
+  @apply text-center text-indigo-400 py-2 h-[100px] px-2 text-xs flex flex-col items-center justify-center gap-1;
 }
 
 .rowDropName {
-  @apply whitespace-nowrap truncate w-full px-4 text-sm;
+  @apply whitespace-nowrap truncate w-full text-sm;
 }
 
 .rowDropTimestamp {
-  @apply text-[11px] text-slate-400;
+  @apply text-[11px] text-slate-400 truncate w-full;
 }
 
 .rowDropTitleLong {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  @apply text-xs text-white overflow-hidden text-ellipsis px-4 justify-center items-center;
+  @apply text-xs text-white overflow-hidden text-ellipsis px-3 justify-center items-center;
 }
 
 .rowDropCategory {

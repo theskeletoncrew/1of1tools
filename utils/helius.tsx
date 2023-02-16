@@ -198,17 +198,44 @@ export const humanReadableTransaction = (
   return description;
 };
 
-export const humanReadableEventShort = (event: OneOfOneNFTEvent): string => {
+export const humanReadableEventShort = (
+  event: OneOfOneNFTEvent,
+  denominationString: string | null = null
+): JSX.Element => {
   const source = event.source;
   const type = event.type;
   const nft = event.mint;
   const url = nft ? urlForSource(source, event.mint) : null;
-  const description = `${humanReadableEventPastTense(event.type)}${
+  const showAmount =
     isEventTypeAmountDisplayable(event.type as TransactionType) &&
-    event.amount > 0
-      ? `: ${event.amount / LAMPORTS_PER_SOL} SOL`
-      : ""
-  }`;
+    event.amount > 0;
+  const description = (
+    <span>
+      {humanReadableEventPastTense(event.type)}:{" "}
+      {showAmount ? (
+        <span className="whitespace-nowrap inline-flex items-center">
+          <span>{event.amount / LAMPORTS_PER_SOL}</span>
+          {denominationString ? (
+            denominationString
+          ) : (
+            <span className="inline-block" style={{ paddingLeft: "1px" }}>
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <use href="#solana-icon"></use>
+              </svg>
+            </span>
+          )}
+        </span>
+      ) : (
+        ""
+      )}
+    </span>
+  );
   return description;
 };
 

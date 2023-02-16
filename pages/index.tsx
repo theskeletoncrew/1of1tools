@@ -33,6 +33,7 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { LazyLoadingImage } from "components/LoadingImage/LoadingImage";
 import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
+import SolanaIcon from "components/Icons/SolanaIcon";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
