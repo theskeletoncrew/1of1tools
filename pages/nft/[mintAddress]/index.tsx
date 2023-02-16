@@ -58,7 +58,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const maxRetries = 1;
     for (let i = 0; i <= maxRetries; i++) {
-      let metadataRes = await OneOfOneToolsClient.nfts([mintAddress], true);
+      let metadataRes = await OneOfOneToolsClient.nfts([mintAddress]);
       if (metadataRes.isErr()) {
         throw new Error("Unable to load NFT: " + metadataRes.error.message);
       }

@@ -1,6 +1,7 @@
 import { Metaplex } from "@metaplex-foundation/js";
 import { Connection } from "@solana/web3.js";
 import { addNFTMetadata } from "db";
+import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import { notEmpty, tryPublicKey } from "utils";
@@ -60,7 +61,8 @@ apiRoute.post(async (req, res) => {
       .nfts()
       .findByMint({ mintAddress: mintAddressPublicKey });
 
-    const metadata: { [key: string]: any } = {
+    const metadata: OneOfOneNFTMetadata = {
+      mint: mintAddress,
       updateAuthorityAddress: nft.updateAuthorityAddress.toString(),
       name: nft.name,
       symbol: nft.symbol,
@@ -95,6 +97,8 @@ apiRoute.post(async (req, res) => {
       description: nft.json?.description ?? null,
       externalURL: nft.json?.external_url ?? null,
       image: nft.json?.image ?? null,
+      cachedImage: null,
+      attributes: [],
     };
 
     nft.json?.attributes?.forEach((attribute, i) => {

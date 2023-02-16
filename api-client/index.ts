@@ -11,6 +11,7 @@ import { Account } from "models/account";
 import { Collection } from "models/collection";
 import { CollectionSortType } from "components/CollectionSort/CollectionSort";
 import { NFTListings } from "models/nftListings";
+import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
 
 export const SERVER_URL =
   process.env.NODE_ENV !== "production"
@@ -18,10 +19,42 @@ export const SERVER_URL =
     : "https://1of1.tools";
 
 export namespace OneOfOneToolsClient {
+  export async function cachedNfts(
+    mintAccounts: string[]
+  ): Promise<Result<OneOfOneNFTMetadata[], Error>> {
+    if (mintAccounts.length == 0) {
+      return ok([]);
+    }
+    try {
+      const response = await fetch(`${SERVER_URL}/api/nfts/metadata`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mintAccounts: mintAccounts,
+          useCache: true,
+        }),
+      });
+      const responseJSON = await response.json();
+
+      if (response.ok) {
+        const nfts = responseJSON.nfts as OneOfOneNFTMetadata[];
+        return ok(nfts);
+      }
+      return err(new OneofOneToolsAPIError(response, responseJSON));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
   export async function nfts(
     mintAccounts: string[],
-    retry: boolean = true,
-    filterOutFailures: boolean = true
+    options?: {
+      retry?: boolean; //true
+      filterOutFailures?: boolean; //true
+    }
   ): Promise<Result<NFTMetadata[], Error>> {
     if (mintAccounts.length == 0) {
       return ok([]);
@@ -43,14 +76,14 @@ export namespace OneOfOneToolsClient {
         // retry any nfts we couldnt pull
         let nfts = responseJSON.nfts as NFTMetadata[];
 
-        if (retry) {
+        if (options?.retry !== false) {
           const failedNfts = nfts.filter(
             (n) => n.onChainData == null || n.offChainData == null
           );
           if (failedNfts.length > 0) {
             const retryNftsRes = await OneOfOneToolsClient.nfts(
               failedNfts.map((n) => n.mint),
-              false
+              { retry: false }
             );
             if (retryNftsRes.isOk()) {
               const retryNfts = retryNftsRes.value.filter(
@@ -67,7 +100,7 @@ export namespace OneOfOneToolsClient {
         }
 
         // finally anything we couldnt populate in the retry, we should just filter out
-        if (filterOutFailures) {
+        if (options?.filterOutFailures !== false) {
           nfts = nfts.filter(
             (n) => n.onChainData != null && n.offChainData != null
           );

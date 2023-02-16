@@ -1,10 +1,8 @@
 import type { NextPage } from "next";
 import { toast } from "react-hot-toast";
 import { OneOfOneToolsClient } from "api-client";
-import { NFTMetadata } from "models/nftMetadata";
 import Head from "next/head";
 import { useEffect, useState } from "react";
-import NFTGrid from "components/NFTGrid/NFTGrid";
 import Header from "components/Header/Header";
 import ErrorMessage from "components/ErrorMessage/ErrorMessage";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -21,6 +19,8 @@ import NFTCollectionFilter, {
   NFTFilterType,
 } from "components/NFTCollectionFilter/NFTCollectionFilter";
 import { parseCookies, setCookie } from "nookies";
+import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
+import CachedNFTGrid from "components/NFTGrid/CachedNFTGrid";
 
 interface Props {
   collection: Collection;
@@ -50,7 +50,7 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
   const filterPref = cookies["oo_filter"];
 
   const [isLoading, setLoading] = useState(true);
-  const [nftsMetadata, setNFTsMetadata] = useState<NFTMetadata[]>([]);
+  const [nftsMetadata, setNFTsMetadata] = useState<OneOfOneNFTMetadata[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string>();
@@ -82,11 +82,7 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
       (currentPage + 1) * NFTS_PER_PAGE
     );
 
-    const nftsRes = await OneOfOneToolsClient.nfts(
-      pageOfMintAddresses,
-      true,
-      false
-    );
+    const nftsRes = await OneOfOneToolsClient.cachedNfts(pageOfMintAddresses);
 
     if (nftsRes.isErr()) {
       toast.error("Failed to load more nfts: " + nftsRes.error.message);
@@ -218,7 +214,7 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
               loader={<LoadingIndicator />}
               endMessage={""}
             >
-              <NFTGrid
+              <CachedNFTGrid
                 nfts={nftsMetadata}
                 listings={listings}
                 isImported={true}

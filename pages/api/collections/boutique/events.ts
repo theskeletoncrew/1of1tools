@@ -24,7 +24,7 @@ apiRoute.get(async (req, res) => {
     if (eventsRes.isOk()) {
       const events = eventsRes.value;
       const mints = new Set(events.map((e) => e.mint));
-      const nftsRes = await OneOfOneToolsClient.nfts([...mints]);
+      const nftsRes = await OneOfOneToolsClient.cachedNfts([...mints]);
       if (nftsRes.isOk()) {
         res.status(200).json({
           success: true,

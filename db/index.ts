@@ -15,6 +15,7 @@ import {
   DiscordGuildNotificationSetting,
   DiscordSubscriptionsContainer,
 } from "models/notificationSetting";
+import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
 import { PaginationToken } from "models/paginationToken";
 import { err, ok, Result } from "neverthrow";
 import { notEmpty } from "utils";
@@ -1039,6 +1040,27 @@ export async function addNFTMetadata(
       .doc(mintAddress)
       .set(metadata);
     return ok(null);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function getNFTsMetadata(
+  mintAddresses: string[],
+  environment: string = "mainnet"
+): Promise<Result<OneOfOneNFTMetadata[], Error>> {
+  try {
+    const refs = mintAddresses.map((mintAddress) =>
+      db.doc(`${environment}/nfts/metadata/${mintAddress}`)
+    );
+    const results = await db.getAll(...refs);
+
+    const metadata = results.map((doc) => {
+      const data = doc.data() as OneOfOneNFTMetadata;
+      data.mint = doc.id;
+      return data;
+    });
+    return ok(metadata);
   } catch (error) {
     return err(error as Error);
   }

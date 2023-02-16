@@ -1,3 +1,5 @@
+import { getNFTsMetadata } from "db";
+import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 
@@ -20,6 +22,24 @@ apiRoute.post(async (req, res) => {
     const mintAccounts: string[] = req.body.mintAccounts;
     if (!mintAccounts || mintAccounts.length == 0) {
       res.status(400).json({ message: "NFT Addresses are required." });
+      return;
+    }
+
+    const useCache = req.body.useCache;
+    if (useCache) {
+      const metadataRes = await getNFTsMetadata(mintAccounts);
+      if (metadataRes.isOk()) {
+        console.log();
+        res.status(200).json({
+          success: true,
+          nfts: metadataRes.value,
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: metadataRes.error.message,
+        });
+      }
       return;
     }
 
