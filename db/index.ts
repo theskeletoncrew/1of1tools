@@ -1026,3 +1026,20 @@ export async function addNewTrackedMint(
 
   return { collection, nft };
 }
+
+export async function addNFTMetadata(
+  mintAddress: string,
+  metadata: { [key: string]: any },
+  environment: string = "mainnet"
+): Promise<Result<null, Error>> {
+  try {
+    // add the metadata
+    await db
+      .collection(`${environment}/nft-metadata`)
+      .doc(mintAddress)
+      .set(metadata);
+    return ok(null);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
