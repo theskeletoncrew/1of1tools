@@ -32,8 +32,9 @@ apiRoute.get(async (req, res) => {
   try {
     const {
       nftAddress: nftAddressStr,
-      originalURL: originalURLStr,
       size: sizeStr,
+      originalURL: originalURLStr,
+      returnType,
     } = req.query;
 
     const nftAddress = nftAddressStr?.toString();
@@ -93,7 +94,11 @@ apiRoute.get(async (req, res) => {
         })
         .on("finish", function () {
           const gcsUrl = bucket.file(fileName).publicUrl();
-          res.redirect(gcsUrl);
+          if (returnType === "json") {
+            res.status(200).json({ url: gcsUrl });
+          } else {
+            res.redirect(gcsUrl);
+          }
         });
     });
   } catch (error) {
