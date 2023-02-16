@@ -100,8 +100,7 @@ apiRoute.post(async (req, res) => {
       if (attribute.trait_type && attribute.value) {
         const safeTraitName = attribute.trait_type
           .toLowerCase()
-          .replace(/[\s]+/g, "-")
-          .replace(/[^a-z0-9\-]/g, "");
+          .replace(/[\s]+/g, "-");
         if (safeTraitName && safeTraitName.length > 0) {
           metadata["___attribute___" + safeTraitName] = attribute.value;
         }
