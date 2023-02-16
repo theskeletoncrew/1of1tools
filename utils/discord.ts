@@ -41,7 +41,7 @@ export const discordEmbedForTransaction = async (
     } else {
       const sellerBonafida = await loadBonfidaName(nftEvent.seller);
       if (sellerBonafida) {
-        sellerName = sellerBonafida;
+        sellerName = sellerBonafida + ".sol";
       }
     }
 
