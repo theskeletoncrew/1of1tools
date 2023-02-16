@@ -19,7 +19,8 @@ export const discordEmbedForTransaction = async (
   const nft = nftEvent.nfts?.length > 0 ? nftEvent.nfts[0] : null;
 
   const source = transaction.source;
-  const url = nft ? urlForSource(source, nft.mint) : null;
+  const url = `https://1of1.tools/nft/${nft?.mint}?i=1`;
+  const sourceURL = nft ? urlForSource(source, nft.mint) : null;
 
   const typeText = humanReadableEventPastTense(transaction.type);
 
@@ -76,8 +77,8 @@ export const discordEmbedForTransaction = async (
     transaction.type === TransactionType.NFT_SALE
       ? ` for ${nftEvent.amount / LAMPORTS_PER_SOL} SOL`
       : "";
-  const sourceText = url
-    ? ` on [${humanReadableSource(source)}](${url})`
+  const sourceText = sourceURL
+    ? ` on [${humanReadableSource(source)}](${sourceURL})`
     : ` on ${humanReadableSource(source)}`;
 
   const description = `${typeText}${sellerText}${buyerText}${priceText}${sourceText}`;
@@ -89,7 +90,7 @@ export const discordEmbedForTransaction = async (
     .setURL(url)
     .setDescription(description)
     .setAuthor({
-      name: shortPubKey(transaction.signature),
+      name: `Tx: ${shortPubKey(transaction.signature)}`,
       url: `https://solscan.io/tx/${transaction.signature}`,
     })
     .setTimestamp(transaction.timestamp * 1000)
