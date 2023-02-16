@@ -1033,8 +1033,6 @@ export async function addNFTMetadata(
   environment: string = "mainnet"
 ): Promise<Result<null, Error>> {
   try {
-    console.log(metadata);
-
     // add the metadata
     await db
       .collection(`${environment}/nfts/metadata`)
