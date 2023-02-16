@@ -22,6 +22,14 @@
   @apply text-center text-indigo-400 py-2 h-[80px] text-xs flex flex-col items-center justify-center gap-1;
 }
 
+.rowDropName {
+  @apply whitespace-nowrap truncate w-full px-4 text-sm;
+}
+
+.rowDropTimestamp {
+  @apply text-[11px] text-slate-400;
+}
+
 .rowDropTitleLong {
   display: -webkit-box;
   -webkit-line-clamp: 2;

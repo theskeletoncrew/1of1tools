@@ -786,7 +786,7 @@ export namespace OneOfOneToolsClient {
   export async function latestBoutiqueEvents(options: {
     limit?: number | null;
   }): Promise<
-    Result<{ events: OneOfOneNFTEvent[]; nfts: NFTMetadata[] }, Error>
+    Result<{ events: OneOfOneNFTEvent[]; nfts: OneOfOneNFTMetadata[] }, Error>
   > {
     try {
       let params: Record<string, string> = {};

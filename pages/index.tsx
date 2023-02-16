@@ -26,13 +26,13 @@ import { OneOfOneToolsClient } from "api-client";
 import { classNames } from "utils";
 import { OneOfOneNFTEvent } from "models/nftEvent";
 import { humanReadableEventShort } from "utils/helius";
-import { NFTMetadata } from "models/nftMetadata";
 
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { LazyLoadingImage } from "components/LoadingImage/LoadingImage";
+import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -61,7 +61,7 @@ const Home: NextPage = () => {
   const [latestBoutiqueEvents, setLatestBoutiqueEvents] =
     useState<OneOfOneNFTEvent[]>();
   const [latestBoutiqueEventsMetadata, setLatestBoutiqueEventsMetadata] =
-    useState<NFTMetadata[]>();
+    useState<OneOfOneNFTMetadata[]>();
 
   const boutiqueSwiperRef = useRef<SwiperCore>();
   const boutiqueEventsSwiperRef = useRef<SwiperCore>();
@@ -352,13 +352,6 @@ const Home: NextPage = () => {
                   const metadata = latestBoutiqueEventsMetadata?.find(
                     (m) => m.mint === event.mint
                   );
-                  const imgURL = metadata?.offChainData?.image
-                    ? `/api/assets/nft/${
-                        event.mint
-                      }/640?originalURL=${encodeURIComponent(
-                        metadata.offChainData.image
-                      )}`
-                    : "";
 
                   return (
                     <SwiperSlide key={`activity-${event.signature}`}>
@@ -367,34 +360,35 @@ const Home: NextPage = () => {
                           <a className={`${styles.rowDropImageWrapper} group`}>
                             <div className={styles.dropImageWrapper}>
                               <LazyLoadingImage
-                                src={imgURL}
+                                src={metadata?.cachedImage ?? ""}
                                 loader={
                                   <div
                                     className={`${styles.dropImage} w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs animate-pulse`}
-                                    data-url={imgURL}
+                                    data-url={metadata?.cachedImage ?? ""}
                                   ></div>
                                 }
                                 unloader={
                                   <div
                                     className={`${styles.dropImage} flex flex-col gap-2 justify-center items-center w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs`}
-                                    data-url={imgURL}
+                                    data-url={metadata?.cachedImage ?? ""}
                                   >
                                     <ExclamationCircleIcon className="w-8 h-8" />
                                     <span>Too Large for Preview</span>
                                   </div>
                                 }
                                 alt={event.description}
-                                data-orig-url={
-                                  metadata?.offChainData?.image ?? ""
-                                }
+                                data-orig-url={metadata?.image ?? ""}
                                 className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
                               />
                             </div>
                             <span className={styles.rowDropDescriptionLong}>
+                              <h4 className={styles.rowDropName}>
+                                {metadata?.name}
+                              </h4>
                               <h5 className={styles.rowDropTitleLong}>
                                 {humanReadableEventShort(event)}
                               </h5>
-                              <span>
+                              <span className={styles.rowDropTimestamp}>
                                 {dayjs(event.timestamp * 1000).toNow(true)} ago
                               </span>
                             </span>
