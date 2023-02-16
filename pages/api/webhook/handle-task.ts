@@ -128,7 +128,7 @@ apiRoute.post(async (req, res) => {
         );
       }
 
-      const discordEmbed = discordEmbedForTransaction(transaction);
+      const discordEmbed = discordEmbedForTransaction(transaction, null);
 
       if (!discordClient) {
         discordClient = new Client({
