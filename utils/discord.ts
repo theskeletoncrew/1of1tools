@@ -36,8 +36,8 @@ export const discordEmbedForTransaction = async (
 
     const sellerTwitter = await loadTwitterName(nftEvent.seller);
     if (sellerTwitter) {
-      sellerPt2 = `[${sellerName}](${sellerURL})`;
-      sellerName = sellerTwitter;
+      sellerPt2 = ` ([${sellerName}](${sellerURL}))`;
+      sellerName = `@${sellerTwitter}`;
       sellerURL = `https://twitter.com/${sellerTwitter}`;
     } else {
       const sellerBonafida = await loadBonfidaName(nftEvent.seller);
@@ -58,8 +58,8 @@ export const discordEmbedForTransaction = async (
 
     const buyerTwitter = await loadTwitterName(nftEvent.buyer);
     if (buyerTwitter) {
-      buyerPt2 = `[${buyerName}](${buyerURL})`;
-      buyerName = buyerTwitter;
+      buyerPt2 = ` ([${buyerName}](${buyerURL}))`;
+      buyerName = `@${buyerTwitter}`;
       buyerURL = `https://twitter.com/${buyerTwitter}`;
     } else {
       const buyerBonafida = await loadBonfidaName(nftEvent.buyer);
