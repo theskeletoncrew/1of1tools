@@ -4,7 +4,7 @@ import { addNFTMetadata } from "db";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import { notEmpty, tryPublicKey } from "utils";
-import { network } from "utils/network";
+import { clusterApiUrl, network } from "utils/network";
 
 const HELIUS_AUTHORIZATION_SECRET =
   process.env.HELIUS_AUTHORIZATION_SECRET || "";
@@ -53,9 +53,10 @@ apiRoute.post(async (req, res) => {
       return;
     }
 
-    const connection = new Connection(network);
-    const metaplex = Metaplex.make(connection);
-    const nft = await metaplex
+    const endpoint = clusterApiUrl(network);
+    const connection = new Connection(endpoint);
+    const mx = Metaplex.make(connection);
+    const nft = await mx
       .nfts()
       .findByMint({ mintAddress: mintAddressPublicKey });
 
@@ -146,6 +147,7 @@ apiRoute.post(async (req, res) => {
       success: true,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: (error as Error).message,
