@@ -30,7 +30,6 @@ apiRoute.post(async (req, res) => {
       console.warn(
         "Received webhook with invalid/missing authorization header"
       );
-      console.warn(JSON.stringify(req.body));
       res.status(401).json({ success: false, message: "Unauthorized" });
       return;
     }
@@ -67,7 +66,7 @@ apiRoute.post(async (req, res) => {
       uri: nft.uri,
       isMutable: nft.isMutable,
       sellerFeeBasisPoints: nft.sellerFeeBasisPoints,
-      editionNonce: nft.editionNonce,
+      editionNonce: nft.editionNonce ?? null,
       creators: nft.creators.map((creator) => ({
         address: creator.address.toString(),
         verified: creator.verified,
@@ -92,9 +91,9 @@ apiRoute.post(async (req, res) => {
           }
         : null,
 
-      description: nft.json?.description,
-      externalURL: nft.json?.external_url,
-      image: nft.json?.image,
+      description: nft.json?.description ?? null,
+      externalURL: nft.json?.external_url ?? null,
+      image: nft.json?.image ?? null,
     };
 
     nft.json?.attributes?.forEach((attribute, i) => {
@@ -107,9 +106,10 @@ apiRoute.post(async (req, res) => {
       }
     });
 
-    metadata["attributes"] = nft.json?.attributes
-      ?.map((attribute) => attribute.trait_type)
-      .filter(notEmpty);
+    metadata["attributes"] =
+      nft.json?.attributes
+        ?.map((attribute) => attribute.trait_type)
+        .filter(notEmpty) ?? null;
 
     if (nft.json?.image) {
       const imageRes = await fetch(
@@ -120,25 +120,27 @@ apiRoute.post(async (req, res) => {
           method: "GET",
           headers: {
             Accept: "application/json",
-            "Content-Type": "application/json",
           },
         }
       );
 
-      const responseJSON = await imageRes.json();
-      const cachedImageURI = responseJSON.url;
-      if (cachedImageURI) {
-        metadata.cachedImage = cachedImageURI;
+      if (imageRes.ok) {
+        const responseJSON = await imageRes.json();
+        const cachedImageURI = responseJSON.url as string;
+        if (cachedImageURI) {
+          metadata.cachedImage = cachedImageURI;
+        }
+      } else {
+        console.error(imageRes.statusText);
       }
     }
 
     const addRes = await addNFTMetadata(mintAddress, metadata);
     if (!addRes.isOk()) {
       console.log(`Failed to add metadata for ${mintAddress}`);
-
-      // not a monitored NFT for creator or collection address
-      res.status(200).json({
-        success: true,
+      res.status(500).json({
+        success: false,
+        message: addRes.error.message,
       });
       return;
     }

@@ -1037,7 +1037,7 @@ export async function addNFTMetadata(
 
     // add the metadata
     await db
-      .collection(`${environment}/nft-metadata`)
+      .collection(`${environment}/nfts/metadata`)
       .doc(mintAddress)
       .set(metadata);
     return ok(null);

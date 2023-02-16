@@ -63,7 +63,11 @@ apiRoute.get(async (req, res) => {
 
     if (cachedFileExists) {
       const gcsUrl = bucket.file(fileName).publicUrl();
-      res.redirect(gcsUrl);
+      if (returnType === "json") {
+        res.status(200).json({ url: gcsUrl });
+      } else {
+        res.redirect(gcsUrl);
+      }
       return;
     }
 
