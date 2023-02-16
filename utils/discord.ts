@@ -1,4 +1,6 @@
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { APIEmbedField, EmbedBuilder } from "discord.js";
+import { TransactionType } from "helius-sdk";
 import { EnrichedTransaction } from "models/enrichedTransaction";
 import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
 import { shortenedAddress, shortPubKey } from "utils";
@@ -7,32 +9,78 @@ import {
   humanReadableSource,
   urlForSource,
 } from "./helius";
+import { loadBonfidaName, loadTwitterName } from "utils/addressResolution";
 
-export const discordEmbedForTransaction = (
+export const discordEmbedForTransaction = async (
   transaction: EnrichedTransaction,
   metadata: OneOfOneNFTMetadata | null
-): EmbedBuilder => {
+): Promise<EmbedBuilder> => {
   const nftEvent = transaction.events.nft;
-  const nft = nftEvent?.nfts?.length > 0 ? nftEvent?.nfts[0] : null;
+  const nft = nftEvent.nfts?.length > 0 ? nftEvent.nfts[0] : null;
 
   const source = transaction.source;
   const url = nft ? urlForSource(source, nft.mint) : null;
 
   const typeText = humanReadableEventPastTense(transaction.type);
-  const sellerURL = `https://1of1.tools/wallet/${nftEvent.seller}`;
-  const buyerURL = `https://1of1.tools/wallet/${nftEvent.buyer}`;
-  const sellerText = nftEvent?.seller
-    ? ` by [${shortenedAddress(nftEvent.seller)}](${sellerURL})`
-    : "";
-  const buyerRelationship = nftEvent.seller ? "to" : "by";
-  const buyerText = nftEvent?.buyer
-    ? ` ${buyerRelationship} [${shortenedAddress(nftEvent.buyer)}](${buyerURL})`
-    : "";
+
+  let sellerText: string | null = null;
+  let buyerText: string | null = null;
+
+  if (nftEvent.seller) {
+    let sellerURL = nftEvent?.seller
+      ? `https://1of1.tools/wallet/${nftEvent.seller}`
+      : null;
+    let sellerName = shortenedAddress(nftEvent.seller);
+    let sellerPt2: string | null = null;
+
+    const sellerTwitter = await loadTwitterName(nftEvent.seller);
+    if (sellerTwitter) {
+      sellerPt2 = `[${sellerName}](${sellerURL})`;
+      sellerName = sellerTwitter;
+      sellerURL = `https://twitter.com/${sellerTwitter}`;
+    } else {
+      const sellerBonafida = await loadBonfidaName(nftEvent.seller);
+      if (sellerBonafida) {
+        sellerName = sellerBonafida;
+      }
+    }
+
+    sellerText = ` by [${sellerName}](${sellerURL})${sellerPt2}`;
+  }
+
+  if (nftEvent.buyer) {
+    let buyerURL = nftEvent?.buyer
+      ? `https://1of1.tools/wallet/${nftEvent.buyer}`
+      : null;
+    let buyerName = shortenedAddress(nftEvent.buyer);
+    let buyerPt2: string | null = null;
+
+    const buyerTwitter = await loadTwitterName(nftEvent.buyer);
+    if (buyerTwitter) {
+      buyerPt2 = `[${buyerName}](${buyerURL})`;
+      buyerName = buyerTwitter;
+      buyerURL = `https://twitter.com/${buyerTwitter}`;
+    } else {
+      const buyerBonafida = await loadBonfidaName(nftEvent.buyer);
+      if (buyerBonafida) {
+        buyerName = buyerBonafida;
+      }
+    }
+
+    const buyerRelationship = nftEvent.seller ? "to" : "by";
+    buyerText = ` ${buyerRelationship} [${buyerName}](${buyerURL})${buyerPt2}`;
+  }
+
+  const priceText =
+    transaction.type === TransactionType.NFT_BID ||
+    transaction.type === TransactionType.NFT_SALE
+      ? ` for ${nftEvent.amount / LAMPORTS_PER_SOL} SOL`
+      : "";
   const sourceText = url
     ? ` on [${humanReadableSource(source)}](${url})`
     : ` on ${humanReadableSource(source)}`;
 
-  const description = `${typeText}${sellerText}${buyerText}${sourceText}`;
+  const description = `${typeText}${sellerText}${buyerText}${priceText}${sourceText}`;
 
   let fields: APIEmbedField[] = [];
 
@@ -49,8 +97,9 @@ export const discordEmbedForTransaction = (
       text: "Powered by 1of1.tools",
     });
   if (metadata) {
-    embed.setTitle(metadata.name).setThumbnail(metadata.cachedImage);
-    // .setImage()
+    embed
+      .setTitle(`${typeText.toUpperCase()} - ${metadata.name}`)
+      .setImage(metadata.cachedImage ?? metadata.image);
 
     if (metadata.description) {
       fields.push({
@@ -72,9 +121,13 @@ export const discordEmbedForTransaction = (
     //   });
     // });
   } else if (nft) {
-    embed.setTitle(nft.name ? nft.name : shortenedAddress(nft.mint));
+    embed.setTitle(
+      `${typeText.toUpperCase()} - ${
+        nft.name ? nft.name : shortenedAddress(nft.mint)
+      }`
+    );
   } else {
-    embed.setTitle("Unknown");
+    embed.setTitle(`${typeText.toUpperCase()} - Unknown`);
   }
   embed.addFields(fields);
   return embed;

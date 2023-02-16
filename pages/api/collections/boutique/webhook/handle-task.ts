@@ -163,7 +163,10 @@ const sendNotifications = async (
 
   try {
     const recipientsSubscribedToDiscord = await discordSubscribers();
-    const discordEmbed = discordEmbedForTransaction(transaction, metadata);
+    const discordEmbed = await discordEmbedForTransaction(
+      transaction,
+      metadata
+    );
 
     if (!discordClient) {
       discordClient = new Client({
