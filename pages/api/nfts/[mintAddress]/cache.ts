@@ -98,11 +98,9 @@ apiRoute.post(async (req, res) => {
 
     nft.json?.attributes?.forEach((attribute, i) => {
       if (attribute.trait_type && attribute.value) {
-        const safeTraitName = attribute.trait_type
-          .toLowerCase()
-          .replace(/[\s]+/g, "-");
+        const safeTraitName = attribute.trait_type.toLowerCase();
         if (safeTraitName && safeTraitName.length > 0) {
-          metadata["___attribute___" + safeTraitName] = attribute.value;
+          metadata["_attrib__" + safeTraitName] = attribute.value;
         }
       }
     });
