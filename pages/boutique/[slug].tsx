@@ -75,9 +75,14 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
     if (nftsRes.isErr()) {
       toast.error("Failed to load more nfts: " + nftsRes.error.message);
     } else {
-      const newNFTMetadata = nftsRes.value.sort((nft1, nft2) =>
-        nft1.name.localeCompare(nft2.name)
-      );
+      const newNFTMetadata = nftsRes.value.sort((nft1, nft2) => {
+        const numVal1 = parseInt(nft1.name.replace(/^\D+/g, ""));
+        const numVal2 = parseInt(nft2.name.replace(/^\D+/g, ""));
+        if (!isNaN(numVal1) && !isNaN(numVal2)) {
+          return numVal1 - numVal2;
+        }
+        return nft1.name.localeCompare(nft2.name);
+      });
 
       setNFTsMetadata(newNFTMetadata);
     }
