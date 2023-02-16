@@ -1,11 +1,12 @@
 import { EnrichedTransaction } from "models/enrichedTransaction";
-import { oneOfOneNFTEvent } from "models/nftEvent";
+import { OneOfOneNFTEvent, oneOfOneNFTEvent } from "models/nftEvent";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import {
   addBoutiqueCollectionEventIfMonitoredAndUpdateStats,
   getDialectSubscribersToBoutiqueNotifications,
   getDiscordSubscribersToBoutiqueNotifications,
+  getNFTsMetadata,
 } from "db";
 import {
   DialectNotificationSetting,
@@ -27,6 +28,7 @@ import {
 import { Constants } from "models/constants";
 import { DialectSdk } from "@dialectlabs/sdk";
 import { Solana } from "@dialectlabs/blockchain-sdk-solana";
+import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
 
 function unique(array: any[], propertyName: string) {
   return array.filter(
@@ -110,7 +112,11 @@ apiRoute.post(async (req, res) => {
     console.log("Monitored Event");
     console.log(event);
 
-    await sendNotifications(transaction);
+    const nftMetadataRes = await getNFTsMetadata([event.mint]);
+    const nftMetadata = nftMetadataRes.isOk() ? nftMetadataRes.value[0]! : null;
+    console.log(nftMetadata);
+
+    await sendNotifications(transaction, nftMetadata);
 
     res.status(201).json({
       success: true,
@@ -124,7 +130,8 @@ apiRoute.post(async (req, res) => {
 });
 
 const sendNotifications = async (
-  transaction: EnrichedTransaction
+  transaction: EnrichedTransaction,
+  metadata: OneOfOneNFTMetadata | null
 ): Promise<null | Error> => {
   let lastError: Error | null = null;
 
@@ -156,7 +163,7 @@ const sendNotifications = async (
 
   try {
     const recipientsSubscribedToDiscord = await discordSubscribers();
-    const discordEmbed = discordEmbedForTransaction(transaction);
+    const discordEmbed = discordEmbedForTransaction(transaction, metadata);
 
     if (!discordClient) {
       discordClient = new Client({
