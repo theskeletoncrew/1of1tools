@@ -102,7 +102,9 @@ apiRoute.post(async (req, res) => {
           .toLowerCase()
           .replace(/[\s]+/g, "-")
           .replace(/[^a-z0-9\-]/g, "");
-        metadata["___attribute___" + safeTraitName] = attribute.value;
+        if (safeTraitName && safeTraitName.length > 0) {
+          metadata["___attribute___" + safeTraitName] = attribute.value;
+        }
       }
     });
 
