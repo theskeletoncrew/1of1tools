@@ -104,7 +104,10 @@ export const discordEmbedForTransaction = async (
     if (metadata.description) {
       fields.push({
         name: "Description",
-        value: metadata.description,
+        value:
+          metadata.description.length > 150
+            ? metadata.description.substring(0, 150) + "..."
+            : metadata.description,
       });
     }
 
