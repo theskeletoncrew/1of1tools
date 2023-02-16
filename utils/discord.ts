@@ -90,7 +90,7 @@ export const discordEmbedForTransaction = async (
     .setURL(url)
     .setDescription(description)
     .setAuthor({
-      name: `Tx: ${shortPubKey(transaction.signature)}`,
+      name: `${shortPubKey(transaction.signature)}`,
       url: `https://solscan.io/tx/${transaction.signature}`,
     })
     .setTimestamp(transaction.timestamp * 1000)
