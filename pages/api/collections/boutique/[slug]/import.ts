@@ -164,12 +164,9 @@ const queue = "nft-cache-offchain";
 const tasksParent = cloudTasksClient.queuePath(project, location, queue);
 
 const addOffchainCachingTaskForMint = async (mintAddress: string) => {
-  const taskName = `projects/${project}/locations/${location}/queues/${queue}/tasks/${mintAddress}`;
-
   await cloudTasksClient.createTask({
     parent: tasksParent,
     task: {
-      name: taskName,
       httpRequest: {
         url: `https://1of1.tools/api/nfts/${mintAddress}/cache`,
         headers: {
