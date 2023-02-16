@@ -22,6 +22,8 @@ const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
 });
 
 apiRoute.post(async (req, res) => {
+  const mintAddress = req.query.mintAddress?.toString();
+
   try {
     if (
       !req.headers["authorization"] ||
@@ -34,7 +36,6 @@ apiRoute.post(async (req, res) => {
       return;
     }
 
-    const mintAddress = req.query.mintAddress?.toString();
     if (!mintAddress) {
       res.status(400).json({
         success: false,
@@ -148,6 +149,7 @@ apiRoute.post(async (req, res) => {
       success: true,
     });
   } catch (error) {
+    console.log(`error caching ${mintAddress}`);
     console.log(error);
     res.status(500).json({
       success: false,
