@@ -24,8 +24,8 @@ export const discordEmbedForTransaction = async (
 
   const typeText = humanReadableEventPastTense(transaction.type);
 
-  let sellerText: string | null = null;
-  let buyerText: string | null = null;
+  let sellerText: string = "";
+  let buyerText: string = "";
 
   if (nftEvent.seller) {
     let sellerURL = nftEvent?.seller
