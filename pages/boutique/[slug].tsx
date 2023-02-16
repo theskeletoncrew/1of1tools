@@ -20,6 +20,7 @@ import NFTCollectionFilter, {
 import { parseCookies, setCookie } from "nookies";
 import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
 import CachedNFTGrid from "components/NFTGrid/CachedNFTGrid";
+import CollectionSearch from "components/CollectionSearch/CollectionSearch";
 
 interface Props {
   collection: Collection;
@@ -49,45 +50,64 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
   const filterPref = cookies["oo_filter"];
 
   const [isLoading, setLoading] = useState(true);
+  const [allNftsMetadata, setAllNftsMetadata] = useState<OneOfOneNFTMetadata[]>(
+    []
+  );
   const [nftsMetadata, setNFTsMetadata] = useState<OneOfOneNFTMetadata[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>();
   const [listings, setListings] = useState<NFTListings[]>([]);
   const [filter, setFilter] = useState<NFTFilterType>(
     filterPref ? (filterPref as NFTFilterType) : NFTFilterType.ALL_ITEMS
   );
+  const [searchTerm, setSearchTerm] = useState<string>();
 
-  const getMoreNfts = async (currentFilter: NFTFilterType) => {
+  const getNfts = async () => {
     if (!collection.mintAddresses || collection.mintAddresses.length === 0) {
       return;
     }
 
     setLoading(true);
 
-    const mintAddresses =
-      currentFilter === NFTFilterType.ALL_ITEMS
-        ? collection.mintAddresses
-        : collection.mintAddresses.filter((m) =>
-            listings.find((l) => l.mint === m)
-          );
-
-    const nftsRes = await OneOfOneToolsClient.cachedNfts(mintAddresses);
+    const nftsRes = await OneOfOneToolsClient.cachedNfts(
+      collection.mintAddresses
+    );
 
     if (nftsRes.isErr()) {
       toast.error("Failed to load more nfts: " + nftsRes.error.message);
     } else {
-      const newNFTMetadata = nftsRes.value.sort((nft1, nft2) => {
-        const numVal1 = parseInt(nft1.name.replace(/^\D+/g, ""));
-        const numVal2 = parseInt(nft2.name.replace(/^\D+/g, ""));
-        if (!isNaN(numVal1) && !isNaN(numVal2)) {
-          return numVal1 - numVal2;
-        }
-        return nft1.name.localeCompare(nft2.name);
-      });
-
-      setNFTsMetadata(newNFTMetadata);
+      let nfts = nftsRes.value;
+      setAllNftsMetadata(nfts);
     }
 
     setLoading(false);
+  };
+
+  const applySearchSortFilter = (
+    nfts: OneOfOneNFTMetadata[],
+    currentFilter: NFTFilterType,
+    search: string | undefined
+  ) => {
+    let newNFTMetadata = nfts;
+    if (currentFilter === NFTFilterType.LISTED_ITEMS) {
+      newNFTMetadata = newNFTMetadata.filter((m) =>
+        listings.find((l) => l.mint === m.mint)
+      );
+    }
+    if (search) {
+      newNFTMetadata = newNFTMetadata.filter((n) =>
+        n.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    newNFTMetadata = newNFTMetadata.sort((nft1, nft2) => {
+      const numVal1 = parseInt(nft1.name.replace(/^\D+/g, ""));
+      const numVal2 = parseInt(nft2.name.replace(/^\D+/g, ""));
+      if (!isNaN(numVal1) && !isNaN(numVal2)) {
+        return numVal1 - numVal2;
+      }
+      return nft1.name.localeCompare(nft2.name);
+    });
+
+    setNFTsMetadata(newNFTMetadata);
   };
 
   const loadListings = async () => {
@@ -109,8 +129,12 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
   };
 
   useEffect(() => {
-    getMoreNfts(filter);
-  }, [filter, listings]);
+    applySearchSortFilter(allNftsMetadata, filter, searchTerm);
+  }, [allNftsMetadata, filter, searchTerm]);
+
+  useEffect(() => {
+    getNfts();
+  }, [listings]);
 
   useEffect(() => {
     loadListings();
@@ -172,7 +196,11 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
 
         <div className="mt-4">
           {listings && (
-            <div className="mx-1 flex items-end justify-end h-[40px]">
+            <div className="mx-1 flex items-end justify-between h-[40px]">
+              <CollectionSearch
+                searchTerm={searchTerm ?? ""}
+                didChangeSearch={(s) => setSearchTerm(s)}
+              />
               <NFTCollectionFilter
                 filter={filter}
                 didChangeFilter={(newFilter) => {

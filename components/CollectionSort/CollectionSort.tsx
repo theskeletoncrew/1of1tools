@@ -48,7 +48,7 @@ const CollectionSort: React.FC<Props> = ({ sort, didChangeSort }) => {
     <Menu as="div" className="relative inline-block text-left h-full">
       <div className="flex items-center gap-2 h-full">
         <span className="whitespace-nowrap text-indigo-500">Sort by:</span>
-        <Menu.Button className="inline-flex w-full justify-center items-center rounded-lg border border-indigo-600 bg-transparent px-4 h-full text-xs font-medium text-indigo-400 hover:bg-indigo-900 hover:bg-opacity-50">
+        <Menu.Button className="inline-flex w-full whitespace-nowrap justify-center items-center rounded-lg border border-indigo-600 bg-transparent px-4 h-full text-xs font-medium text-indigo-400 hover:bg-indigo-900 hover:bg-opacity-50">
           {sortOptions.find((s) => s.value === sort)?.label ??
             sortOptions[0]!.label}
           <ChevronDownIcon className="-mr-1 ml-2 h-5 w-5" aria-hidden="true" />

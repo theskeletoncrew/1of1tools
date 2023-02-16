@@ -56,8 +56,9 @@ input[type="text"],
 input[type="email"],
 input[type="datetime-local"],
 input[type="number"],
+input[type="search"],
 textarea {
-  @apply py-2 text-base font-display font-light sm:text-lg text-slate-200 border-sky-800 focus:outline-none focus:ring-sky-500;
+  @apply py-2 text-base font-display font-light bg-transparent sm:text-lg text-slate-200 border-indigo-600 focus:outline-none focus:ring-indigo-500;
 }
 
 input[type="datetime-local"] {
