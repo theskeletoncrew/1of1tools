@@ -359,9 +359,7 @@ const Home: NextPage = () => {
                       <div className={styles.rowDrop}>
                         <Link href={`/nft/${event.mint}`}>
                           <a className={`${styles.rowDropImageWrapper} group`}>
-                            <div
-                              className={styles.dropImageWrapper}
-                            >
+                            <div className={styles.dropImageWrapper}>
                               <LazyLoadingImage
                                 src={
                                   metadata?.cachedImage ?? metadata?.image ?? ""
