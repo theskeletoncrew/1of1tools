@@ -11,7 +11,7 @@ import { Collection } from "models/collection";
 import CollectionSocial from "components/CollectionSocial/CollectionSocial";
 import CollectionStats from "components/CollectionStats/CollectionStats";
 import { GetServerSideProps } from "next";
-import { NFTListings } from "models/nftListings";
+import { NFTListing, NFTListings } from "models/nftListings";
 import NFTCollectionFilter, {
   NFTFilterType,
 } from "components/NFTCollectionFilter/NFTCollectionFilter";
@@ -127,14 +127,29 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
       });
     }
 
-    newNFTMetadata = newNFTMetadata.sort((nft1, nft2) => {
-      const numVal1 = parseInt(nft1.name.replace(/^\D+/g, ""));
-      const numVal2 = parseInt(nft2.name.replace(/^\D+/g, ""));
-      if (!isNaN(numVal1) && !isNaN(numVal2)) {
-        return numVal1 - numVal2;
-      }
-      return nft1.name.localeCompare(nft2.name);
-    });
+    if (currentFilter === NFTFilterType.LISTED_ITEMS) {
+      newNFTMetadata = newNFTMetadata.sort((nft1, nft2) => {
+        const listing1: NFTListings = listings.find(
+          (l) => l.mint === nft1.mint
+        )!;
+        const listing2: NFTListings = listings.find(
+          (l) => l.mint === nft2.mint
+        )!;
+        return (
+          (listing1.activeListings[0]?.amount ?? 0) -
+          (listing2.activeListings[0]?.amount ?? 0)
+        );
+      });
+    } else {
+      newNFTMetadata = newNFTMetadata.sort((nft1, nft2) => {
+        const numVal1 = parseInt(nft1.name.replace(/^\D+/g, ""));
+        const numVal2 = parseInt(nft2.name.replace(/^\D+/g, ""));
+        if (!isNaN(numVal1) && !isNaN(numVal2)) {
+          return numVal1 - numVal2;
+        }
+        return nft1.name.localeCompare(nft2.name);
+      });
+    }
 
     setNFTsMetadata(newNFTMetadata);
   };
