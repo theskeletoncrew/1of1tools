@@ -252,7 +252,7 @@ const Home: NextPage = () => {
                                   src={imgURL}
                                   loader={
                                     <div
-                                      className={`${styles.dropImage} w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs animate-pulse`}
+                                      className={`${styles.dropImage} w-full aspect-1 bg-indigo-500 bg-opacity-25 text-xs animate-pulse`}
                                       data-url={imgURL}
                                     ></div>
                                   }
@@ -359,12 +359,16 @@ const Home: NextPage = () => {
                       <div className={styles.rowDrop}>
                         <Link href={`/nft/${event.mint}`}>
                           <a className={`${styles.rowDropImageWrapper} group`}>
-                            <div className={styles.dropImageWrapper}>
+                            <div
+                              className={styles.dropImageWrapper}
+                            >
                               <LazyLoadingImage
-                                src={metadata?.cachedImage ?? ""}
+                                src={
+                                  metadata?.cachedImage ?? metadata?.image ?? ""
+                                }
                                 loader={
                                   <div
-                                    className={`${styles.dropImage} w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs animate-pulse`}
+                                    className={`${styles.dropImage} w-full aspect-1 bg-indigo-500 bg-opacity-25 text-xs animate-pulse`}
                                     data-url={metadata?.cachedImage ?? ""}
                                   ></div>
                                 }
@@ -378,7 +382,9 @@ const Home: NextPage = () => {
                                   </div>
                                 }
                                 alt={event.description}
-                                data-orig-url={metadata?.image ?? ""}
+                                data-orig-url={
+                                  metadata?.cachedImage ?? metadata?.image
+                                }
                                 className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
                               />
                             </div>
