@@ -154,11 +154,7 @@ const CollectionIndexGrid: React.FC<Props> = ({
           </div>
         </div>
         {items.map((item, i) => {
-          const collectionImageURL = item.imageURL
-            ? `/api/assets/collection/${
-                item.slug
-              }/640?originalURL=${encodeURIComponent(item.imageURL)}`
-            : "";
+          const collectionImageURL = item.cachedImage ?? item.imageURL ?? "";
           const floorUrl =
             item.floor && item.floor.listing
               ? urlForSource(item.floor.listing.marketplace, item.floor.mint)
@@ -192,7 +188,7 @@ const CollectionIndexGrid: React.FC<Props> = ({
                       unloader={
                         <div
                           className="flex flex-col gap-2 justify-center items-center w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs"
-                          data-url={collectionImageURL}
+                          data-url={item.cachedImage ?? ""}
                         >
                           <ExclamationCircleIcon className="w-8 h-8" />
                           <span>Too Large for Preview</span>

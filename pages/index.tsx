@@ -234,42 +234,37 @@ const Home: NextPage = () => {
             ) : (
               <>
                 {boutiqueCollections?.map((collection) => {
-                  const imgURL = collection.imageURL
-                    ? `/api/assets/collection/${
-                        collection.slug
-                      }/640?originalURL=${encodeURIComponent(
-                        collection.imageURL
-                      )}`
-                    : "";
                   return (
                     <SwiperSlide key={`boutique-collection-${collection.slug}`}>
                       <div className={styles.rowDrop}>
                         <Link href={`/boutique/${collection.slug}`}>
                           <a className={`${styles.rowDropImageWrapper} group`}>
-                            {collection.imageURL && (
-                              <div className={styles.dropImageWrapper}>
-                                <LazyLoadingImage
-                                  src={imgURL}
-                                  loader={
-                                    <div
-                                      className={`${styles.dropImage} w-full aspect-1 bg-indigo-500 bg-opacity-25 text-xs animate-pulse`}
-                                      data-url={imgURL}
-                                    ></div>
-                                  }
-                                  unloader={
-                                    <div
-                                      className={`${styles.dropImage} flex flex-col gap-2 justify-center items-center w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs`}
-                                    >
-                                      <ExclamationCircleIcon className="w-8 h-8" />
-                                      <span>Too Large for Preview</span>
-                                    </div>
-                                  }
-                                  alt={collection.name}
-                                  data-orig-url={collection.imageURL}
-                                  className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
-                                />
-                              </div>
-                            )}
+                            <div className={styles.dropImageWrapper}>
+                              <LazyLoadingImage
+                                src={
+                                  collection.cachedImage ??
+                                  collection?.imageURL ??
+                                  ""
+                                }
+                                loader={
+                                  <div
+                                    className={`${styles.dropImage} w-full aspect-1 bg-indigo-500 bg-opacity-25 text-xs animate-pulse`}
+                                    data-url={collection.cachedImage}
+                                  ></div>
+                                }
+                                unloader={
+                                  <div
+                                    className={`${styles.dropImage} flex flex-col gap-2 justify-center items-center w-full aspect-1 bg-indigo-500 bg-opacity-5 text-xs`}
+                                  >
+                                    <ExclamationCircleIcon className="w-8 h-8" />
+                                    <span>Too Large for Preview</span>
+                                  </div>
+                                }
+                                alt={collection.name}
+                                data-orig-url={collection.imageURL}
+                                className={`${styles.dropImage} group-hover:scale-125 transition-transform duration-300`}
+                              />
+                            </div>
                             <span className={styles.rowDropDescription}>
                               <h5 className={styles.rowDropTitle}>
                                 {collection.name}

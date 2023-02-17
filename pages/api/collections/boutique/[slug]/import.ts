@@ -3,7 +3,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import {
   addAllMintsAsTracked,
   getBoutiqueCollection,
-  setBoutiqueCollectionFiltersAndSize,
+  setBoutiqueCollectionExtras,
 } from "db";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
@@ -55,6 +55,35 @@ apiRoute.post(async (req, res) => {
       return;
     }
 
+    // get and cache collection image
+    let cachedImage: string | null = null;
+
+    if (collection.imageURL) {
+      const imageRes = await fetch(
+        `${
+          Constants.SERVER_URL
+        }/api/assets/collection/${slug}/640?originalURL=${encodeURIComponent(
+          collection.imageURL
+        )}&returnType=json`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (imageRes.ok) {
+        const responseJSON = await imageRes.json();
+        const cachedImageURI = responseJSON.url as string;
+        if (cachedImageURI) {
+          cachedImage = cachedImageURI;
+        }
+      } else {
+        console.error(imageRes.statusText);
+      }
+    }
+
     // determine the collection address and first creator address
     let collectionAddress = collection.collectionAddress;
     let firstVerifiedCreator = collection.firstVerifiedCreator;
@@ -83,11 +112,12 @@ apiRoute.post(async (req, res) => {
         (!collection.collectionAddress && collectionAddress) ||
         !collection.firstVerifiedCreator
       ) {
-        const setVerifiedCreatorRes = await setBoutiqueCollectionFiltersAndSize(
+        const setVerifiedCreatorRes = await setBoutiqueCollectionExtras(
           slug,
           collectionAddress,
           firstVerifiedCreator,
-          collection.mintAddresses.length
+          collection.mintAddresses.length,
+          cachedImage
         );
         if (!setVerifiedCreatorRes.isOk()) {
           res.status(500).json({

@@ -500,20 +500,26 @@ export async function getBoutiqueCollections(
         query = query.orderBy("nameLowercase", "asc");
         break;
       default:
-        console.log("no sort matching " + sort);
+        console.log("no sort matching " + resolvedSort);
     }
 
-    if (cursor && cursor.length > 0) {
+    if (options?.cursor && options?.cursor.length > 0) {
       const docRef = await db
         .collection("boutique-collections")
-        .doc(cursor)
+        .doc(options.cursor)
         .get();
       if (docRef) {
         query = query.startAfter(docRef);
       }
     }
-    if (limit !== null) {
-      query = query.limit(limit);
+
+    const resolvedLimit =
+      options && options.limit !== undefined
+        ? options.limit
+        : COLLECTIONS_PER_PAGE;
+
+    if (resolvedLimit) {
+      query = query.limit(resolvedLimit);
     }
 
     const snapshot = await query.get();
@@ -618,17 +624,19 @@ export async function addMintAsTracked(
   }
 }
 
-export async function setBoutiqueCollectionFiltersAndSize(
+export async function setBoutiqueCollectionExtras(
   slug: string,
   collectionAddress: string | null,
   firstVerifiedCreator: string | null,
-  numItems: number
+  numItems: number,
+  cachedImage: string | null
 ): Promise<Result<null, Error>> {
   try {
     await db.collection("boutique-collections").doc(slug).update({
       collectionAddress: collectionAddress,
       firstVerifiedCreator: firstVerifiedCreator,
       numItems: numItems,
+      cachedImage: cachedImage,
     });
     return ok(null);
   } catch (error) {
@@ -653,6 +661,20 @@ export async function setBoutiqueCollectionStats(
       dayVolume: dayVolume,
       athSale: athSale,
       floor: floor,
+    });
+    return ok(null);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
+export async function addBoutiqueCollectionCachedImage(
+  slug: string,
+  cachedImage: string | null
+): Promise<Result<null, Error>> {
+  try {
+    await db.collection("boutique-collections").doc(slug).update({
+      cachedImage: cachedImage,
     });
     return ok(null);
   } catch (error) {

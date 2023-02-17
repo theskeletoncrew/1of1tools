@@ -8,6 +8,7 @@ export interface Collection {
   collectionAddress?: string | null;
   firstVerifiedCreator?: string | null;
   imageURL: string | null;
+  cachedImage: string | null;
   twitterURL: string | null;
   discordURL: string | null;
   webURL: string | null;
