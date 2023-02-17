@@ -4,6 +4,8 @@ import nextConnect from "next-connect";
 import axios from "axios";
 import { proxyImgUrl } from "utils/imgproxy";
 import { tryPublicKey } from "utils";
+import sharp, { Sharp } from "sharp";
+import { Readable } from "stream";
 const httpAdapter = require("axios/lib/adapters/http");
 
 const storage = new Storage({
@@ -46,11 +48,13 @@ apiRoute.get(async (req, res) => {
       res.status(400).json({ message: "NFT address is required." });
       return;
     }
+
     const originalURL = originalURLStr?.toString();
     if (!originalURL || originalURL.length == 0) {
       res.status(400).json({ message: "Original URL is required." });
       return;
     }
+
     const size = sizeStr ? parseInt(sizeStr.toString()) : 640;
     const imageURL = proxyImgUrl(originalURL, size, size);
 
@@ -71,12 +75,32 @@ apiRoute.get(async (req, res) => {
       return;
     }
 
-    const response = await axios.get(imageURL, {
+    let response = await axios.get(imageURL, {
       responseType: "stream",
       adapter: httpAdapter,
+      validateStatus: () => true,
     });
 
-    if (response.status != 200) {
+    let stream: Readable | null = response.status == 200 ? response.data : null;
+    let transformer: Sharp | null = null;
+
+    if (!stream) {
+      // fallback to original url
+      response = await axios.get(originalURL, {
+        responseType: "stream",
+        adapter: httpAdapter,
+      });
+
+      stream = response.status == 200 ? response.data : null;
+
+      transformer = await sharp({ animated: true }).resize({
+        width: size,
+        height: size,
+        fit: sharp.fit.contain,
+      });
+    }
+
+    if (!stream) {
       res.status(400).json({ success: false });
       return;
     }
@@ -88,10 +112,13 @@ apiRoute.get(async (req, res) => {
       },
     });
 
-    const stream = response.data;
-
     await new Promise<null>(async (resolve, reject) => {
-      stream
+      if (!stream) {
+        res.status(400).json({ message: "Unable to read image" });
+        return;
+      }
+
+      (transformer ? stream.pipe(transformer) : stream)
         .pipe(remoteWriteStream)
         .on("error", function (error: any) {
           res.status(400).json({ message: (error as Error).message });
