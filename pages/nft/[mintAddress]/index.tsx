@@ -209,7 +209,7 @@ const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
       result.paginationToken && result.paginationToken.length > 0
         ? result.paginationToken
         : undefined;
-    const more = token != undefined;
+    const more = token !== undefined;
 
     setEvents((events) =>
       isFirstLoad ? result.events : (events ?? []).concat(result.events)
