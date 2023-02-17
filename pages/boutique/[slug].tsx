@@ -5,8 +5,6 @@ import Head from "next/head";
 import { useEffect, useState } from "react";
 import Header from "components/Header/Header";
 import ErrorMessage from "components/ErrorMessage/ErrorMessage";
-import InfiniteScroll from "react-infinite-scroll-component";
-import LoadingIndicator from "components/LoadingIndicator/LoadingIndicator";
 import Layout from "components/Layout/Layout";
 import LoadingGrid from "components/LoadingGrid/LoadingGrid";
 import { Collection } from "models/collection";
@@ -21,6 +19,8 @@ import { parseCookies, setCookie } from "nookies";
 import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
 import CachedNFTGrid from "components/NFTGrid/CachedNFTGrid";
 import CollectionSearch from "components/CollectionSearch/CollectionSearch";
+import CollectionFilters from "components/CollectionFilters/CollectionFilters";
+import { XMarkIcon } from "@heroicons/react/20/solid";
 
 interface Props {
   collection: Collection;
@@ -60,6 +60,12 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
     filterPref ? (filterPref as NFTFilterType) : NFTFilterType.ALL_ITEMS
   );
   const [searchTerm, setSearchTerm] = useState<string>();
+  const [attributes, setAttributes] = useState<{
+    [key: string]: Set<string>;
+  }>();
+  const [attributeSelections, setAttributeSelections] = useState<{
+    [key: string]: string | null;
+  }>();
 
   const getNfts = async () => {
     if (!collection.mintAddresses || collection.mintAddresses.length === 0) {
@@ -77,6 +83,7 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
     } else {
       let nfts = nftsRes.value;
       setAllNftsMetadata(nfts);
+      calculateAttributes(nfts);
     }
 
     setLoading(false);
@@ -85,7 +92,12 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
   const applySearchSortFilter = (
     nfts: OneOfOneNFTMetadata[],
     currentFilter: NFTFilterType,
-    search: string | undefined
+    search: string | undefined,
+    attributeSelections:
+      | {
+          [key: string]: string | null;
+        }
+      | undefined
   ) => {
     let newNFTMetadata = nfts;
     if (currentFilter === NFTFilterType.LISTED_ITEMS) {
@@ -98,6 +110,23 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
         n.name.toLowerCase().includes(search.toLowerCase())
       );
     }
+
+    if (attributeSelections) {
+      newNFTMetadata = newNFTMetadata.filter((n) => {
+        const missingAttribute = Object.keys(attributeSelections).find(
+          (attribute) =>
+            attributeSelections[attribute] &&
+            n["_attrib__" + attribute.toLowerCase()]?.toString() !==
+              attributeSelections[attribute]
+        );
+        if (n.name === "AQUA ESTHER") {
+          console.log(n);
+          console.log("missing: " + missingAttribute);
+        }
+        return missingAttribute === undefined;
+      });
+    }
+
     newNFTMetadata = newNFTMetadata.sort((nft1, nft2) => {
       const numVal1 = parseInt(nft1.name.replace(/^\D+/g, ""));
       const numVal2 = parseInt(nft2.name.replace(/^\D+/g, ""));
@@ -108,6 +137,42 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
     });
 
     setNFTsMetadata(newNFTMetadata);
+  };
+
+  const calculateAttributes = (nfts: OneOfOneNFTMetadata[]) => {
+    let allAttributes: { [key: string]: Set<string> } = {};
+    nfts.forEach((nft) => {
+      nft.attributes?.forEach((attribute) => {
+        let existingSet = allAttributes[attribute];
+        if (!existingSet) {
+          existingSet = new Set<string>();
+        }
+        const attributeValue =
+          nft["_attrib__" + attribute.toLowerCase()]?.toString();
+        if (attributeValue) {
+          existingSet.add(attributeValue);
+        }
+        allAttributes[attribute] = existingSet;
+      });
+    });
+    console.log(
+      JSON.stringify(Object.values(allAttributes).map((v) => [...v]))
+    );
+    setAttributes(allAttributes);
+
+    let emptyAttributeSelections: { [key: string]: string | null } = {};
+    Object.keys(allAttributes).forEach((attribute) => {
+      emptyAttributeSelections[attribute] = null;
+    });
+    setAttributeSelections(emptyAttributeSelections);
+  };
+
+  const removeSelection = (attribute: string, value: string | undefined) => {
+    let updatedSelections = { ...attributeSelections };
+    updatedSelections[attribute] = null;
+    setAttributeSelections((currentSelections) => ({
+      ...updatedSelections,
+    }));
   };
 
   const loadListings = async () => {
@@ -129,8 +194,13 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
   };
 
   useEffect(() => {
-    applySearchSortFilter(allNftsMetadata, filter, searchTerm);
-  }, [allNftsMetadata, filter, searchTerm]);
+    applySearchSortFilter(
+      allNftsMetadata,
+      filter,
+      searchTerm,
+      attributeSelections
+    );
+  }, [allNftsMetadata, filter, searchTerm, attributeSelections]);
 
   useEffect(() => {
     getNfts();
@@ -196,32 +266,75 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
 
         <div className="mt-4">
           {listings && (
-            <div className="mx-1 flex items-end justify-between h-[40px]">
-              <CollectionSearch
-                searchTerm={searchTerm ?? ""}
-                didChangeSearch={(s) => setSearchTerm(s)}
-              />
-              <NFTCollectionFilter
-                filter={filter}
-                didChangeFilter={(newFilter) => {
-                  setFilter(newFilter);
+            <>
+              <div className="mx-1 flex items-end justify-between h-[40px]">
+                <div className="flex items-center gap-3 h-full">
+                  {attributes && Object.keys(attributes).length > 0 && (
+                    <CollectionFilters
+                      attributes={attributes}
+                      attributeSelections={attributeSelections ?? {}}
+                      didChangeSelections={(selections) => {
+                        setAttributeSelections(selections);
+                        console.log(selections);
+                      }}
+                    />
+                  )}
+                  <CollectionSearch
+                    searchTerm={searchTerm ?? ""}
+                    didChangeSearch={(s) => setSearchTerm(s)}
+                  />
+                </div>
+                <NFTCollectionFilter
+                  filter={filter}
+                  didChangeFilter={(newFilter) => {
+                    setFilter(newFilter);
 
-                  setCookie(null, "oo_filter", newFilter, {
-                    maxAge: 30 * 24 * 60 * 60,
-                    path: "/",
-                  });
-                }}
-              />
-            </div>
+                    setCookie(null, "oo_filter", newFilter, {
+                      maxAge: 30 * 24 * 60 * 60,
+                      path: "/",
+                    });
+                  }}
+                />
+              </div>
+              {attributeSelections &&
+                Object.values(attributeSelections).find((s) => s !== null) && (
+                  <div className="mt-4 flex gap-2">
+                    {Object.keys(attributeSelections).map((attributeName) => {
+                      const attributeValue = attributeSelections[attributeName];
+                      return attributeValue !== null ? (
+                        <label
+                          key={attributeName}
+                          className="button thinbutton"
+                          onClick={() =>
+                            removeSelection(attributeName, attributeValue)
+                          }
+                        >
+                          <span>
+                            {attributeName}:{" "}
+                            {attributeSelections[attributeName]}
+                          </span>
+                          <span>
+                            <XMarkIcon className="w-5 h-5" />
+                          </span>
+                        </label>
+                      ) : (
+                        ""
+                      );
+                    })}
+                  </div>
+                )}
+            </>
           )}
           {isLoading ? (
             <LoadingGrid className="mt-10 mx-1 gap-10 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 2xl:grid-cols-6" />
           ) : nftsMetadata.length > 0 ? (
-            <CachedNFTGrid
-              nfts={nftsMetadata}
-              listings={listings}
-              isImported={true}
-            />
+            <div>
+              <CachedNFTGrid
+                nfts={nftsMetadata}
+                listings={listings}
+                isImported={true}
+              />
+            </div>
           ) : (
             <ErrorMessage title={errorMessage ?? "No NFTs found"} />
           )}
