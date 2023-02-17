@@ -2,10 +2,6 @@ import ImageKit from "imagekit-javascript";
 
 const IMAGEKIT_ENDPOINT = process.env.NEXT_PUBLIC_IMAGEKIT_ENDPOINT || "";
 const IMAGEKIT_PUBLIC_KEY = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "";
-export const SERVER_URL =
-  process.env.NODE_ENV !== "production"
-    ? "http://localhost:3000"
-    : "https://1of1.tools";
 
 var imagekit = new ImageKit({
   publicKey: IMAGEKIT_PUBLIC_KEY,

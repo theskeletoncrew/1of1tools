@@ -2,16 +2,16 @@ export namespace Constants {
   export const PRODUCT_NAME = "1of1 Tools";
   export const TAGLINE = "Tagline";
 
-  export const HOST =
-    process.env.NODE_ENV === "development"
+  export const SERVER_URL =
+    process.env.NODE_ENV !== "production"
       ? "http://localhost:3000"
-      : "https://1of1tools.com";
+      : "https://1of1.tools";
 
   export const DISCORD_API = "https://discord.com/api";
 
   export const DISCORD_APP_ID = process.env.NEXT_PUBLIC_DISCORD_APP_ID || "";
-  export const DISCORD_OAUTH_REDIRECT_URI = `${HOST}/connect/discord`;
-  export const DISCORD_RETURN_URL = `${HOST}/connect/discord`;
+  export const DISCORD_OAUTH_REDIRECT_URI = `${SERVER_URL}/connect/discord`;
+  export const DISCORD_RETURN_URL = `${SERVER_URL}/connect/discord`;
 
   // send messages, embed links, attach files (?)
   export const DISCORD_BOT_PERMISSIONS_INTEGER = 18432;

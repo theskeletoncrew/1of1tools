@@ -12,11 +12,7 @@ import { Collection } from "models/collection";
 import { CollectionSortType } from "components/CollectionSort/CollectionSort";
 import { NFTListings } from "models/nftListings";
 import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
-
-export const SERVER_URL =
-  process.env.NODE_ENV !== "production"
-    ? "http://localhost:3000"
-    : "https://1of1.tools";
+import { Constants } from "models/constants";
 
 export namespace OneOfOneToolsClient {
   export async function cachedNfts(
@@ -26,17 +22,20 @@ export namespace OneOfOneToolsClient {
       return ok([]);
     }
     try {
-      const response = await fetch(`${SERVER_URL}/api/nfts/metadata`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mintAccounts: mintAccounts,
-          useCache: true,
-        }),
-      });
+      const response = await fetch(
+        `${Constants.SERVER_URL}/api/nfts/metadata`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mintAccounts: mintAccounts,
+            useCache: true,
+          }),
+        }
+      );
       const responseJSON = await response.json();
 
       if (response.ok) {
@@ -60,16 +59,19 @@ export namespace OneOfOneToolsClient {
       return ok([]);
     }
     try {
-      const response = await fetch(`${SERVER_URL}/api/nfts/metadata`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mintAccounts: mintAccounts,
-        }),
-      });
+      const response = await fetch(
+        `${Constants.SERVER_URL}/api/nfts/metadata`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mintAccounts: mintAccounts,
+          }),
+        }
+      );
       const responseJSON = await response.json();
 
       if (response.ok) {
@@ -130,7 +132,7 @@ export namespace OneOfOneToolsClient {
       const query = new URLSearchParams(params).toString();
 
       const response = await fetch(
-        `${SERVER_URL}/api/creators/${creatorAddress}/nfts?${query}`,
+        `${Constants.SERVER_URL}/api/creators/${creatorAddress}/nfts?${query}`,
         {
           method: "GET",
           headers: {
@@ -159,7 +161,7 @@ export namespace OneOfOneToolsClient {
   ): Promise<Result<{ mints: string[]; numberOfPages: number }, Error>> {
     try {
       const response = await fetch(
-        `${SERVER_URL}/api/wallets/${walletAddress}/nfts?page=${page}`,
+        `${Constants.SERVER_URL}/api/wallets/${walletAddress}/nfts?page=${page}`,
         {
           method: "GET",
           headers: {
@@ -201,7 +203,7 @@ export namespace OneOfOneToolsClient {
 
     try {
       const response = await fetch(
-        `${SERVER_URL}/api/nfts/${mintAddress}/events?${query}`,
+        `${Constants.SERVER_URL}/api/nfts/${mintAddress}/events?${query}`,
         {
           method: "GET",
           headers: {
@@ -229,7 +231,7 @@ export namespace OneOfOneToolsClient {
   ): Promise<Result<string[], Error>> {
     try {
       const response = await fetch(
-        `${SERVER_URL}/api/collections/${collectionAddress}/mintlist`,
+        `${Constants.SERVER_URL}/api/collections/${collectionAddress}/mintlist`,
         {
           method: "GET",
           headers: {
@@ -254,7 +256,7 @@ export namespace OneOfOneToolsClient {
   ): Promise<Result<string[], Error>> {
     try {
       const response = await fetch(
-        `${SERVER_URL}/api/wallets/${walletAddress}/names`,
+        `${Constants.SERVER_URL}/api/wallets/${walletAddress}/names`,
         {
           method: "GET",
           headers: {
@@ -279,7 +281,7 @@ export namespace OneOfOneToolsClient {
   ): Promise<Result<DialectNotificationSetting | null, Error>> {
     try {
       const response = await fetch(
-        `${SERVER_URL}/api/notifications/creators/${accountAddress}`,
+        `${Constants.SERVER_URL}/api/notifications/creators/${accountAddress}`,
         {
           method: "GET",
           headers: {
@@ -306,19 +308,22 @@ export namespace OneOfOneToolsClient {
     exchangeArtNotifications: boolean
   ): Promise<Result<null, Error>> {
     try {
-      const response = await fetch(`${SERVER_URL}/api/notifications/creators`, {
-        method: "PUT",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          accountAddress: accountAddress,
-          deliveryAddress: deliveryAddress,
-          formfunctionNotifications: formfunctionNotifications,
-          exchangeArtNotifications: exchangeArtNotifications,
-        }),
-      });
+      const response = await fetch(
+        `${Constants.SERVER_URL}/api/notifications/creators`,
+        {
+          method: "PUT",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            accountAddress: accountAddress,
+            deliveryAddress: deliveryAddress,
+            formfunctionNotifications: formfunctionNotifications,
+            exchangeArtNotifications: exchangeArtNotifications,
+          }),
+        }
+      );
       const result = await response.json();
 
       if (response.ok) {
@@ -335,7 +340,7 @@ export namespace OneOfOneToolsClient {
   ): Promise<Result<DiscordGuildNotificationSetting[], Error>> {
     try {
       const response = await fetch(
-        `${SERVER_URL}/api/notifications/creators/${accountAddress}?deliveryType=discord`,
+        `${Constants.SERVER_URL}/api/notifications/creators/${accountAddress}?deliveryType=discord`,
         {
           method: "GET",
           headers: {
@@ -360,18 +365,21 @@ export namespace OneOfOneToolsClient {
     subscriptions: DiscordGuildNotificationSetting[]
   ): Promise<Result<null, Error>> {
     try {
-      const response = await fetch(`${SERVER_URL}/api/notifications/creators`, {
-        method: "PUT",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          accountAddress: accountAddress,
-          guildSubscriptions: subscriptions,
-          deliveryType: "discord",
-        }),
-      });
+      const response = await fetch(
+        `${Constants.SERVER_URL}/api/notifications/creators`,
+        {
+          method: "PUT",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            accountAddress: accountAddress,
+            guildSubscriptions: subscriptions,
+            deliveryType: "discord",
+          }),
+        }
+      );
       const result = await response.json();
 
       if (response.ok) {
@@ -388,7 +396,7 @@ export namespace OneOfOneToolsClient {
   ): Promise<Result<DialectNotificationSetting | null, Error>> {
     try {
       const response = await fetch(
-        `${SERVER_URL}/api/notifications/nfts/${mintAddress}`,
+        `${Constants.SERVER_URL}/api/notifications/nfts/${mintAddress}`,
         {
           method: "GET",
           headers: {
@@ -415,19 +423,22 @@ export namespace OneOfOneToolsClient {
     exchangeArtNotifications: boolean
   ): Promise<Result<null, Error>> {
     try {
-      const response = await fetch(`${SERVER_URL}/api/notifications/nfts`, {
-        method: "PUT",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mintAddress: mintAddress,
-          deliveryAddress: deliveryAddress,
-          formfunctionNotifications: formfunctionNotifications,
-          exchangeArtNotifications: exchangeArtNotifications,
-        }),
-      });
+      const response = await fetch(
+        `${Constants.SERVER_URL}/api/notifications/nfts`,
+        {
+          method: "PUT",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mintAddress: mintAddress,
+            deliveryAddress: deliveryAddress,
+            formfunctionNotifications: formfunctionNotifications,
+            exchangeArtNotifications: exchangeArtNotifications,
+          }),
+        }
+      );
       const result = await response.json();
 
       if (response.ok) {
@@ -443,13 +454,16 @@ export namespace OneOfOneToolsClient {
     Result<DialectNotificationSetting | null, Error>
   > {
     try {
-      const response = await fetch(`${SERVER_URL}/api/notifications/boutique`, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${Constants.SERVER_URL}/api/notifications/boutique`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
       const result = await response.json();
 
       if (response.ok) {
@@ -465,16 +479,19 @@ export namespace OneOfOneToolsClient {
     deliveryAddress: string
   ): Promise<Result<null, Error>> {
     try {
-      const response = await fetch(`${SERVER_URL}/api/notifications/boutique`, {
-        method: "PUT",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          deliveryAddress: deliveryAddress,
-        }),
-      });
+      const response = await fetch(
+        `${Constants.SERVER_URL}/api/notifications/boutique`,
+        {
+          method: "PUT",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            deliveryAddress: deliveryAddress,
+          }),
+        }
+      );
       const result = await response.json();
 
       if (response.ok) {
@@ -491,7 +508,7 @@ export namespace OneOfOneToolsClient {
   > {
     try {
       const response = await fetch(
-        `${SERVER_URL}/api/notifications/boutique?deliveryType=discord`,
+        `${Constants.SERVER_URL}/api/notifications/boutique?deliveryType=discord`,
         {
           method: "GET",
           headers: {
@@ -515,17 +532,20 @@ export namespace OneOfOneToolsClient {
     subscriptions: DiscordGuildNotificationSetting[]
   ): Promise<Result<null, Error>> {
     try {
-      const response = await fetch(`${SERVER_URL}/api/notifications/boutique`, {
-        method: "PUT",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          guildSubscriptions: subscriptions,
-          deliveryType: "discord",
-        }),
-      });
+      const response = await fetch(
+        `${Constants.SERVER_URL}/api/notifications/boutique`,
+        {
+          method: "PUT",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            guildSubscriptions: subscriptions,
+            deliveryType: "discord",
+          }),
+        }
+      );
       const result = await response.json();
 
       if (response.ok) {
@@ -542,7 +562,7 @@ export namespace OneOfOneToolsClient {
     recipientEmail: string
   ): Promise<Result<{ id: string; isComplete: boolean }, Error>> {
     try {
-      const response = await fetch(`${SERVER_URL}/api/mint`, {
+      const response = await fetch(`${Constants.SERVER_URL}/api/mint`, {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -571,13 +591,16 @@ export namespace OneOfOneToolsClient {
     uploadId: string
   ): Promise<Result<{ mintAddress: string; isComplete: boolean }, Error>> {
     try {
-      const response = await fetch(`${SERVER_URL}/api/mint/${uploadId}`, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${Constants.SERVER_URL}/api/mint/${uploadId}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
       const result = await response.json();
 
       if (response.ok) {
@@ -600,7 +623,7 @@ export namespace OneOfOneToolsClient {
     twitterUsername: string | undefined
   ): Promise<Result<null, Error>> {
     try {
-      const response = await fetch(`${SERVER_URL}/api/accounts`, {
+      const response = await fetch(`${Constants.SERVER_URL}/api/accounts`, {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -629,7 +652,7 @@ export namespace OneOfOneToolsClient {
     Result<Account, Error>
   > {
     try {
-      const response = await fetch(`${SERVER_URL}/api/accounts`, {
+      const response = await fetch(`${Constants.SERVER_URL}/api/accounts`, {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -654,22 +677,25 @@ export namespace OneOfOneToolsClient {
     guildId: string,
     cookie: string | undefined
   ): Promise<Result<boolean, Error>> {
-    const response = await fetch(`${SERVER_URL}/api/accounts/connect/discord`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        Accept: "application/json",
-        "Access-Control-Allow-Credentials": "true",
-        "Content-Type": "application/json",
-        Cookie: cookie ?? "",
-      },
-      body: JSON.stringify({
-        discordAccessToken: discordAccessToken,
-        discordTokenType: discordTokenType,
-        discordRefreshToken: discordRefreshToken,
-        guildId: guildId,
-      }),
-    });
+    const response = await fetch(
+      `${Constants.SERVER_URL}/api/accounts/connect/discord`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+          "Access-Control-Allow-Credentials": "true",
+          "Content-Type": "application/json",
+          Cookie: cookie ?? "",
+        },
+        body: JSON.stringify({
+          discordAccessToken: discordAccessToken,
+          discordTokenType: discordTokenType,
+          discordRefreshToken: discordRefreshToken,
+          guildId: guildId,
+        }),
+      }
+    );
     const result = await response.json();
     if (response.ok) {
       return ok(result);
@@ -681,17 +707,20 @@ export namespace OneOfOneToolsClient {
     guildId: string,
     channelId: string
   ): Promise<Result<boolean, Error>> {
-    const response = await fetch(`${SERVER_URL}/api/accounts/discord-channel`, {
-      method: "PATCH",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        guildId: guildId,
-        channelId: channelId,
-      }),
-    });
+    const response = await fetch(
+      `${Constants.SERVER_URL}/api/accounts/discord-channel`,
+      {
+        method: "PATCH",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          guildId: guildId,
+          channelId: channelId,
+        }),
+      }
+    );
     const result = await response.json();
     if (response.ok) {
       return ok(result);
@@ -703,7 +732,7 @@ export namespace OneOfOneToolsClient {
     guildId: string
   ): Promise<Result<boolean, Error>> {
     const response = await fetch(
-      `${SERVER_URL}/api/accounts/discord-guild/${guildId}`,
+      `${Constants.SERVER_URL}/api/accounts/discord-guild/${guildId}`,
       {
         method: "DELETE",
         headers: {
@@ -724,7 +753,7 @@ export namespace OneOfOneToolsClient {
   ): Promise<Result<Collection, Error>> {
     try {
       const response = await fetch(
-        `${SERVER_URL}/api/collections/boutique/${slug}`,
+        `${Constants.SERVER_URL}/api/collections/boutique/${slug}`,
         {
           method: "GET",
           headers: {
@@ -763,7 +792,7 @@ export namespace OneOfOneToolsClient {
       const query = new URLSearchParams(params).toString();
 
       const response = await fetch(
-        `${SERVER_URL}/api/collections/boutique?${query}`,
+        `${Constants.SERVER_URL}/api/collections/boutique?${query}`,
         {
           method: "GET",
           headers: {
@@ -796,7 +825,7 @@ export namespace OneOfOneToolsClient {
       const query = new URLSearchParams(params).toString();
 
       const response = await fetch(
-        `${SERVER_URL}/api/collections/boutique/events?${query}`,
+        `${Constants.SERVER_URL}/api/collections/boutique/events?${query}`,
         {
           method: "GET",
           headers: {
@@ -820,14 +849,17 @@ export namespace OneOfOneToolsClient {
     collection: Collection
   ): Promise<Result<Collection[], Error>> {
     try {
-      const response = await fetch(`${SERVER_URL}/api/collections/boutique`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ collection: collection }),
-      });
+      const response = await fetch(
+        `${Constants.SERVER_URL}/api/collections/boutique`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ collection: collection }),
+        }
+      );
       const responseJSON = await response.json();
 
       if (response.ok) {
@@ -844,7 +876,7 @@ export namespace OneOfOneToolsClient {
   ): Promise<Result<NFTListings[], Error>> {
     try {
       const response = await fetch(
-        `${SERVER_URL}/api/collections/boutique/${slug}/listings`,
+        `${Constants.SERVER_URL}/api/collections/boutique/${slug}/listings`,
         {
           method: "GET",
           headers: {
@@ -870,7 +902,7 @@ export namespace OneOfOneToolsClient {
   ): Promise<Result<NFTListings, Error>> {
     try {
       const response = await fetch(
-        `${SERVER_URL}/api/nfts/${mintAddress}/listings?firstVerifiedCreator=${firstVerifiedCreator}`,
+        `${Constants.SERVER_URL}/api/nfts/${mintAddress}/listings?firstVerifiedCreator=${firstVerifiedCreator}`,
         {
           method: "GET",
           headers: {

@@ -6,6 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import { notEmpty, tryPublicKey } from "utils";
 import { clusterApiUrl, network } from "utils/network";
+import { Constants } from "models/constants";
 
 const HELIUS_AUTHORIZATION_SECRET =
   process.env.HELIUS_AUTHORIZATION_SECRET || "";
@@ -117,7 +118,9 @@ apiRoute.post(async (req, res) => {
 
     if (nft.json?.image) {
       const imageRes = await fetch(
-        `https://1of1.tools/api/assets/nft/${mintAddress}/640?originalURL=${encodeURIComponent(
+        `${
+          Constants.SERVER_URL
+        }/api/assets/nft/${mintAddress}/640?originalURL=${encodeURIComponent(
           nft.json?.image
         )}&returnType=json`,
         {
