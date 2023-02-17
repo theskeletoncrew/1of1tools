@@ -1,5 +1,5 @@
 import { Firestore, FieldValue } from "@google-cloud/firestore";
-import { Metaplex, Nft } from "@metaplex-foundation/js";
+import { isNftPrintEdition, Metaplex, Nft } from "@metaplex-foundation/js";
 import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { CollectionSortType } from "components/CollectionSort/CollectionSort";
 import { randomUUID } from "crypto";
@@ -772,7 +772,7 @@ export async function addBoutiqueCollectionEvent(
 
 export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
   event: OneOfOneNFTEvent
-): Promise<Result<boolean, Error>> {
+): Promise<Result<{ isNewlyTracked: boolean; shouldIgnore: boolean }, Error>> {
   try {
     const nftRef = await db
       .collection("boutique-collection-items")
@@ -785,11 +785,17 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
     if (nftRef.exists) {
       nft = nftRef.data() as CollectionNFT;
     } else {
-      nft = await trackNewMintIfPartOfCollection(event);
+      const nftRes = await trackNewMintIfPartOfCollection(event);
+      // its something we're not going to track because it does belong to a collection
+      // but its not one of the boutique collections
+      if (nftRes.shouldIgnore) {
+        return ok({ isNewlyTracked: false, shouldIgnore: true });
+      }
+      nft = nftRes.collectionNFT;
       isNewlyTrackedNFT = true;
     }
     if (!nft) {
-      return err(new Error("NFT is not tracked"));
+      return err(new Error("NFT is not tracked."));
     }
 
     const slug = nft.collectionSlug;
@@ -918,7 +924,10 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
       }
     });
 
-    return ok(isNewlyTrackedNFT);
+    return ok({
+      isNewlyTracked: isNewlyTrackedNFT,
+      shouldIgnore: false,
+    });
   } catch (error) {
     console.error(error);
     return err(error as Error);
@@ -966,51 +975,65 @@ export async function getAllEvents(): Promise<
 
 export async function trackNewMintIfPartOfCollection(
   event: OneOfOneNFTEvent
-): Promise<CollectionNFT | undefined> {
-  if (
-    event.type == TransactionType.NFT_MINT ||
-    event.type == TransactionType.NFT_AUCTION_CREATED
-  ) {
-    const endpoint = clusterApiUrl(network);
-    const connection = new Connection(endpoint);
-    const mx = Metaplex.make(connection);
-    const nftDetails = (await mx
-      .nfts()
-      .findByMint({ mintAddress: new PublicKey(event.mint) })) as Nft;
-    if (nftDetails.collection?.address) {
-      const collectionRef = await db
-        .collection("boutique-collections")
-        .where(
-          "collectionAddress",
-          "==",
-          nftDetails.collection.address.toString()
-        )
-        .limit(1)
-        .get();
-      if (collectionRef.docs.length == 1) {
-        const collection = collectionRef.docs[0]!.data() as Collection;
-        collection.slug = collectionRef.docs[0]!.id;
-        const updatedMints = collection.mintAddresses.concat(event.mint);
-        // add mint address to collection
-        await db.collection(`boutique-collections`).doc(collection.slug).set(
-          {
-            mintAddresses: updatedMints,
-          },
-          { merge: true }
-        );
+): Promise<{
+  collectionNFT: CollectionNFT | undefined;
+  shouldIgnore: boolean;
+}> {
+  const endpoint = clusterApiUrl(network);
+  const connection = new Connection(endpoint);
+  const mx = Metaplex.make(connection);
+  const nftDetails = (await mx
+    .nfts()
+    .findByMint({ mintAddress: new PublicKey(event.mint) })) as Nft;
 
-        // add all of the mint addresses to the list of tracked addresses
-        await addMintAsTracked(event.mint, collection.slug);
+  if (isNftPrintEdition(nftDetails.edition)) {
+    return {
+      collectionNFT: undefined,
+      shouldIgnore: true,
+    };
+  }
 
-        return {
+  if (nftDetails.collection?.address) {
+    const collectionRef = await db
+      .collection("boutique-collections")
+      .where(
+        "collectionAddress",
+        "==",
+        nftDetails.collection.address.toString()
+      )
+      .limit(1)
+      .get();
+
+    if (collectionRef.docs.length == 1) {
+      const collection = collectionRef.docs[0]!.data() as Collection;
+      collection.slug = collectionRef.docs[0]!.id;
+      const updatedMints = collection.mintAddresses.concat(event.mint);
+
+      // add mint address to collection
+      await db.collection(`boutique-collections`).doc(collection.slug).set(
+        {
+          mintAddresses: updatedMints,
+        },
+        { merge: true }
+      );
+
+      // add all of the mint addresses to the list of tracked addresses
+      await addMintAsTracked(event.mint, collection.slug);
+
+      return {
+        collectionNFT: {
           address: event.mint,
           collectionSlug: collection.slug,
-        } as CollectionNFT;
-      }
+        } as CollectionNFT,
+        shouldIgnore: nftDetails.collection?.address !== null,
+      };
     }
   }
 
-  return undefined;
+  return {
+    collectionNFT: undefined,
+    shouldIgnore: false,
+  };
 }
 
 export async function addNewTrackedMint(

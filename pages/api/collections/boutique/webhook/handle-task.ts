@@ -107,7 +107,16 @@ apiRoute.post(async (req, res) => {
       console.log("Monitored Event");
       console.log(event);
 
-      isNewlyFoundNFT = addRes.value;
+      isNewlyFoundNFT = addRes.value.isNewlyTracked;
+
+      if (addRes.value.shouldIgnore) {
+        // end here if this is an nft that we dont track
+        // and it belongs to a collection thats not tracked
+        // or its an edition
+        res.status(201).json({
+          success: true,
+        });
+      }
     } else {
       console.log("Unmonitored Event");
       console.log(event);

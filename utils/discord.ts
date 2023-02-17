@@ -136,7 +136,7 @@ export const discordEmbedForTransaction = async (
     embed.setTitle(`${typeText.toUpperCase()} - Unknown`);
   }
 
-  if (isUnmonitored) {
+  if (isBoutique && isUnmonitored) {
     fields.push({
       name: "Unmonitored",
       value:
