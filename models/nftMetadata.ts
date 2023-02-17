@@ -57,4 +57,5 @@ export interface NFTFile {
 export interface NFTAttribute {
   traitType: string;
   value: string;
+  [key: string]: string;
 }
