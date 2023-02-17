@@ -140,7 +140,7 @@ export const discordEmbedForTransaction = async (
     fields.push({
       name: "Unmonitored",
       value:
-        "NOTE: This NFT is not known to be from a boutique collection, but it does share a creator address with one.",
+        "This NFT is not officially in our tracking list (yet). It shares a creator address with a boutique collection.",
     });
   }
 
