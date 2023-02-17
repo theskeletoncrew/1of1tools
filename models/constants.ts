@@ -19,4 +19,7 @@ export namespace Constants {
     DISCORD_RETURN_URL
   )}`;
   export const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || "";
+
+  export const UNTRACKED_IMAGE_URL =
+    "https://1of1.tools/images/untracked-nft-thumb.jpg";
 }

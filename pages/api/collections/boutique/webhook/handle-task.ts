@@ -128,7 +128,7 @@ apiRoute.post(async (req, res) => {
 
     if (isNewlyFoundNFT) {
       await addOffchainCachingTaskForMint(event.mint);
-      await sendNotifications(transaction, isUnmonitored);
+      await sendNotifications(transaction, null, isUnmonitored);
     } else {
       const nftMetadataRes = await getNFTsMetadata([event.mint]);
       const nftMetadata = nftMetadataRes.isOk()

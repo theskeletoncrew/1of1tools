@@ -10,6 +10,7 @@ import {
   urlForSource,
 } from "./helius";
 import { loadBonfidaName, loadTwitterName } from "utils/addressResolution";
+import { Constants } from "models/constants";
 
 export const discordEmbedForTransaction = async (
   transaction: EnrichedTransaction,
@@ -127,13 +128,17 @@ export const discordEmbedForTransaction = async (
     //   });
     // });
   } else if (nft) {
-    embed.setTitle(
-      `${typeText.toUpperCase()} - ${
-        nft.name ? nft.name : shortenedAddress(nft.mint)
-      }`
-    );
+    embed
+      .setTitle(
+        `${typeText.toUpperCase()} - ${
+          nft.name ? nft.name : shortenedAddress(nft.mint)
+        }`
+      )
+      .setImage(Constants.UNTRACKED_IMAGE_URL);
   } else {
-    embed.setTitle(`${typeText.toUpperCase()} - Unknown`);
+    embed
+      .setTitle(`${typeText.toUpperCase()} - Unknown`)
+      .setImage(Constants.UNTRACKED_IMAGE_URL);
   }
 
   if (isBoutique && isUnmonitored) {
