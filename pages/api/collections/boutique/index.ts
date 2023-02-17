@@ -24,11 +24,11 @@ apiRoute.get(async (req, res) => {
       ? (sortStr.toString() as CollectionSortType)
       : CollectionSortType.TOTAL_VOLUME_DESC;
 
-    const collectionsRes = await getBoutiqueCollections(
-      cursor?.toString(),
-      limit > 0 ? limit : null,
-      sort
-    );
+    const collectionsRes = await getBoutiqueCollections({
+      cursor: cursor?.toString(),
+      limit: limit > 0 ? limit : null,
+      sort,
+    });
     if (!collectionsRes.isOk()) {
       res
         .status(500)

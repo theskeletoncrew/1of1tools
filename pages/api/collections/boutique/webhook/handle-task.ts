@@ -3,6 +3,7 @@ import { OneOfOneNFTEvent, oneOfOneNFTEvent } from "models/nftEvent";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import {
+  addBoutiqueCollectionEventForUnmonitoredNFT,
   addBoutiqueCollectionEventIfMonitoredAndUpdateStats,
   getDialectSubscribersToBoutiqueNotifications,
   getDiscordSubscribersToBoutiqueNotifications,
@@ -29,6 +30,7 @@ import { Constants } from "models/constants";
 import { DialectSdk } from "@dialectlabs/sdk";
 import { Solana } from "@dialectlabs/blockchain-sdk-solana";
 import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
+import { addOffchainCachingTaskForMint } from "utils/nftCache";
 
 function unique(array: any[], propertyName: string) {
   return array.filter(
@@ -95,28 +97,36 @@ apiRoute.post(async (req, res) => {
       return;
     }
 
+    let isNewlyFoundNFT = false;
+    let isUnmonitored = false;
+
     const addRes = await addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
       event
     );
-    if (!addRes.isOk()) {
+    if (addRes.isOk()) {
+      console.log("Monitored Event");
+      console.log(event);
+
+      isNewlyFoundNFT = addRes.value;
+    } else {
       console.log("Unmonitored Event");
       console.log(event);
 
-      // not a monitored NFT for creator or collection address
-      res.status(200).json({
-        success: true,
-      });
-      return;
+      await addBoutiqueCollectionEventForUnmonitoredNFT(event);
+      isNewlyFoundNFT = true;
+      isUnmonitored = true;
     }
 
-    console.log("Monitored Event");
-    console.log(event);
-
-    const nftMetadataRes = await getNFTsMetadata([event.mint]);
-    const nftMetadata = nftMetadataRes.isOk() ? nftMetadataRes.value[0]! : null;
-    console.log(nftMetadata);
-
-    await sendNotifications(transaction, nftMetadata);
+    if (isNewlyFoundNFT) {
+      await addOffchainCachingTaskForMint(event.mint);
+      await sendNotifications(transaction);
+    } else {
+      const nftMetadataRes = await getNFTsMetadata([event.mint]);
+      const nftMetadata = nftMetadataRes.isOk()
+        ? nftMetadataRes.value[0]!
+        : null;
+      await sendNotifications(transaction, nftMetadata, isUnmonitored);
+    }
 
     res.status(201).json({
       success: true,
@@ -131,7 +141,8 @@ apiRoute.post(async (req, res) => {
 
 const sendNotifications = async (
   transaction: EnrichedTransaction,
-  metadata: OneOfOneNFTMetadata | null
+  metadata: OneOfOneNFTMetadata | null = null,
+  isUnmonitored: boolean = false
 ): Promise<null | Error> => {
   let lastError: Error | null = null;
 
@@ -165,7 +176,9 @@ const sendNotifications = async (
     const recipientsSubscribedToDiscord = await discordSubscribers();
     const discordEmbed = await discordEmbedForTransaction(
       transaction,
-      metadata
+      metadata,
+      true,
+      isUnmonitored
     );
 
     if (!discordClient) {

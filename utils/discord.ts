@@ -13,7 +13,9 @@ import { loadBonfidaName, loadTwitterName } from "utils/addressResolution";
 
 export const discordEmbedForTransaction = async (
   transaction: EnrichedTransaction,
-  metadata: OneOfOneNFTMetadata | null
+  metadata: OneOfOneNFTMetadata | null,
+  isBoutique: boolean = false,
+  isUnmonitored: boolean = false
 ): Promise<EmbedBuilder> => {
   const nftEvent = transaction.events.nft;
   const nft = nftEvent.nfts?.length > 0 ? nftEvent.nfts[0] : null;
@@ -133,6 +135,15 @@ export const discordEmbedForTransaction = async (
   } else {
     embed.setTitle(`${typeText.toUpperCase()} - Unknown`);
   }
+
+  if (isUnmonitored) {
+    fields.push({
+      name: "Unmonitored",
+      value:
+        "NOTE: This NFT is not known to be from a boutique collection, but it does share a creator address with one.",
+    });
+  }
+
   embed.addFields(fields);
   return embed;
 };

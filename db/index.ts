@@ -467,17 +467,18 @@ export async function setDiscordGuilds(
   }
 }
 
-export async function getBoutiqueCollections(
-  cursor: string | null | undefined = null,
-  limit: number | null = COLLECTIONS_PER_PAGE,
-  sort: CollectionSortType | null = CollectionSortType.TOTAL_VOLUME_DESC
-): Promise<Result<Collection[], Error>> {
+export async function getBoutiqueCollections(options?: {
+  cursor?: string | null; // default: null,
+  limit?: number | null; // default: COLLECTIONS_PER_PAGE,
+  sort?: CollectionSortType | null; // default: CollectionSortType.TOTAL_VOLUME_DESC
+}): Promise<Result<Collection[], Error>> {
   try {
     let query = db
       .collection("boutique-collections")
       .where("approved", "==", true);
 
-    switch (sort) {
+    const resolvedSort = options?.sort ?? CollectionSortType.TOTAL_VOLUME_DESC;
+    switch (resolvedSort) {
       case CollectionSortType.ATH_SALE_DESC:
         query = query.orderBy("athSale.amount", "desc");
         break;
@@ -771,7 +772,7 @@ export async function addBoutiqueCollectionEvent(
 
 export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
   event: OneOfOneNFTEvent
-): Promise<Result<null, Error>> {
+): Promise<Result<boolean, Error>> {
   try {
     const nftRef = await db
       .collection("boutique-collection-items")
@@ -779,11 +780,13 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
       .get();
 
     let nft: CollectionNFT | undefined;
+    let isNewlyTrackedNFT = false;
 
     if (nftRef.exists) {
       nft = nftRef.data() as CollectionNFT;
     } else {
       nft = await trackNewMintIfPartOfCollection(event);
+      isNewlyTrackedNFT = true;
     }
     if (!nft) {
       return err(new Error("NFT is not tracked"));
@@ -914,6 +917,27 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
         }
       }
     });
+
+    return ok(isNewlyTrackedNFT);
+  } catch (error) {
+    console.error(error);
+    return err(error as Error);
+  }
+}
+
+export async function addBoutiqueCollectionEventForUnmonitoredNFT(
+  event: OneOfOneNFTEvent
+): Promise<Result<null, Error>> {
+  try {
+    const { signature, ...eventDetails } = event;
+
+    // add the event
+    await db
+      .collection(`boutique-collection-unmonitored-events`)
+      .doc(signature)
+      .set({
+        ...eventDetails,
+      });
 
     return ok(null);
   } catch (error) {
