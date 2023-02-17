@@ -268,7 +268,7 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
           {listings && (
             <>
               <div className="mx-1 flex items-end justify-between h-[40px]">
-                <div className="flex items-center gap-3 h-full">
+                <div className="flex items-center gap-3 h-full max-w-[50%]">
                   {attributes && Object.keys(attributes).length > 0 && (
                     <CollectionFilters
                       attributes={attributes}

@@ -8,7 +8,7 @@ interface Props {
 const CollectionSearch: React.FC<Props> = ({ searchTerm, didChangeSearch }) => {
   const [search, setSearch] = useState<string>();
   return (
-    <div className="flex items-center gap-2 h-full max-w-[50%]">
+    <div className="flex items-center gap-2 h-full">
       <span className="whitespace-nowrap text-indigo-500">Search:</span>
       <input
         type="search"
