@@ -181,6 +181,11 @@ const sendNotifications = async (
     }
   }
 
+  // for now short circuit for unmonitored
+  if (isUnmonitored) {
+    return lastError;
+  }
+
   try {
     const recipientsSubscribedToDiscord = await discordSubscribers();
     const discordEmbed = await discordEmbedForTransaction(
