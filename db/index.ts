@@ -610,7 +610,7 @@ export async function addAllMintsAsTracked(
   }
 }
 
-export async function addMintAsTracked(
+async function addMintAsTracked(
   mintAddress: string,
   collectionSlug: string
 ): Promise<Result<null, Error>> {
@@ -1095,6 +1095,38 @@ export async function addNewTrackedMint(
   } as CollectionNFT;
 
   return { collection, nft };
+}
+
+export async function migrateUntrackedEventsToTracked(
+  mintAddress: string
+): Promise<Result<null, Error>> {
+  try {
+    await db.runTransaction(async (transaction) => {
+      // get all the unmonitored events for this mint
+      const snapshot = await transaction.get(
+        db
+          .collection("boutique-collection-unmonitored-events")
+          .where("mint", "==", mintAddress)
+      );
+
+      for (let i = 0; i < snapshot.docs.length; i++) {
+        const doc = snapshot.docs[i]!;
+
+        // copy them to monitored events
+        transaction.set(
+          db.collection(`boutique-collection-events`).doc(doc.id),
+          doc.data()
+        );
+
+        // delete the unmonitored events
+        transaction.delete(doc.ref);
+      }
+    });
+
+    return ok(null);
+  } catch (error) {
+    return err(error as Error);
+  }
 }
 
 export async function addNFTMetadata(
