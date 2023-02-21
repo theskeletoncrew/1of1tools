@@ -1158,7 +1158,9 @@ export async function getNFTsMetadata(
 
     const metadata = results.map((doc) => {
       const data = doc.data() as OneOfOneNFTMetadata;
-      data.mint = doc.id;
+      if (data) {
+        data.mint = doc.id;
+      }
       return data;
     });
     return ok(metadata);

@@ -21,6 +21,7 @@ import CachedNFTGrid from "components/NFTGrid/CachedNFTGrid";
 import CollectionSearch from "components/CollectionSearch/CollectionSearch";
 import CollectionFilters from "components/CollectionFilters/CollectionFilters";
 import { XMarkIcon } from "@heroicons/react/20/solid";
+import { notEmpty } from "utils";
 
 interface Props {
   collection: Collection;
@@ -81,7 +82,7 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
     if (nftsRes.isErr()) {
       toast.error("Failed to load more nfts: " + nftsRes.error.message);
     } else {
-      let nfts = nftsRes.value;
+      let nfts = nftsRes.value.filter(notEmpty);
       setAllNftsMetadata(nfts);
       calculateAttributes(nfts);
     }
