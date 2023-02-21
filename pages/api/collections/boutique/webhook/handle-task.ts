@@ -31,6 +31,7 @@ import { DialectSdk } from "@dialectlabs/sdk";
 import { Solana } from "@dialectlabs/blockchain-sdk-solana";
 import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
 import { addOffchainCachingTaskForMint } from "utils/nftCache";
+import { cacheMint } from "utils/cacheMint";
 
 function unique(array: any[], propertyName: string) {
   return array.filter(
@@ -127,15 +128,17 @@ apiRoute.post(async (req, res) => {
     }
 
     if (isNewlyFoundNFT) {
-      await addOffchainCachingTaskForMint(event.mint);
-      await sendNotifications(transaction, null, isUnmonitored);
-    } else {
-      const nftMetadataRes = await getNFTsMetadata([event.mint]);
-      const nftMetadata = nftMetadataRes.isOk()
-        ? nftMetadataRes.value[0]!
-        : null;
-      await sendNotifications(transaction, nftMetadata, isUnmonitored);
+      const cacheRes = await cacheMint(event.mint);
+      if (!cacheRes.isOk()) {
+        res.status(200).json({
+          success: true,
+        });
+      }
     }
+
+    const nftMetadataRes = await getNFTsMetadata([event.mint]);
+    const nftMetadata = nftMetadataRes.isOk() ? nftMetadataRes.value[0]! : null;
+    await sendNotifications(transaction, nftMetadata, isUnmonitored);
 
     res.status(201).json({
       success: true,
@@ -158,10 +161,8 @@ const sendNotifications = async (
   try {
     const customDescription = humanReadableTransaction(transaction);
 
-    let recipients: DialectNotificationSetting[] = [];
-
     const recipientsSubscribedToDialect = await dialectSubscribers();
-    recipients = recipients.concat(recipientsSubscribedToDialect);
+    console.log("Dialect Subscribers", recipientsSubscribedToDialect);
 
     if (!dialect) {
       dialect = createDialectSdk();
@@ -169,7 +170,7 @@ const sendNotifications = async (
 
     await sendDialectMessagesForRecipients(
       dialect,
-      unique(recipients, "deliveryAddress"),
+      unique(recipientsSubscribedToDialect, "deliveryAddress"),
       customDescription
     );
   } catch (error) {
