@@ -30,8 +30,11 @@ import { Constants } from "models/constants";
 import { DialectSdk } from "@dialectlabs/sdk";
 import { Solana } from "@dialectlabs/blockchain-sdk-solana";
 import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
-import { addOffchainCachingTaskForMint } from "utils/nftCache";
 import { cacheMint } from "utils/cacheMint";
+import { Helius } from "helius-sdk";
+
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY || "";
+const HELIUS_WEBHOOK_ID = process.env.HELIUS_WEBHOOK_ID || "";
 
 function unique(array: any[], propertyName: string) {
   return array.filter(
@@ -117,6 +120,12 @@ apiRoute.post(async (req, res) => {
         res.status(201).json({
           success: true,
         });
+      }
+
+      if (isNewlyFoundNFT) {
+        // subscribe webhook to events about this mint address
+        const helius = new Helius(HELIUS_API_KEY);
+        await helius.appendAddressesToWebhook(HELIUS_WEBHOOK_ID, [event.mint]);
       }
     } else {
       console.log("Unmonitored Event");

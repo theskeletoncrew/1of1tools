@@ -160,9 +160,10 @@ apiRoute.post(async (req, res) => {
 
     // subscribe webhook to events about this creator address
     const helius = new Helius(HELIUS_API_KEY);
-    await helius.appendAddressesToWebhook(HELIUS_WEBHOOK_ID, [
-      firstVerifiedCreator,
-    ]);
+    await helius.appendAddressesToWebhook(
+      HELIUS_WEBHOOK_ID,
+      collection.mintAddresses.concat([firstVerifiedCreator])
+    );
 
     res.status(200).json({
       success: true,

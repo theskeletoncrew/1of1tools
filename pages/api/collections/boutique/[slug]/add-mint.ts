@@ -3,12 +3,15 @@ import {
   addNewTrackedMint,
   migrateUntrackedEventsToTracked,
 } from "db";
+import { Helius } from "helius-sdk";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
 import { addOffchainCachingTaskForMint } from "utils/nftCache";
 
 const HELIUS_AUTHORIZATION_SECRET =
   process.env.HELIUS_AUTHORIZATION_SECRET || "";
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY || "";
+const HELIUS_WEBHOOK_ID = process.env.HELIUS_WEBHOOK_ID || "";
 
 const apiRoute = nextConnect<NextApiRequest, NextApiResponse<any | Error>>({
   onError(error, req, res) {
@@ -77,6 +80,10 @@ apiRoute.post(async (req, res) => {
 
     // migrate the captured untracked events to tracked
     await migrateUntrackedEventsToTracked(mint);
+
+    // subscribe webhook to events about this mint address
+    const helius = new Helius(HELIUS_API_KEY);
+    await helius.appendAddressesToWebhook(HELIUS_WEBHOOK_ID, [mint]);
 
     res.status(200).json({
       success: true,
