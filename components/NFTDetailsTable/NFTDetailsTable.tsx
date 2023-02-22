@@ -6,7 +6,6 @@ import {
   Sft,
   SftWithToken,
 } from "@metaplex-foundation/js";
-import { NFTMetadataOffChain, NFTMetadataOnChain } from "models/nftMetadata";
 import { pubKeyUrl, shortenedAddress, shortPubKey } from "utils";
 import { network } from "utils/network";
 import { CheckBadgeIcon, Square2StackIcon } from "@heroicons/react/24/outline";
@@ -17,21 +16,27 @@ import { loadBonfidaName, loadTwitterName } from "utils/addressResolution";
 import { useWallet } from "@solana/wallet-adapter-react";
 
 interface Props {
-  onChainData: NFTMetadataOnChain;
-  offChainData: NFTMetadataOffChain;
   collectionNft?: Nft;
   nft?: Nft | Sft | SftWithToken | NftWithToken;
   parentNft?: Nft;
   owner?: string;
+  sellerFeeBasisPoints: number;
+  mintAddress: string;
+  updateAuthority: string;
+  collectionAddress: string | undefined;
+  isMutable: boolean;
 }
 
 const NFTDetailsTable: React.FC<Props> = ({
-  onChainData,
-  offChainData,
   collectionNft,
   nft,
   parentNft,
   owner,
+  sellerFeeBasisPoints,
+  mintAddress,
+  updateAuthority,
+  collectionAddress,
+  isMutable,
 }) => {
   const wallet = useWallet();
   const [bonfidaName, setBonfidaName] = useState<string>();
@@ -54,28 +59,24 @@ const NFTDetailsTable: React.FC<Props> = ({
         <tr>
           <td className="pr-10">Royalty:</td>
           <td className="text-right text-indigo-300">
-            {offChainData.sellerFeeBasisPoints / 100.0}%
+            {sellerFeeBasisPoints / 100.0}%
           </td>
         </tr>
 
         <tr>
           <td className="pr-10">Address:</td>
           <td className="text-right text-indigo-300 flex items-center justify-end gap-1">
-            <a href={pubKeyUrl(onChainData.mint, network)}>
-              {shortenedAddress(onChainData.mint)}
+            <a href={pubKeyUrl(mintAddress, network)}>
+              {shortenedAddress(mintAddress)}
             </a>
             <Square2StackIcon
               className="w-5 h-5 cursor-pointer text-indigo-400"
               onClick={async () => {
-                await navigator.clipboard.writeText(
-                  onChainData.mint.toString()
-                );
+                await navigator.clipboard.writeText(mintAddress);
                 toast.success("Copied!");
               }}
             />
-            <Link
-              href={`https://solscan.io/account/${onChainData.mint.toString()}`}
-            >
+            <Link href={`https://solscan.io/account/${mintAddress}`}>
               <a target="_blank" rel="noreferrer">
                 <img
                   src="/images/solscan.png"
@@ -87,29 +88,25 @@ const NFTDetailsTable: React.FC<Props> = ({
             </Link>
           </td>
         </tr>
-        {onChainData.collection && (
+        {collectionAddress && (
           <tr>
             <td className="pr-10">Collection: </td>
             <td className="text-right text-indigo-300 flex items-center justify-end gap-1">
-              <a href={`/collection/${onChainData.collection.key}`}>
+              <a href={`/collection/${collectionAddress}`}>
                 {collectionNft
                   ? collectionNft.name
-                  : shortenedAddress(onChainData.collection.key)}
+                  : shortenedAddress(collectionAddress)}
               </a>
               <Square2StackIcon
                 className="w-5 h-5 cursor-pointer text-indigo-400"
                 onClick={async () => {
-                  if (onChainData.collection) {
-                    await navigator.clipboard.writeText(
-                      onChainData.collection.key
-                    );
+                  if (collectionAddress) {
+                    await navigator.clipboard.writeText(collectionAddress);
                     toast.success("Copied!");
                   }
                 }}
               />
-              <Link
-                href={`https://solscan.io/account/${onChainData.collection.key}`}
-              >
+              <Link href={`https://solscan.io/account/${collectionAddress}`}>
                 <a target="_blank" rel="noreferrer">
                   <img
                     src="/images/solscan.png"
@@ -125,7 +122,7 @@ const NFTDetailsTable: React.FC<Props> = ({
         <tr>
           <td className="pr-10">Mutable:</td>
           <td className="text-right text-indigo-300">
-            {onChainData.isMutable ? "Yes" : "No"}
+            {isMutable ? "Yes" : "No"}
           </td>
         </tr>
 
@@ -177,25 +174,20 @@ const NFTDetailsTable: React.FC<Props> = ({
         <tr>
           <td className="pr-10">Update Authority:</td>
           <td className="text-right text-indigo-300 flex items-center justify-end gap-1">
-            <a href={`/creator/${onChainData.updateAuthority.toString()}`}>
-              {shortenedAddress(onChainData.updateAuthority)}
+            <a href={`/creator/${updateAuthority}`}>
+              {shortenedAddress(updateAuthority)}
             </a>
-            {wallet &&
-            wallet.publicKey?.toString() == onChainData.updateAuthority
+            {wallet && wallet.publicKey?.toString() == updateAuthority
               ? " - You! 😎"
               : ""}
             <Square2StackIcon
               className="w-5 h-5 cursor-pointer text-indigo-400"
               onClick={async () => {
-                await navigator.clipboard.writeText(
-                  onChainData.updateAuthority.toString()
-                );
+                await navigator.clipboard.writeText(updateAuthority);
                 toast.success("Copied!");
               }}
             />
-            <Link
-              href={`https://solscan.io/account/${onChainData.updateAuthority.toString()}`}
-            >
+            <Link href={`https://solscan.io/account/${updateAuthority}`}>
               <a target="_blank" rel="noreferrer">
                 <img
                   src="/images/solscan.png"
@@ -227,7 +219,7 @@ const NFTDetailsTable: React.FC<Props> = ({
                   "Original 1/1"
                 )
               ) : (
-                onChainData.tokenStandard ?? "Legacy"
+                nft.tokenStandard ?? "Legacy"
               )}
             </td>
           </tr>

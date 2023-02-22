@@ -417,11 +417,14 @@ const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
                     ) : (
                       <NFTDetailsTable
                         nft={nft}
-                        onChainData={onChainData}
-                        offChainData={offChainData}
                         collectionNft={collectionNft}
                         parentNft={parentNft}
                         owner={owner}
+                        sellerFeeBasisPoints={offChainData.sellerFeeBasisPoints}
+                        mintAddress={onChainData.mint}
+                        updateAuthority={onChainData.updateAuthority}
+                        collectionAddress={onChainData.collection?.key}
+                        isMutable={onChainData.isMutable}
                       />
                     )}
                   </div>
