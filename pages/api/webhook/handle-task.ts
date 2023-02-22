@@ -60,7 +60,7 @@ apiRoute.post(async (req, res) => {
   try {
     const transaction = req.body as EnrichedTransaction;
 
-    const customDescription = humanReadableTransaction(transaction);
+    const customDescription = humanReadableTransaction(transaction, false);
 
     const nftEvent = transaction.events.nft ? transaction.events.nft : null;
     const nft = nftEvent?.nfts?.length ?? 0 > 0 ? nftEvent?.nfts[0] : null;

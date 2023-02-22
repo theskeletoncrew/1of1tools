@@ -183,7 +183,8 @@ export const urlForSource = (
 };
 
 export const humanReadableTransaction = (
-  transaction: EnrichedTransaction
+  transaction: EnrichedTransaction,
+  useFirstPartyUrls: boolean = true
 ): string => {
   const source = transaction.source;
   const type = transaction.type;
@@ -191,7 +192,11 @@ export const humanReadableTransaction = (
     transaction.events.nft?.nfts?.length > 0
       ? transaction.events.nft?.nfts[0]
       : null;
-  const url = nft ? urlForSource(source, nft.mint) : null;
+  const url = useFirstPartyUrls
+    ? `https://1of1.tools/tx/${transaction.signature}?i=1`
+    : nft
+    ? urlForSource(source, nft.mint)
+    : null;
   const description = `${humanReadableEventPastTense(
     transaction.type
   )} on ${humanReadableSource(source)}${url ? ": " + url : ""}`;
