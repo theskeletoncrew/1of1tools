@@ -120,6 +120,7 @@ apiRoute.post(async (req, res) => {
         res.status(201).json({
           success: true,
         });
+        return;
       }
 
       if (isNewlyFoundNFT) {
@@ -142,6 +143,7 @@ apiRoute.post(async (req, res) => {
         res.status(200).json({
           success: true,
         });
+        return;
       }
     }
 
