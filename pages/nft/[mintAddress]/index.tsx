@@ -39,7 +39,7 @@ import NotificationSubscriptionModal from "components/NotificationSubscriptionMo
 import { BellAlertIcon } from "@heroicons/react/24/outline";
 import { NFTListings } from "models/nftListings";
 import Link from "next/link";
-import { urlForSource } from "utils/helius";
+import { humanReadableSource, urlForSource } from "utils/helius";
 
 const EVENTS_PER_PAGE = 25;
 
@@ -464,7 +464,10 @@ const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
                           >
                             <a target="_blank" rel="noreferrer">
                               <button className="button">
-                                View on Marketplace
+                                View on{" "}
+                                {humanReadableSource(
+                                  listing.activeListings[0]!.marketplace
+                                )}
                               </button>
                             </a>
                           </Link>
