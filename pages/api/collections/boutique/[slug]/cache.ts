@@ -33,7 +33,7 @@ apiRoute.post(async (req, res) => {
     if (!slug) {
       res.status(400).json({
         success: false,
-        message: `mintAddress is required`,
+        message: `collection is required`,
       });
       return;
     }
