@@ -6,7 +6,7 @@ import {
 import { Helius } from "helius-sdk";
 import type { NextApiRequest, NextApiResponse } from "next";
 import nextConnect from "next-connect";
-import { addOffchainCachingTaskForMint } from "utils/nftCache";
+import { cacheMint } from "utils/cacheMint";
 
 const HELIUS_AUTHORIZATION_SECRET =
   process.env.HELIUS_AUTHORIZATION_SECRET || "";
@@ -75,8 +75,8 @@ apiRoute.post(async (req, res) => {
       return;
     }
 
-    // create tasks to capture offchain data (images, metadata)
-    await addOffchainCachingTaskForMint(mint);
+    // cache the image and metadata for the mint immediately
+    await cacheMint(mint);
 
     // migrate the captured untracked events to tracked
     await migrateUntrackedEventsToTracked(mint);
