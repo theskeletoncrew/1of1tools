@@ -171,7 +171,6 @@ const sendNotifications = async (
     const customDescription = humanReadableTransaction(transaction);
 
     const recipientsSubscribedToDialect = await dialectSubscribers();
-    console.log("Dialect Subscribers", recipientsSubscribedToDialect);
 
     if (!dialect) {
       dialect = createDialectSdk();
