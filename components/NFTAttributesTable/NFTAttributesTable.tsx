@@ -13,13 +13,14 @@ const NFTAttributesTable: React.FC<Props> = ({ attributes }) => {
           key={i}
           className="px-4 pt-2 pb-3 rounded-lg bg-white bg-opacity-5 text-center focus:outline-none"
         >
-          <span className="relative">
-            <span className="text-xs uppercase">
+          <div className="overflow-hidden">
+            <p className="text-xs uppercase w-full break-words mb-2">
               {attribute.traitType ?? attribute.trait_type}
-            </span>
-            <br />
-            <span className="text-indigo-300">{attribute.value}</span>
-          </span>
+            </p>
+            <p className="text-indigo-300 w-full break-words">
+              {attribute.value}
+            </p>
+          </div>
         </div>
       ))}
     </div>
