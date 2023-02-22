@@ -30,7 +30,4 @@ export interface CollectionFloor {
 export interface CollectionNFT {
   address: string;
   collectionSlug: string;
-  name?: string | null;
-  localImage?: string | null;
-  metadata?: any | null;
 }
