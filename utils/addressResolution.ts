@@ -48,14 +48,18 @@ export const resolveWalletAddress = async (
 export const loadBonfidaName = async (
   walletAddress: string
 ): Promise<string | undefined> => {
-  const namesRes = await OneOfOneToolsClient.walletNames(walletAddress);
-  if (namesRes.isOk()) {
-    const names = namesRes.value;
-    if (namesRes.value.length > 0) {
-      return names[0];
+  try {
+    const namesRes = await OneOfOneToolsClient.walletNames(walletAddress);
+    if (namesRes.isOk()) {
+      const names = namesRes.value;
+      if (namesRes.value.length > 0) {
+        return names[0];
+      }
+    } else {
+      console.log(namesRes.error.message);
     }
-  } else {
-    console.log(namesRes.error.message);
+  } catch (error) {
+    console.log(error);
   }
   return undefined;
 };
@@ -63,19 +67,19 @@ export const loadBonfidaName = async (
 export const loadTwitterName = async (
   walletAddress: string
 ): Promise<string | undefined> => {
-  const walletPublicKey = tryPublicKey(walletAddress);
-  if (walletPublicKey) {
-    const endpoint = clusterApiUrl(network);
-    const connection = new Connection(endpoint);
-    try {
+  try {
+    const walletPublicKey = tryPublicKey(walletAddress);
+    if (walletPublicKey) {
+      const endpoint = clusterApiUrl(network);
+      const connection = new Connection(endpoint);
       const [handle, registryKey] = await getHandleAndRegistryKey(
         connection,
         walletPublicKey
       );
       return handle;
-    } catch {
-      // ignore failures
     }
+  } catch (error) {
+    console.log(error);
   }
   return undefined;
 };
