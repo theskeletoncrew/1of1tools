@@ -720,6 +720,21 @@ export async function getBoutiqueCollectionEvents(
   }
 }
 
+export async function getBoutiqueCollectionEvent(
+  signature: string
+): Promise<Result<OneOfOneNFTEvent, Error>> {
+  try {
+    let docRef = await db.doc(`boutique-collection-events/${signature}`).get();
+
+    const event = docRef.data() as OneOfOneNFTEvent;
+    event.signature = docRef.id;
+
+    return ok(event);
+  } catch (error) {
+    return err(error as Error);
+  }
+}
+
 export async function getLatestBoutiqueCollectionEvents(
   limit: number = 8
 ): Promise<Result<OneOfOneNFTEvent[], Error>> {
@@ -786,15 +801,18 @@ export async function addBoutiqueCollectionEventIfMonitoredAndUpdateStats(
       nft = nftRef.data() as CollectionNFT;
     } else {
       const nftRes = await trackNewMintIfPartOfCollection(event);
-      // its something we're not going to track because it does belong to a collection
+      // it's something we're not going to track because it does belong to a collection
       // but its not one of the boutique collections
       if (nftRes.shouldIgnore) {
+        console.log("ignoring");
         return ok({ isNewlyTracked: false, shouldIgnore: true });
       }
       nft = nftRes.collectionNFT;
       isNewlyTrackedNFT = true;
     }
+
     if (!nft) {
+      console.log("not a tracked nft");
       return err(new Error("NFT is not tracked."));
     }
 
@@ -987,6 +1005,7 @@ export async function trackNewMintIfPartOfCollection(
     .findByMint({ mintAddress: new PublicKey(event.mint) })) as Nft;
 
   if (isNftPrintEdition(nftDetails.edition)) {
+    console.log("it was a print");
     return {
       collectionNFT: undefined,
       shouldIgnore: true,
@@ -1020,6 +1039,7 @@ export async function trackNewMintIfPartOfCollection(
       // add all of the mint addresses to the list of tracked addresses
       await addMintAsTracked(event.mint, collection.slug);
 
+      console.log("it was a new item in a boutique collection");
       return {
         collectionNFT: {
           address: event.mint,
@@ -1027,8 +1047,16 @@ export async function trackNewMintIfPartOfCollection(
         } as CollectionNFT,
         shouldIgnore: nftDetails.collection?.address !== null,
       };
+    } else {
+      console.log("it was an item in an unknown collection");
+      return {
+        collectionNFT: undefined,
+        shouldIgnore: true,
+      };
     }
   }
+
+  console.log("it was a 1/1 and not in a collection");
 
   return {
     collectionNFT: undefined,

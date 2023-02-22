@@ -226,6 +226,40 @@ export namespace OneOfOneToolsClient {
     }
   }
 
+  export async function event(
+    signature: string,
+    isImported: boolean
+  ): Promise<Result<{ event: NFTEvent; nft: OneOfOneNFTMetadata }, Error>> {
+    let params: Record<string, string> = {
+      isImported: isImported ? "1" : "0",
+    };
+    const query = new URLSearchParams(params).toString();
+
+    try {
+      const response = await fetch(
+        `${Constants.SERVER_URL}/api/events/${signature}?${query}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const result = await response.json();
+
+      if (response.ok) {
+        return ok({
+          event: result.event,
+          nft: result.nft,
+        });
+      }
+      return err(new OneofOneToolsAPIError(response, result));
+    } catch (e) {
+      return err(new Error(e instanceof Error ? e.message : ""));
+    }
+  }
+
   export async function mintList(
     collectionAddress: string
   ): Promise<Result<string[], Error>> {
