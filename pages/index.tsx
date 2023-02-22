@@ -23,7 +23,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Collection } from "models/collection";
 import { OneOfOneToolsClient } from "api-client";
-import { classNames } from "utils";
+import { classNames, notEmpty } from "utils";
 import { OneOfOneNFTEvent } from "models/nftEvent";
 import { humanReadableEventShort } from "utils/helius";
 
@@ -33,7 +33,6 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { LazyLoadingImage } from "components/LoadingImage/LoadingImage";
 import { OneOfOneNFTMetadata } from "models/oneOfOneNFTMetadata";
-import SolanaIcon from "components/Icons/SolanaIcon";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -82,7 +81,7 @@ const Home: NextPage = () => {
       });
       if (eventsRes.isOk()) {
         setLatestBoutiqueEvents(eventsRes.value.events);
-        setLatestBoutiqueEventsMetadata(eventsRes.value.nfts);
+        setLatestBoutiqueEventsMetadata(eventsRes.value.nfts.filter(notEmpty));
       }
     };
     if (!isLoading) {
