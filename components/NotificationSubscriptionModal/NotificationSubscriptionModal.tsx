@@ -188,7 +188,7 @@ const NotificationSubscriptionModal: React.FC<Props> = ({
                           />
                           <label
                             htmlFor={`${guild.id}`}
-                            className="ml-3 cursor-pointer truncate whitespace-nowrap pr-6 text-sm font-medium text-gray-900"
+                            className="ml-3 cursor-pointer truncate pr-6 text-sm font-medium text-gray-900"
                           >
                             {guild.name}
                           </label>
