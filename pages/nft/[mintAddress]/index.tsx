@@ -1,7 +1,7 @@
 import type { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { OneOfOneToolsClient } from "api-client";
-import { NFTMetadata } from "models/nftMetadata";
+import { NFTAttribute, NFTMetadata } from "models/nftMetadata";
 import { NFTEvent } from "models/nftEvent";
 import { shortenedAddress, tryPublicKey } from "utils";
 import { clusterApiUrl, network } from "utils/network";
@@ -45,6 +45,7 @@ const EVENTS_PER_PAGE = 25;
 
 interface Props {
   nftMetadata: NFTMetadata;
+  cachedImage: string | null;
   isImported: boolean;
 }
 
@@ -55,10 +56,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   try {
     let nftMetadata: NFTMetadata | null = null;
+    let cachedImage: string | null = null;
+
+    if (isImported) {
+      let importedRes = await OneOfOneToolsClient.cachedNfts([mintAddress]);
+      if (importedRes.isOk()) {
+        const metadata = importedRes.value[0]!;
+        cachedImage = metadata.cachedImage ?? metadata.image;
+      }
+    }
 
     const maxRetries = 1;
     for (let i = 0; i <= maxRetries; i++) {
       let metadataRes = await OneOfOneToolsClient.nfts([mintAddress]);
+
       if (metadataRes.isErr()) {
         throw new Error("Unable to load NFT: " + metadataRes.error.message);
       }
@@ -89,7 +100,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     //   );
     // }
 
-    return { props: { nftMetadata, isImported } };
+    return { props: { nftMetadata, cachedImage, isImported } };
   } catch (error) {
     console.log(error);
     return {
@@ -103,7 +114,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 };
 
-const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
+const NFTPage: NextPage<Props> = ({ nftMetadata, cachedImage, isImported }) => {
   const onChainData = nftMetadata.onChainData!;
   const offChainData = nftMetadata.offChainData!;
 
@@ -330,7 +341,9 @@ const NFTPage: NextPage<Props> = ({ nftMetadata, isImported }) => {
     const title = `1of1.tools - ${offChainData.name}: ${onChainData.mint}`;
     const url = `https://1of1.tools/nft/${nftMetadata.mint}`;
     const description = `View ${offChainData.name} aggregated nft listings, owner information, and historical activity across all marketplaces.`;
-    const featuredImageURL = offChainData.image
+    const featuredImageURL = cachedImage
+      ? cachedImage
+      : offChainData.image
       ? `https://1of1.tools/api/assets/nft/${
           nftMetadata.mint
         }/640?originalURL=${encodeURIComponent(offChainData.image)}`
