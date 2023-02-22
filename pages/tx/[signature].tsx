@@ -2,7 +2,7 @@ import type { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import { OneOfOneToolsClient } from "api-client";
 import { NFTEvent } from "models/nftEvent";
-import { pubKeyUrl, shortenedAddress, tryPublicKey, txUrl } from "utils";
+import { shortenedAddress, tryPublicKey, txUrl } from "utils";
 import { clusterApiUrl, network } from "utils/network";
 import {
   Connection,
@@ -267,7 +267,9 @@ const NFTPage: NextPage<Props> = ({
   const title = `1of1.tools - ${humanReadableEventPastTense(event.type)}: ${
     nftMetadata.name
   } | ${event.signature}`;
-  const url = `https://1of1.tools/nft/${nftMetadata.mint}`;
+  const url = `https://1of1.tools/tx/${event.signature}?i=${
+    isImported ? "1" : "0"
+  }`;
   const description = `View ${nftMetadata.name} aggregated nft listings, owner information, and historical activity across all marketplaces.`;
   const featuredImageURL =
     nftMetadata.cachedImage ??
