@@ -143,8 +143,18 @@ const CollectionPage: NextPage<Props> = ({ collection }) => {
       });
     } else {
       newNFTMetadata = newNFTMetadata.sort((nft1, nft2) => {
-        const numVal1 = parseInt(nft1.name.replace(/^\D+/g, ""));
-        const numVal2 = parseInt(nft2.name.replace(/^\D+/g, ""));
+        const name1HashIndex = nft1.name.lastIndexOf("#");
+        const name2HashIndex = nft2.name.lastIndexOf("#");
+        const numVal1 = parseInt(
+          nft1.name
+            .substring(name1HashIndex >= 0 ? name1HashIndex : 0)
+            .replace(/^\D+/g, "")
+        );
+        const numVal2 = parseInt(
+          nft2.name
+            .substring(name2HashIndex >= 0 ? name2HashIndex : 0)
+            .replace(/^\D+/g, "")
+        );
         if (!isNaN(numVal1) && !isNaN(numVal2)) {
           return numVal1 - numVal2;
         }
