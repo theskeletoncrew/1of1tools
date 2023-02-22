@@ -351,7 +351,7 @@ const Home: NextPage = () => {
                   return (
                     <SwiperSlide key={`activity-${event.signature}`}>
                       <div className={styles.rowDrop}>
-                        <Link href={`/nft/${event.mint}`}>
+                        <Link href={`/nft/${event.mint}?i=1`}>
                           <a className={`${styles.rowDropImageWrapper} group`}>
                             <div className={styles.dropImageWrapper}>
                               <LazyLoadingImage
