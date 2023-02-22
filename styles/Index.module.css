@@ -23,7 +23,7 @@
 }
 
 .rowDropName {
-  @apply whitespace-nowrap truncate w-full text-sm;
+  @apply truncate w-full text-sm;
 }
 
 .rowDropTimestamp {
