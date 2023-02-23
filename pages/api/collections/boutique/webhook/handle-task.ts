@@ -170,7 +170,10 @@ const sendNotifications = async (
   let lastError: Error | null = null;
 
   try {
-    const customDescription = humanReadableTransaction(transaction);
+    const customDescription = humanReadableTransaction(
+      transaction,
+      !isUnmonitored
+    );
 
     const recipientsSubscribedToDialect = await dialectSubscribers();
 

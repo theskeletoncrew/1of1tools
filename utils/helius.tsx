@@ -184,6 +184,7 @@ export const urlForSource = (
 
 export const humanReadableTransaction = (
   transaction: EnrichedTransaction,
+  isImported: boolean,
   useFirstPartyUrls: boolean = true
 ): string => {
   const source = transaction.source;
@@ -193,7 +194,9 @@ export const humanReadableTransaction = (
       ? transaction.events.nft?.nfts[0]
       : null;
   const url = useFirstPartyUrls
-    ? `https://1of1.tools/tx/${transaction.signature}?i=1`
+    ? `https://1of1.tools/tx/${transaction.signature}${
+        isImported ? "?i=1" : ""
+      }`
     : nft
     ? urlForSource(source, nft.mint)
     : null;
