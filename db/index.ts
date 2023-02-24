@@ -1045,7 +1045,7 @@ export async function trackNewMintIfPartOfCollection(
           address: event.mint,
           collectionSlug: collection.slug,
         } as CollectionNFT,
-        shouldIgnore: nftDetails.collection?.address !== null,
+        shouldIgnore: false,
       };
     } else {
       console.log("it was an item in an unknown collection");
