@@ -49,7 +49,8 @@ export const discordEmbedForTransaction = async (
       }
     }
 
-    sellerText = ` by [${sellerName}](${sellerURL})${sellerPt2}`;
+    const sellerVerb = nftEvent.type == TransactionType.NFT_BID ? "on" : "by";
+    sellerText = ` ${sellerVerb} [${sellerName}](${sellerURL})${sellerPt2}`;
   }
 
   if (nftEvent.buyer) {
@@ -71,7 +72,8 @@ export const discordEmbedForTransaction = async (
       }
     }
 
-    const buyerRelationship = nftEvent.seller ? "to" : "by";
+    const buyerRelationship =
+      nftEvent.seller && nftEvent.type != TransactionType.NFT_BID ? "to" : "by";
     buyerText = ` ${buyerRelationship} [${buyerName}](${buyerURL})${buyerPt2}`;
   }
 
