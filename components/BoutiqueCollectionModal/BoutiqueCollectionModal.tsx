@@ -131,7 +131,7 @@ const BoutiqueCollectionsModal: React.FC<Props> = ({
                 id="discordURL"
                 name="discordURL"
                 defaultValue={discordURL}
-                placeholder="ex. https://discord.gg/skeletoncrewrip"
+                placeholder="ex. https://discord.gg/myproject"
                 onChange={(e) => {
                   setDiscordURL(e.currentTarget.value);
                 }}
