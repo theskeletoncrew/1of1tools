@@ -29,21 +29,41 @@ apiRoute.get(async (req, res) => {
 
     const { mintId } = req.query;
     const mintIdentifier = mintId?.toString();
+    // const compressed = req.body.compressed?.toString() === "1";
+    const compressed = true;
 
-    const response = await fetch(
-      `https://www.crossmint.com/api/2022-06-09/collections/default-solana/nfts/${mintIdentifier}`,
-      {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "x-client-secret": CROSSMINT_API_SECRET,
-          "x-project-id": CROSSMINT_PROJECT_ID,
-        },
-      }
-    );
+    let response: Response;
+
+    if (compressed) {
+      response = await fetch(
+        `https://www.crossmint.com/api/v1-alpha1/minting/collections/default-solana/nfts/${mintIdentifier}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "x-client-secret": CROSSMINT_API_SECRET,
+            "x-project-id": CROSSMINT_PROJECT_ID,
+          },
+        }
+      );
+    } else {
+      response = await fetch(
+        `https://www.crossmint.com/api/2022-06-09/collections/default-solana/nfts/${mintIdentifier}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "x-client-secret": CROSSMINT_API_SECRET,
+            "x-project-id": CROSSMINT_PROJECT_ID,
+          },
+        }
+      );
+    }
 
     const responseJSON = await response.json();
+    console.log(responseJSON);
 
     if (response.ok) {
       res.status(200).json(responseJSON);

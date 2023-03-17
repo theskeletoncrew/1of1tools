@@ -29,6 +29,8 @@ apiRoute.post(async (req, res) => {
 
     const metadata = req.body.metadata;
     const recipientEmail = req.body.recipientEmail;
+    // const compressed = req.body.compressed;
+    const compressed = true;
 
     if (!metadata || metadata.length == 0) {
       res.status(400).json({ message: "Metadata is required." });
@@ -39,29 +41,43 @@ apiRoute.post(async (req, res) => {
       return;
     }
 
-    if (uid != "5awsmonFXxL4xCNQTYVgw8zGWXEzAcoTbirxYEYqxwh3") {
-      res.status(500).json({
-        success: false,
-        message: "Crossmint minting is temporarily disabled",
-      });
-    }
+    let response: Response;
 
-    const response = await fetch(
-      `https://www.crossmint.com/api/2022-06-09/collections/default-solana/nfts`,
-      {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "x-client-secret": CROSSMINT_API_SECRET,
-          "x-project-id": CROSSMINT_PROJECT_ID,
-        },
-        body: JSON.stringify({
-          metadata: metadata,
-          recipient: `email:${recipientEmail}:solana`,
-        }),
-      }
-    );
+    if (compressed) {
+      response = await fetch(
+        `https://www.crossmint.com/api/v1-alpha1/minting/collections/default-solana/nfts`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "x-client-secret": CROSSMINT_API_SECRET,
+            "x-project-id": CROSSMINT_PROJECT_ID,
+          },
+          body: JSON.stringify({
+            metadata: metadata,
+            recipient: `email:${recipientEmail}:solana`,
+          }),
+        }
+      );
+    } else {
+      response = await fetch(
+        `https://www.crossmint.com/api/2022-06-09/collections/default-solana/nfts`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "x-client-secret": CROSSMINT_API_SECRET,
+            "x-project-id": CROSSMINT_PROJECT_ID,
+          },
+          body: JSON.stringify({
+            metadata: metadata,
+            recipient: `email:${recipientEmail}:solana`,
+          }),
+        }
+      );
+    }
 
     const responseJSON = await response.json();
 

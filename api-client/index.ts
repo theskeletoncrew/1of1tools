@@ -593,7 +593,8 @@ export namespace OneOfOneToolsClient {
 
   export async function mint(
     metadata: any,
-    recipientEmail: string
+    recipientEmail: string,
+    compressed: boolean
   ): Promise<Result<{ id: string; isComplete: boolean }, Error>> {
     try {
       const response = await fetch(`${Constants.SERVER_URL}/api/mint`, {
@@ -605,6 +606,7 @@ export namespace OneOfOneToolsClient {
         body: JSON.stringify({
           metadata: metadata,
           recipientEmail: recipientEmail,
+          compressed: compressed,
         }),
       });
       const result = await response.json();
@@ -622,11 +624,14 @@ export namespace OneOfOneToolsClient {
   }
 
   export async function mintStatus(
-    uploadId: string
+    uploadId: string,
+    compressed: boolean
   ): Promise<Result<{ mintAddress: string; isComplete: boolean }, Error>> {
     try {
       const response = await fetch(
-        `${Constants.SERVER_URL}/api/mint/${uploadId}`,
+        `${Constants.SERVER_URL}/api/mint/${uploadId}?compressed=${
+          compressed ? 1 : 0
+        }`,
         {
           method: "GET",
           headers: {

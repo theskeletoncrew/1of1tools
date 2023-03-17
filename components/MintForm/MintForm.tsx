@@ -832,9 +832,9 @@ const MintForm: React.FC<Props> = ({
                       validateAndSaveNFTs(true);
                     }}
                   >
-                    Mint & Email
+                    Mint & Email w/Crossmint
                     <br />
-                    w/Crossmint
+                    (Compressed NFT)
                   </button>
                 </div>
               </>

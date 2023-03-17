@@ -53,6 +53,7 @@ apiRoute.post(async (req, res) => {
         },
         body: JSON.stringify({
           mintAccounts: mintAccounts,
+          includeOffchain: true,
         }),
       }
     );

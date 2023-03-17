@@ -196,7 +196,8 @@ const MintPage: NextPage = () => {
         setMintingStatus("Uploading metadata and writing to blockchain...");
         const mintRes = await OneOfOneToolsClient.mint(
           jsonMetadata,
-          recipientEmail
+          recipientEmail,
+          true
         );
 
         if (mintRes.isOk()) {
@@ -207,13 +208,16 @@ const MintPage: NextPage = () => {
           let mintAddress: string | undefined;
 
           while (!isComplete) {
-            const statusRes = await OneOfOneToolsClient.mintStatus(uploadId);
+            const statusRes = await OneOfOneToolsClient.mintStatus(
+              uploadId,
+              true
+            );
             if (statusRes.isOk()) {
               isComplete = statusRes.value.isComplete;
               mintAddress = statusRes.value.mintAddress;
             }
             retries++;
-            if (isComplete || retries > 6) {
+            if (isComplete || retries > 10) {
               break;
             }
             await pause(5000);
@@ -384,24 +388,40 @@ const MintPage: NextPage = () => {
         ) : mintedNFTAddress ? (
           <div className="w-full h-[80vh] flex flex-col gap-4 items-center justify-center text-center text-3xl">
             <span>Mint Successful! 🎉</span>
-            <a
-              href={`/nft/${mintedNFTAddress}`}
-              rel="noreferrer"
-              target="_blank"
-            >
-              1of1.tools/nft/{shortenedAddress(mintedNFTAddress)}
-            </a>
-            <a
-              href={pubKeyUrl(
-                mintedNFTAddress,
-                mintedWithCrossMint ? WalletAdapterNetwork.Devnet : network
-              )}
-              rel="noreferrer"
-              target="_blank"
-              className="text-sm"
-            >
-              View on Solana Explorer ({shortenedAddress(mintedNFTAddress)})
-            </a>
+            {mintedWithCrossMint ? (
+              <>
+                <a
+                  href={`https://xray.helius.xyz/${mintedNFTAddress}/token`}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  https://xray.helius.xyz/{shortenedAddress(mintedNFTAddress)}
+                  /token
+                </a>
+              </>
+            ) : (
+              <>
+                <a
+                  href={`/nft/${mintedNFTAddress}`}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  1of1.tools/nft/{shortenedAddress(mintedNFTAddress)}
+                </a>
+                <a
+                  href={pubKeyUrl(
+                    mintedNFTAddress,
+                    mintedWithCrossMint ? WalletAdapterNetwork.Devnet : network
+                  )}
+                  rel="noreferrer"
+                  target="_blank"
+                  className="text-sm"
+                >
+                  View on Solana Explorer ({shortenedAddress(mintedNFTAddress)})
+                </a>
+              </>
+            )}
+
             {mintedWithCrossMint && recipientEmail && (
               <span>
                 Next Steps:{" "}
