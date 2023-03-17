@@ -39,6 +39,13 @@ apiRoute.post(async (req, res) => {
       return;
     }
 
+    if (uid != "5awsmonFXxL4xCNQTYVgw8zGWXEzAcoTbirxYEYqxwh3") {
+      res.status(500).json({
+        success: false,
+        message: "Crossmint minting is temporarily disabled",
+      });
+    }
+
     const response = await fetch(
       `https://www.crossmint.com/api/2022-06-09/collections/default-solana/nfts`,
       {
